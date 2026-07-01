@@ -21,6 +21,17 @@ export function getHandToHand(id: string): HandToHandType | undefined {
   return hthById.get(id);
 }
 
+/** Look up a Hand-to-Hand type, throwing on an unknown/unmodeled id. */
+function requireHandToHand(id: string): HandToHandType {
+  const t = hthById.get(id);
+  if (!t) {
+    throw new Error(
+      `Unknown Hand-to-Hand type: "${id}". Known types: ${[...hthById.keys()].join(", ")}.`,
+    );
+  }
+  return t;
+}
+
 export interface StatRange {
   min: number;
   max: number;
@@ -29,8 +40,9 @@ export interface StatRange {
 
 /** Hit Point range for a character of the given P.E. and experience level. */
 export function hitPointsRange(pe: number, level: number): StatRange {
-  const { baseBonusFormula, perLevelFormula } = vitals.hitPoints;
-  const perLevelRolls = Math.max(0, level - 1); // +1 roll for each level after 1
+  const { baseBonusFormula, perLevelFormula, perLevelStartsAt } = vitals.hitPoints;
+  // one roll per level from `perLevelStartsAt` up to `level` (matches rollHitPoints)
+  const perLevelRolls = Math.max(0, level - perLevelStartsAt + 1);
   return {
     min: pe + diceMin(baseBonusFormula) + perLevelRolls * diceMin(perLevelFormula),
     max: pe + diceMax(baseBonusFormula) + perLevelRolls * diceMax(perLevelFormula),
@@ -63,8 +75,7 @@ export function comaDeathFloor(pe: number): number {
 
 /** Total attacks per melee for a Hand-to-Hand type at a given level. */
 export function attacksPerMelee(hthId: string, level: number): number {
-  const t = hthById.get(hthId);
-  if (!t) return 1;
+  const t = requireHandToHand(hthId);
   let attacks = t.baseAttacks;
   for (const lv of t.levels) {
     if (lv.level <= level && lv.addAttacks) attacks += lv.addAttacks;
@@ -77,8 +88,7 @@ export type CombatBonuses = Record<string, number>;
 /** Accumulated Hand-to-Hand combat bonuses (strike/parry/dodge/...) at a level. */
 export function hthBonuses(hthId: string, level: number): CombatBonuses {
   const out: CombatBonuses = {};
-  const t = hthById.get(hthId);
-  if (!t) return out;
+  const t = requireHandToHand(hthId);
   for (const lv of t.levels) {
     if (lv.level > level || !lv.bonuses) continue;
     for (const [k, v] of Object.entries(lv.bonuses)) {

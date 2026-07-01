@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "ready": "vp check && vp run -r test && vp run -r build",
-    "dev": "vp run website#dev"
+    "ready": "vp check && vp run -r test && vp run -r build"
   },
   "devDependencies": {
     "vite-plus": "catalog:"

@@ -169,17 +169,30 @@
     { "n": 13, "name": "O.C.C. Bonuses", "summary": "See bonuses." }
   ],
   "occSkills": [
-    { "skill": "Language: Native Tongue", "atLevel1": 98, "unit": "percent", "fixed": true },
-    { "skill": "Language: Other", "choose": 2, "occBonus": 20 },
-    { "skill": "Climbing", "occBonus": 5 },
-    { "skill": "Math: Basic", "occBonus": 10 },
-    { "skill": "Land Navigation", "occBonus": 4 },
-    { "skill": "Wilderness Survival", "occBonus": 10 },
+    {
+      "skill": "Language: Native Tongue",
+      "skillId": "language-native-tongue",
+      "atLevel1": 98,
+      "unit": "percent",
+      "fixed": true
+    },
+    { "skill": "Language: Other", "skillId": "language-other", "choose": 2, "occBonus": 20 },
+    { "skill": "Climbing", "skillId": "climbing", "occBonus": 5 },
+    { "skill": "Math: Basic", "skillId": "math-basic", "occBonus": 10 },
+    { "skill": "Land Navigation", "skillId": "land-navigation", "occBonus": 4 },
+    { "skill": "Wilderness Survival", "skillId": "wilderness-survival", "occBonus": 10 },
     { "skill": "Pilot", "chooseFromCategory": "Pilot", "choose": 1, "occBonus": 5 },
-    { "skill": "Lore: Demon & Monster", "occBonus": 15 },
-    { "skill": "Lore", "choose": 4, "occBonus": 10, "note": "Any Lore skills." },
+    { "skill": "Lore: Demon & Monster", "skillId": "lore-demons-monsters", "occBonus": 15 },
+    {
+      "skill": "Lore",
+      "skillPrefix": "Lore",
+      "choose": 4,
+      "occBonus": 10,
+      "note": "Any Lore skills."
+    },
     {
       "skill": "Hand to Hand: Basic",
+      "hthId": "basic",
       "upgrades": [
         { "to": "Hand to Hand: Expert", "cost": { "occRelatedSkills": 1 } },
         { "to": "Martial Arts", "cost": { "occRelatedSkills": 2 } },
@@ -201,7 +214,7 @@
     ],
     "newSkillsStartAtLevel1": true,
     "categoryRules": [
-      { "category": "Communications", "allowed": "Radio: Basic only" },
+      { "category": "Communication", "allowed": "Radio: Basic only" },
       { "category": "Cowboy", "allowed": "none" },
       { "category": "Domestic", "allowed": "any", "bonus": 10 },
       { "category": "Electrical", "allowed": "none" },

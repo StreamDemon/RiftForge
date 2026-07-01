@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { attributeCodeSchema, sourceRefSchema } from "./attributes.ts";
+import { diceFormulaSchema } from "./dice.ts";
 
 /** A minimum attribute a character must have to take this O.C.C. */
 export const attributeRequirementSchema = z.object({
@@ -10,17 +11,17 @@ export const attributeRequirementSchema = z.object({
 /** How this O.C.C. generates and recovers P.P.E. (Potential Psychic Energy). */
 export const ppeSchema = z.object({
   /** Dice formula for permanent base P.P.E. at level 1 (e.g. "3D6*10+20"). */
-  baseFormula: z.string(),
+  baseFormula: diceFormulaSchema,
   /** Whether the character's P.E. attribute number is added to the base. */
   addPeAttribute: z.boolean(),
   /** Dice formula gained per level (e.g. "3D6"). */
-  perLevelFormula: z.string(),
+  perLevelFormula: diceFormulaSchema,
   /** First level at which the per-level P.P.E. is gained. */
-  perLevelStartsAt: z.number().int(),
-  recoveryPerHourRest: z.number(),
-  recoveryPerHourMeditation: z.number(),
-  supplementalOnLeyLinePerMelee: z.number().optional(),
-  supplementalAtNexusPerMelee: z.number().optional(),
+  perLevelStartsAt: z.number().int().positive(),
+  recoveryPerHourRest: z.number().nonnegative(),
+  recoveryPerHourMeditation: z.number().nonnegative(),
+  supplementalOnLeyLinePerMelee: z.number().nonnegative().optional(),
+  supplementalAtNexusPerMelee: z.number().nonnegative().optional(),
   notes: z.string().optional(),
 });
 
@@ -89,8 +90,8 @@ export const secondarySkillsSchema = z.object({
 
 export const moneySchema = z.object({
   /** Dice formula for starting credits (e.g. "1D4*1000"). */
-  credits: z.string(),
-  blackMarketItems: z.string().optional(),
+  credits: diceFormulaSchema,
+  blackMarketItems: diceFormulaSchema.optional(),
 });
 
 /**

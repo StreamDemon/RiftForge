@@ -13,11 +13,11 @@ export const skillSchema = z.object({
   /** RUE skill category, e.g. "Wilderness", "Technical", "Communication". */
   category: z.string(),
   /** Base skill percentage at level 1 (before any bonuses). */
-  baseSkill: z.number().int(),
+  baseSkill: z.number().int().min(0),
   /** Second base percentage for two-value skills. */
-  baseSkill2: z.number().int().optional(),
+  baseSkill2: z.number().int().min(0).optional(),
   /** Percent gained per experience level (0 for fixed skills). */
-  perLevel: z.number().int(),
+  perLevel: z.number().int().min(0),
   /** True for flat skills that never grow with level (e.g. Native Tongue 98%). */
   fixed: z.boolean().optional(),
   /** Prerequisite skill ids/names, if any. */
@@ -31,7 +31,7 @@ export type Skill = z.infer<typeof skillSchema>;
 export const skillCatalogSchema = z.object({
   book: z.string().min(1),
   /** Hard ceiling any skill percentage is capped at (98% in RUE). */
-  maxPercent: z.number().int(),
+  maxPercent: z.number().int().positive(),
   skills: z.array(skillSchema),
 });
 export type SkillCatalog = z.infer<typeof skillCatalogSchema>;

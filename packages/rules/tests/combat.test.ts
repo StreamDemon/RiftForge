@@ -103,5 +103,11 @@ describe("combatProfile integrates attributes + Hand to Hand", () => {
     expect(p.saveBonuses.insanity).toBe(13);
     expect(p.saveBonuses.comaDeathPct).toBe(30);
     expect(p.saveBonuses.magic).toBe(8);
+    expect(p.saveBonuses.poison).toBe(8); // P.E. 30 -> save vs magic/poison +8
+  });
+
+  test("an unknown Hand-to-Hand id throws instead of silently defaulting", () => {
+    expect(() => attacksPerMelee("expert", 1)).toThrow(/Unknown Hand-to-Hand/);
+    expect(() => hthBonuses("expert", 1)).toThrow(/Unknown Hand-to-Hand/);
   });
 });
