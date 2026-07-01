@@ -1,0 +1,67 @@
+docs/rules/PAGE_MAP.md
+  s_9022c0ece1998d::t_1365d354f0582a 1-104
+packages/rules/package.json
+  s_9022c0ece1998d::t_2fd69bee632788 1-24
+packages/rules/src/content/attribute-bonuses.json
+  s_9022c0ece1998d::t_815b8319ac81e9 1-288
+packages/rules/src/content/combat/hand-to-hand.json
+  s_9022c0ece1998d::t_0e0344a89cfca5 1-51
+packages/rules/src/content/occ/ley-line-walker.json
+  s_9022c0ece1998d::t_bcb19c80d59fde 1-283
+packages/rules/src/content/skills/skills.json
+  s_9022c0ece1998d::t_0e9a81b4bd97a6 1-334
+packages/rules/src/engine/attributes.ts
+  s_9022c0ece1998d::t_8ba0b5bbca3905 1-76
+packages/rules/src/engine/combat.ts
+  s_9022c0ece1998d::t_7e75e9758847de 1-152
+packages/rules/src/engine/dice.ts
+  s_9022c0ece1998d::t_6e0125bfe1db11 1-74
+packages/rules/src/engine/occ.ts
+  s_9022c0ece1998d::t_f62febc0be3a23 1-42
+packages/rules/src/schema/attributes.ts
+  s_9022c0ece1998d::t_56f52a8e00d166 1-60
+packages/rules/src/schema/occ.ts
+  s_9022c0ece1998d::t_1559128d74af54 1-136
+packages/rules/tests/attributes.test.ts
+  s_9022c0ece1998d::t_725e668671a725 1-90
+packages/rules/tests/dice.test.ts
+  s_9022c0ece1998d::t_ecbffc3e89d173 1-67
+packages/rules/tests/occ.test.ts
+  s_9022c0ece1998d::t_f73af3559e248d 1-52
+packages/rules/tests/skills.test.ts
+  s_9022c0ece1998d::t_dd80ab3de13ad0 1-96
+packages/rules/src/content/combat/saving-throws.json
+  s_9022c0ece1998d::t_aaf7c82cfa829b 1-36
+packages/rules/src/content/combat/vitals.json
+  s_9022c0ece1998d::t_8b2dab0e59cbcc 1-19
+packages/rules/src/engine/skills.ts
+  s_9022c0ece1998d::t_0d353efa66ff0f 1-79
+packages/rules/src/index.ts
+  s_9022c0ece1998d::t_8bfbce06a85be4 1-9
+packages/rules/src/schema/combat.ts
+  s_9022c0ece1998d::t_ef5fdaef91e662 1-82
+packages/rules/src/schema/skills.ts
+  s_9022c0ece1998d::t_5d5ff550ea8bc2 1-37
+packages/rules/tests/combat.test.ts
+  s_9022c0ece1998d::t_ce2724f4c84f97 1-107
+packages/rules/tsconfig.json
+  s_9022c0ece1998d::t_25b917f65bec21 1-22
+packages/rules/vite.config.ts
+  s_9022c0ece1998d::t_38e61eba6117ba 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "7dfa08530a8e8b9a22335c823354b4274f3ba71c",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@gmail.com>"
+    }
+  }
+}
