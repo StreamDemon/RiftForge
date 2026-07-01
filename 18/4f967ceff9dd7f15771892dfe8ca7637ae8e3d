@@ -1,0 +1,29 @@
+packages/rules/tests/character.test.ts
+  s_9022c0ece1998d::t_876b54962514a0 1-81,83-84
+  s_9022c0ece1998d::t_6f7f2ab21712fb 82
+packages/rules/src/schema/character.ts
+  s_9022c0ece1998d::t_cbd68d4ba07e07 1-47
+packages/rules/src/index.ts
+  s_9022c0ece1998d::t_6e9aae78e0e075 13
+  s_9022c0ece1998d::t_e4e87b69fe5f91 6
+packages/rules/src/engine/character.ts
+  s_9022c0ece1998d::t_6f7f2ab21712fb 158
+  s_9022c0ece1998d::t_01cfa2434e6d34 1-14,16-157,159-164
+  s_9022c0ece1998d::t_597df3870f4053 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "184f967ceff9dd7f15771892dfe8ca7637ae8e3d",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
