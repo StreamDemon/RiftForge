@@ -1,0 +1,23 @@
+packages/rules/tests/skills.test.ts
+  s_9022c0ece1998d::t_85c5a11cf41a3f 2-8
+  s_9022c0ece1998d::t_af850fbdc36e34 71-102
+packages/rules/src/engine/skills.ts
+  s_9022c0ece1998d::t_4836639c033b80 12-41,44
+  s_9022c0ece1998d::t_8258a96186a6f6 45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "b99e2d54680bf26fdef00148a22a1da2aab445bf",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@gmail.com>"
+    }
+  }
+}
