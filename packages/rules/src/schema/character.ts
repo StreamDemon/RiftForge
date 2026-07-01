@@ -21,6 +21,10 @@ export const characterAttributesSchema = z.object({
 });
 export type CharacterAttributes = z.infer<typeof characterAttributesSchema>;
 
+/** Psychic aptitude, which sets the save-vs-psionics target (RUE p.346/348). */
+export const psychicClassSchema = z.enum(["masterPsychic", "majorOrMinorPsychic", "ordinary"]);
+export type PsychicClass = z.infer<typeof psychicClassSchema>;
+
 /**
  * A built character — the player's *choices*. Derived stats (bonuses, attacks,
  * save targets, resolved skill %s, spell strength, …) are computed by
@@ -34,8 +38,20 @@ export const characterSchema = z.object({
   attributes: characterAttributesSchema,
   /** Hand-to-Hand combat type id (e.g. "basic"). */
   hthType: z.string().min(1),
-  skills: z.array(characterSkillSchema).default([]),
-  spellIds: z.array(z.string().min(1)).default([]),
+  /** The character's psychic aptitude (sets the save-vs-psionics target). */
+  psychicClass: psychicClassSchema.default("ordinary"),
+  skills: z
+    .array(characterSkillSchema)
+    .refine((arr) => new Set(arr.map((s) => s.skillId)).size === arr.length, {
+      message: "A skill cannot be taken twice (duplicate skillId).",
+    })
+    .default([]),
+  spellIds: z
+    .array(z.string().min(1))
+    .refine((arr) => new Set(arr).size === arr.length, {
+      message: "A spell cannot be known twice (duplicate spellId).",
+    })
+    .default([]),
   rolled: z
     .object({
       hitPoints: z.number().int().positive().optional(),
@@ -44,4 +60,7 @@ export const characterSchema = z.object({
     })
     .optional(),
 });
+/** A fully-resolved character (defaulted fields present) — e.g. after parsing/from storage. */
 export type Character = z.infer<typeof characterSchema>;
+/** Character input for `deriveSheet` — defaulted fields (psychicClass/skills/spellIds) may be omitted. */
+export type CharacterInput = z.input<typeof characterSchema>;

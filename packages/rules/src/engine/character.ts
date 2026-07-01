@@ -1,4 +1,4 @@
-import type { Character } from "../schema/character.ts";
+import type { Character, CharacterInput } from "../schema/character.ts";
 import { characterSchema } from "../schema/character.ts";
 import type { Occ } from "../schema/occ.ts";
 import type { Spell } from "../schema/spells.ts";
@@ -12,7 +12,7 @@ import {
   savingThrowTarget,
   type StatRange,
 } from "./combat.ts";
-import { basePpeRange, getOcc } from "./occ.ts";
+import { getOcc, ppeRange } from "./occ.ts";
 import { iqSkillBonus, resolveSkill, type ResolvedSkill } from "./skills.ts";
 import { getSpell, occSpellStrength } from "./spells.ts";
 
@@ -77,7 +77,7 @@ function withRolled(range: StatRange, rolled?: number): StatValue {
  * `character.rolled`, not generated here), so it runs anywhere: tests, the
  * Convex backend, or the client.
  */
-export function deriveSheet(input: Character): CharacterSheet {
+export function deriveSheet(input: CharacterInput): CharacterSheet {
   const character = characterSchema.parse(input);
   const occ = getOcc(character.occId);
   if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
@@ -100,7 +100,7 @@ export function deriveSheet(input: Character): CharacterSheet {
       bonus: combat.saveBonuses.magic + occSaveBonus(occ, "magic", level),
     },
     psionics: {
-      target: psionicsSaveTarget("ordinary"),
+      target: psionicsSaveTarget(character.psychicClass),
       bonus: combat.saveBonuses.psionic,
     },
     insanity: {
@@ -155,7 +155,7 @@ export function deriveSheet(input: Character): CharacterSheet {
       sdc: withRolled(physicalSdcRange(), character.rolled?.sdc),
       comaDeathFloor: comaDeathFloor(attrs.PE),
     },
-    ppe: occ.ppe ? withRolled(basePpeRange(occ, attrs.PE), character.rolled?.ppe) : undefined,
+    ppe: occ.ppe ? withRolled(ppeRange(occ, attrs.PE, level), character.rolled?.ppe) : undefined,
     spellStrength: isCaster ? occSpellStrength(occ, level) : undefined,
     saves,
     skills,

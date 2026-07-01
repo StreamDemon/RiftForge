@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vite-plus/test";
-import { deriveSheet, type Character } from "../src/index.ts";
+import { deriveSheet, type CharacterInput } from "../src/index.ts";
 
-const leyLineWalker: Character = {
+const leyLineWalker: CharacterInput = {
   name: "Vesper",
   occId: "ley-line-walker",
   level: 1,
@@ -80,5 +80,36 @@ describe("deriveSheet — edge cases", () => {
 
   test("an unknown O.C.C. throws", () => {
     expect(() => deriveSheet({ ...leyLineWalker, occId: "nope" })).toThrow(/Unknown O\.C\.C\./);
+  });
+
+  test("P.P.E. grows with level (+3D6 per level from level 2)", () => {
+    // level 3: base {64, 214, 139} + 2 * 3D6 {3, 18, 10.5}
+    expect(deriveSheet({ ...leyLineWalker, level: 3 }).ppe).toEqual({
+      min: 70,
+      max: 250,
+      average: 160,
+    });
+  });
+
+  test("save-vs-psionics target follows the character's psychic class", () => {
+    expect(deriveSheet(leyLineWalker).saves.psionics.target).toBe(15); // ordinary (default)
+    expect(
+      deriveSheet({ ...leyLineWalker, psychicClass: "masterPsychic" }).saves.psionics.target,
+    ).toBe(10);
+  });
+
+  test("duplicate skills or spells are rejected", () => {
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        skills: [
+          { skillId: "math-basic", occBonus: 10 },
+          { skillId: "math-basic", occBonus: 10 },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      deriveSheet({ ...leyLineWalker, spellIds: ["globe-of-daylight", "globe-of-daylight"] }),
+    ).toThrow();
   });
 });
