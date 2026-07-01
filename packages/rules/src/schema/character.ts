@@ -1,0 +1,66 @@
+import { z } from "zod";
+
+/** A skill the character has taken, with the O.C.C./category bonuses that apply. */
+export const characterSkillSchema = z.object({
+  skillId: z.string().min(1),
+  occBonus: z.number().int().optional(),
+  categoryBonus: z.number().int().optional(),
+});
+export type CharacterSkill = z.infer<typeof characterSkillSchema>;
+
+/** The eight rolled attributes (I.Q., M.E., M.A., P.S., P.P., P.E., P.B., Spd). */
+export const characterAttributesSchema = z.object({
+  IQ: z.number().int().positive(),
+  ME: z.number().int().positive(),
+  MA: z.number().int().positive(),
+  PS: z.number().int().positive(),
+  PP: z.number().int().positive(),
+  PE: z.number().int().positive(),
+  PB: z.number().int().positive(),
+  Spd: z.number().int().positive(),
+});
+export type CharacterAttributes = z.infer<typeof characterAttributesSchema>;
+
+/** Psychic aptitude, which sets the save-vs-psionics target (RUE p.346/348). */
+export const psychicClassSchema = z.enum(["masterPsychic", "majorOrMinorPsychic", "ordinary"]);
+export type PsychicClass = z.infer<typeof psychicClassSchema>;
+
+/**
+ * A built character — the player's *choices*. Derived stats (bonuses, attacks,
+ * save targets, resolved skill %s, spell strength, …) are computed by
+ * `deriveSheet`, never stored. Optional `rolled` values pin the dice results
+ * that would otherwise be shown as a range.
+ */
+export const characterSchema = z.object({
+  name: z.string().min(1),
+  occId: z.string().min(1),
+  level: z.number().int().positive(),
+  attributes: characterAttributesSchema,
+  /** Hand-to-Hand combat type id (e.g. "basic"). */
+  hthType: z.string().min(1),
+  /** The character's psychic aptitude (sets the save-vs-psionics target). */
+  psychicClass: psychicClassSchema.default("ordinary"),
+  skills: z
+    .array(characterSkillSchema)
+    .refine((arr) => new Set(arr.map((s) => s.skillId)).size === arr.length, {
+      message: "A skill cannot be taken twice (duplicate skillId).",
+    })
+    .default([]),
+  spellIds: z
+    .array(z.string().min(1))
+    .refine((arr) => new Set(arr).size === arr.length, {
+      message: "A spell cannot be known twice (duplicate spellId).",
+    })
+    .default([]),
+  rolled: z
+    .object({
+      hitPoints: z.number().int().positive().optional(),
+      sdc: z.number().int().nonnegative().optional(),
+      ppe: z.number().int().nonnegative().optional(),
+    })
+    .optional(),
+});
+/** A fully-resolved character (defaulted fields present) — e.g. after parsing/from storage. */
+export type Character = z.infer<typeof characterSchema>;
+/** Character input for `deriveSheet` — defaulted fields (psychicClass/skills/spellIds) may be omitted. */
+export type CharacterInput = z.input<typeof characterSchema>;

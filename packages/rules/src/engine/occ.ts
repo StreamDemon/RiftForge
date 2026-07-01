@@ -21,17 +21,25 @@ export interface PpeRange {
 }
 
 /**
- * The level-1 permanent P.P.E. an O.C.C. grants, as a range, given the
- * character's P.E. attribute. Returns zeros for O.C.C.s without P.P.E.
+ * The permanent P.P.E. an O.C.C. grants at a given level, as a range: the level-1
+ * base plus the per-level gain for each level reached (matching `hitPointsRange`).
+ * Returns zeros for O.C.C.s without P.P.E.
  */
-export function basePpeRange(occ: Occ, peAttribute: number): PpeRange {
+export function ppeRange(occ: Occ, peAttribute: number, level: number): PpeRange {
   if (!occ.ppe) return { min: 0, max: 0, average: 0 };
   const add = occ.ppe.addPeAttribute ? peAttribute : 0;
+  const { baseFormula, perLevelFormula, perLevelStartsAt } = occ.ppe;
+  const perLevelGains = Math.max(0, level - perLevelStartsAt + 1);
   return {
-    min: diceMin(occ.ppe.baseFormula) + add,
-    max: diceMax(occ.ppe.baseFormula) + add,
-    average: diceAverage(occ.ppe.baseFormula) + add,
+    min: diceMin(baseFormula) + add + perLevelGains * diceMin(perLevelFormula),
+    max: diceMax(baseFormula) + add + perLevelGains * diceMax(perLevelFormula),
+    average: diceAverage(baseFormula) + add + perLevelGains * diceAverage(perLevelFormula),
   };
+}
+
+/** The level-1 permanent P.P.E. range (convenience wrapper over {@link ppeRange}). */
+export function basePpeRange(occ: Occ, peAttribute: number): PpeRange {
+  return ppeRange(occ, peAttribute, 1);
 }
 
 /** Roll a concrete level-1 permanent P.P.E. total for a character. */
