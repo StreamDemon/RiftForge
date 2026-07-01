@@ -1,0 +1,51 @@
+{
+  "source": {
+    "book": "Rifts Ultimate Edition",
+    "page": 347,
+    "table": "Hand to Hand Combat Skills"
+  },
+  "note": "Accumulative level-by-level bonuses. `bonuses` values are added to the like-named combat action; `addAttacks` increments attacks per melee. Only 'none' and 'basic' are modeled so far (Expert/Martial Arts/Assassin/Commando to follow).",
+  "types": [
+    {
+      "id": "none",
+      "name": "No Hand to Hand Combat Skill",
+      "baseAttacks": 1,
+      "levels": [
+        {
+          "level": 1,
+          "attacks": 1,
+          "nonCombatActions": 2,
+          "note": "One attack plus two non-combat melee actions."
+        },
+        { "level": 3, "addAttacks": 1, "addNonCombatActions": 1, "bonuses": { "dodge": 1 } },
+        { "level": 6, "addNonCombatActions": 2 },
+        { "level": 9, "addAttacks": 1, "addNonCombatActions": 1 }
+      ]
+    },
+    {
+      "id": "basic",
+      "name": "Hand to Hand: Basic",
+      "baseAttacks": 4,
+      "levels": [
+        { "level": 1, "attacks": 4, "bonuses": { "pullPunch": 2, "rollWithImpact": 2 } },
+        { "level": 2, "bonuses": { "parry": 2, "dodge": 2 } },
+        { "level": 3, "note": "Kick attack does 1D8 damage." },
+        { "level": 4, "addAttacks": 1 },
+        { "level": 5, "bonuses": { "strike": 1, "disarm": 1 } },
+        { "level": 6, "note": "Critical Strike on an unmodified roll of 19 or 20." },
+        { "level": 7, "bonuses": { "damage": 2 } },
+        {
+          "level": 8,
+          "note": "Judo-style body flip/throw: 1D6 damage; victim loses initiative and one attack."
+        },
+        { "level": 9, "addAttacks": 1 },
+        { "level": 10, "bonuses": { "pullPunch": 2, "rollWithImpact": 2 } },
+        { "level": 11, "bonuses": { "parry": 1, "dodge": 1 } },
+        { "level": 12, "bonuses": { "strike": 1 } },
+        { "level": 13, "note": "Critical Strike or knockout from behind." },
+        { "level": 14, "bonuses": { "damage": 2 } },
+        { "level": 15, "addAttacks": 1 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,283 @@
+{
+  "source": {
+    "book": "Rifts Ultimate Edition",
+    "page": 113,
+    "table": "Ley Line Walker O.C.C. (pp. 113-116)"
+  },
+  "id": "ley-line-walker",
+  "name": "Ley Line Walker",
+  "category": "Practitioner of Magic",
+  "description": "A spell-casting wizard so attuned to ley lines that he can see magic energy (P.P.E.) and draw on ley-line power as a living relay and P.P.E. battery. Prefers lightweight weapons and armor, since full body armor and bionics disrupt the flow of magic.",
+  "alignment": "Any",
+  "attributeRequirements": [
+    { "code": "IQ", "min": 10 },
+    { "code": "PE", "min": 12 }
+  ],
+  "racialRequirement": "None. At least 30% are D-Bees.",
+  "concealedBodyArmor": {
+    "source": { "book": "Rifts Ultimate Edition", "page": 113 },
+    "light": { "mainBodyMdc": "2D6+32" },
+    "medium": {
+      "mainBodyMdc": "3D6+50",
+      "armsMdc": { "min": 11, "max": 18 },
+      "legsMdc": { "min": 22, "max": 28 },
+      "skillPenalty": {
+        "amount": -5,
+        "unit": "percent",
+        "appliesTo": ["Prowl", "Climb", "Swimming", "physicalSkills"]
+      }
+    },
+    "notes": "Seldom wears heavy/full body armor; conventional environmental armor prevents spell casting unless made mostly of natural M.D.C. materials."
+  },
+  "ppe": {
+    "baseFormula": "3D6*10+20",
+    "addPeAttribute": true,
+    "perLevelFormula": "3D6",
+    "perLevelStartsAt": 2,
+    "recoveryPerHourRest": 7,
+    "recoveryPerHourMeditation": 15,
+    "supplementalOnLeyLinePerMelee": 20,
+    "supplementalAtNexusPerMelee": 40,
+    "notes": "Permanent Base P.P.E. = 3D6x10+20 added to the character's P.E. attribute number. Plus 3D6 P.P.E. per additional level starting at level two."
+  },
+  "spellKnowledge": {
+    "initial": { "fromEachLevel": 3, "spellLevels": [1, 2, 3, 4], "total": 12 },
+    "perLevelUp": {
+      "count": 1,
+      "maxSpellLevel": "characterLevel",
+      "note": "One new spell of level up to the character's own experience level (not one from each level)."
+    },
+    "startsWithRiftLeyLineMagic": false,
+    "notes": "See 'The Pursuit of Magic' (p.185). Additional spells/rituals of any level can be learned or purchased at any time. Larger spell selection in Rifts Book of Magic."
+  },
+  "abilities": [
+    {
+      "n": 1,
+      "name": "Sense Ley Line and Magic Energy",
+      "summary": "Automatic sensing powers, no P.P.E. cost.",
+      "senses": [
+        {
+          "name": "Sense Ley Line",
+          "range": "10 miles (16 km) per level",
+          "baseSkill": 30,
+          "perLevel": 5,
+          "unit": "percent"
+        },
+        { "name": "Sense Ley Line Nexus", "baseSkill": 40, "perLevel": 5, "unit": "percent" },
+        {
+          "name": "Sense a Rift",
+          "range": "within 50 miles (80 km); +10 miles per level starting at level two"
+        },
+        { "name": "Sense Magic in Use", "range": "100 feet (30.5 m) per level; not psionics" },
+        {
+          "name": "See Magic Energy",
+          "detail": "Sees P.P.E. aura when >20 P.P.E. present; can see the magically invisible. Costs one melee action while willed in place. Range line of sight ~1000 ft (305 m). Does not work on Invisibility: Superior."
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "name": "Read Ley Lines",
+      "summary": "Automatic. Instantly learns a ley line's direction, length, nexus points, open Rifts, and major natural disasters along it. No P.P.E. cost."
+    },
+    {
+      "n": 3,
+      "name": "Ley Line Transmission",
+      "summary": "Send a verbal/visual message along a ley line to anyone on the line (one-way unless recipient is also a mage with the Transmission spell). Automatic, no P.P.E. 01-20% chance a Telepath senses it."
+    },
+    {
+      "n": 4,
+      "name": "Ley Line Phasing (teleportation)",
+      "summary": "Teleport flawlessly anywhere on the same ley line. Requires 1D4 melees of concentration. Automatic, no P.P.E.",
+      "usesPer24h": {
+        "formula": "4+2*level",
+        "examples": "6 at L1, 8 at L2, 10 at L3",
+        "maxPerHour": 4
+      },
+      "limits": "Only self + possessions; must stay on the same ley line (switch lines only at a nexus)."
+    },
+    {
+      "n": 5,
+      "name": "Ley Line Walking / Line Drifting",
+      "summary": "Walk or float along a ley line at Speed 10, no exertion, no P.P.E. Can meditate while drifting. Height typically 1-5 ft, up to the height of the line."
+    },
+    {
+      "n": 6,
+      "name": "Ley Line Rejuvenation",
+      "summary": "On a ley line, doubles natural healing. Instant rejuvenation once per 24h: fully rested and heals 20 H.P. + 20 S.D.C., +1D6 H.P. and 2D6 S.D.C. (or 4D6 M.D.C. if a Mega-Damage being) per level. No P.P.E. Restores H.P./S.D.C. only, not P.P.E./I.S.P."
+    },
+    {
+      "n": 7,
+      "name": "Ley Line Observation Ball",
+      "summary": "Conjure a linked scrying sphere on a ley line.",
+      "stats": {
+        "mdc": "1 per level",
+        "range": "500 ft (152 m) per level",
+        "speed": 44,
+        "bonuses": { "dodge": 3 }
+      }
+    },
+    {
+      "n": 8,
+      "name": "Affinity with Rift & Ley Line Magic",
+      "summary": "These dimensional spells are most commonly known by Ley Line Walkers but the LLW does NOT start with any at level 1 (only the Ley Line Rifter does). Learned over time: one per new experience level via a 48-hour meditative trance.",
+      "spellList": [
+        { "name": "Dimensional Portal", "ppe": 1000 },
+        { "name": "Ley Line Fade", "ppe": 20 },
+        { "name": "Ley Line Ghost", "ppe": "80 or 240" },
+        { "name": "Ley Line Phantom", "ppe": 40 },
+        { "name": "Ley Line Restoration", "ppe": "800+" },
+        { "name": "Ley Line Resurrection", "ppe": "2000+" },
+        { "name": "Ley Line Shutdown", "ppe": 3000 },
+        { "name": "Ley Line Storm Defense", "ppe": 180 },
+        { "name": "Ley Line Tendril Bolts", "ppe": 26 },
+        { "name": "Ley Line Time Capsule", "ppe": 15 },
+        { "name": "Ley Line Time Flux", "ppe": 80 },
+        { "name": "Ley Line Transmission", "ppe": 30 },
+        { "name": "Rift to Limbo", "ppe": 160 },
+        { "name": "Rift Teleportation", "ppe": 200 },
+        { "name": "Rift Triangular Defense System", "ppe": 840 },
+        { "name": "Summon Ley Line Storm", "ppe": 500 },
+        { "name": "Swallowing Rift", "ppe": 300 }
+      ]
+    },
+    {
+      "n": 9,
+      "name": "Ley Line Force Field",
+      "summary": "On a ley line, summon an Armor of Ithan-like field.",
+      "stats": {
+        "mdc": "20 +2 per level",
+        "ppeCost": 10,
+        "note": "Regenerates at full strength next melee if destroyed; draws 20 ambient ley-line P.P.E. per melee while up."
+      }
+    },
+    {
+      "n": 10,
+      "name": "Initial Spell Knowledge",
+      "summary": "Master of spell magic (tends to avoid ritual magic but can perform rituals). At level 1, select any three spells from each of magic Levels 1-4 (12 total). See spellKnowledge."
+    },
+    {
+      "n": 11,
+      "name": "Learning New Spells",
+      "summary": "Additional spells and rituals of any level can be learned and/or purchased at any time regardless of experience level. See 'The Pursuit of Magic'."
+    },
+    {
+      "n": 12,
+      "name": "P.P.E.",
+      "summary": "Greatest permanent P.P.E. of all mortal practitioners of magic. See ppe."
+    },
+    { "n": 13, "name": "O.C.C. Bonuses", "summary": "See bonuses." }
+  ],
+  "occSkills": [
+    { "skill": "Language: Native Tongue", "atLevel1": 98, "unit": "percent", "fixed": true },
+    { "skill": "Language: Other", "choose": 2, "occBonus": 20 },
+    { "skill": "Climbing", "occBonus": 5 },
+    { "skill": "Math: Basic", "occBonus": 10 },
+    { "skill": "Land Navigation", "occBonus": 4 },
+    { "skill": "Wilderness Survival", "occBonus": 10 },
+    { "skill": "Pilot", "chooseFromCategory": "Pilot", "choose": 1, "occBonus": 5 },
+    { "skill": "Lore: Demon & Monster", "occBonus": 15 },
+    { "skill": "Lore", "choose": 4, "occBonus": 10, "note": "Any Lore skills." },
+    {
+      "skill": "Hand to Hand: Basic",
+      "upgrades": [
+        { "to": "Hand to Hand: Expert", "cost": { "occRelatedSkills": 1 } },
+        { "to": "Martial Arts", "cost": { "occRelatedSkills": 2 } },
+        { "to": "Assassin", "cost": { "occRelatedSkills": 2 }, "requiresAlignment": "evil" }
+      ]
+    }
+  ],
+  "occRelatedSkills": {
+    "count": 7,
+    "constraints": [
+      { "fromCategory": "Science", "min": 2 },
+      { "fromCategory": "Technical", "min": 1 }
+    ],
+    "progression": [
+      { "level": 3, "count": 2 },
+      { "level": 6, "count": 1 },
+      { "level": 9, "count": 1 },
+      { "level": 12, "count": 1 }
+    ],
+    "newSkillsStartAtLevel1": true,
+    "categoryRules": [
+      { "category": "Communications", "allowed": "Radio: Basic only" },
+      { "category": "Cowboy", "allowed": "none" },
+      { "category": "Domestic", "allowed": "any", "bonus": 10 },
+      { "category": "Electrical", "allowed": "none" },
+      { "category": "Espionage", "allowed": "Intelligence only", "bonus": 5 },
+      { "category": "Horsemanship", "allowed": "General and Exotic Animals only" },
+      { "category": "Mechanical", "allowed": "none" },
+      {
+        "category": "Medical",
+        "allowed": "First Aid or Paramedic (Paramedic counts as two skills)",
+        "bonus": 5
+      },
+      { "category": "Military", "allowed": "none" },
+      { "category": "Physical", "allowed": "any except Gymnastics and Wrestling" },
+      { "category": "Pilot", "allowed": "any", "bonus": 2 },
+      { "category": "Pilot Related", "allowed": "any", "bonus": 2 },
+      { "category": "Rogue", "allowed": "any" },
+      { "category": "Science", "allowed": "any", "bonus": 10 },
+      { "category": "Technical", "allowed": "any", "bonus": 5 },
+      { "category": "W.P.", "allowed": "any" },
+      { "category": "Wilderness", "allowed": "any" }
+    ]
+  },
+  "secondarySkills": {
+    "count": 6,
+    "progression": [
+      { "level": 4, "count": 1 },
+      { "level": 8, "count": 1 },
+      { "level": 12, "count": 1 }
+    ],
+    "notes": "From the Secondary Skills list; no category bonuses (only a high-I.Q. bonus may apply). Start at base skill level."
+  },
+  "bonuses": [
+    {
+      "type": "attributeBoost",
+      "detail": "+1D4 to any one Mental attribute (I.Q., M.E., or M.A.)"
+    },
+    { "type": "save", "target": "horrorFactor", "value": 4 },
+    { "type": "save", "target": "possessionAndMindControl", "value": 2 },
+    { "type": "save", "target": "curses", "value": 3 },
+    { "type": "save", "target": "magic", "value": 1, "atLevels": [3, 6, 9, 11, 14] },
+    {
+      "type": "spellStrength",
+      "value": 1,
+      "atLevels": [3, 7, 10, 13],
+      "note": "The number others must save against when you cast a spell."
+    },
+    {
+      "type": "perception",
+      "value": 1,
+      "atLevels": [2, 5, 7, 10, 13],
+      "note": "Double when on a ley line."
+    }
+  ],
+  "standardEquipment": [
+    "Robe or cape",
+    "set of clothing",
+    "set of traveling clothes",
+    "light M.D.C. body armor",
+    "knapsack",
+    "backpack",
+    "1D4 small sacks",
+    "one large sack",
+    "six wooden stakes and mallet",
+    "canteen",
+    "binoculars",
+    "tinted goggles or sunglasses",
+    "air filter and gas mask",
+    "flashlight",
+    "100 ft (30.5 m) of lightweight cord and grappling hook",
+    "pens/pencils and note/sketch pad"
+  ],
+  "weapons": "Survival knife, hand axe, automatic pistol or submachine-gun (player's choice), energy pistol or rifle, and several extra clips of ammunition.",
+  "vehicle": "Usually a Techno-Wizardry device, hover vehicle, motorcycle, jet pack, or Wing Board — inexpensive and easy to replace, since they often leave vehicles behind when phasing.",
+  "money": {
+    "credits": "1D4*1000",
+    "blackMarketItems": "3D4*1000"
+  },
+  "cybernetics": "Starts with none and avoids augmentation because it interferes with magic. Bio-System prosthetics considered only if necessary."
+}

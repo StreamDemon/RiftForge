@@ -1,0 +1,152 @@
+import type { AttributeCode } from "../schema/attributes.ts";
+import {
+  handToHandSchema,
+  savingThrowsSchema,
+  vitalsSchema,
+  type HandToHandType,
+} from "../schema/combat.ts";
+import vitalsRaw from "../content/combat/vitals.json" with { type: "json" };
+import handToHandRaw from "../content/combat/hand-to-hand.json" with { type: "json" };
+import savingThrowsRaw from "../content/combat/saving-throws.json" with { type: "json" };
+import { deriveAttributeBonuses } from "./attributes.ts";
+import { diceAverage, diceMax, diceMin, rollDice, type Rng } from "./dice.ts";
+
+export const vitals = vitalsSchema.parse(vitalsRaw);
+export const handToHand = handToHandSchema.parse(handToHandRaw);
+export const savingThrows = savingThrowsSchema.parse(savingThrowsRaw);
+
+const hthById = new Map<string, HandToHandType>(handToHand.types.map((t) => [t.id, t]));
+
+export function getHandToHand(id: string): HandToHandType | undefined {
+  return hthById.get(id);
+}
+
+export interface StatRange {
+  min: number;
+  max: number;
+  average: number;
+}
+
+/** Hit Point range for a character of the given P.E. and experience level. */
+export function hitPointsRange(pe: number, level: number): StatRange {
+  const { baseBonusFormula, perLevelFormula } = vitals.hitPoints;
+  const perLevelRolls = Math.max(0, level - 1); // +1 roll for each level after 1
+  return {
+    min: pe + diceMin(baseBonusFormula) + perLevelRolls * diceMin(perLevelFormula),
+    max: pe + diceMax(baseBonusFormula) + perLevelRolls * diceMax(perLevelFormula),
+    average: pe + diceAverage(baseBonusFormula) + perLevelRolls * diceAverage(perLevelFormula),
+  };
+}
+
+/** Roll concrete Hit Points for a character of the given P.E. and level. */
+export function rollHitPoints(pe: number, level: number, rng: Rng = Math.random): number {
+  let hp = pe + rollDice(vitals.hitPoints.baseBonusFormula, rng);
+  for (let l = vitals.hitPoints.perLevelStartsAt; l <= level; l++) {
+    hp += rollDice(vitals.hitPoints.perLevelFormula, rng);
+  }
+  return hp;
+}
+
+export function physicalSdcRange(): StatRange {
+  const f = vitals.physicalSdc.baseFormula;
+  return { min: diceMin(f), max: diceMax(f), average: diceAverage(f) };
+}
+
+export function rollPhysicalSdc(rng: Rng = Math.random): number {
+  return rollDice(vitals.physicalSdc.baseFormula, rng);
+}
+
+/** Negative-H.P. threshold a character can survive to (coma until then, dead below). */
+export function comaDeathFloor(pe: number): number {
+  return -pe;
+}
+
+/** Total attacks per melee for a Hand-to-Hand type at a given level. */
+export function attacksPerMelee(hthId: string, level: number): number {
+  const t = hthById.get(hthId);
+  if (!t) return 1;
+  let attacks = t.baseAttacks;
+  for (const lv of t.levels) {
+    if (lv.level <= level && lv.addAttacks) attacks += lv.addAttacks;
+  }
+  return attacks;
+}
+
+export type CombatBonuses = Record<string, number>;
+
+/** Accumulated Hand-to-Hand combat bonuses (strike/parry/dodge/...) at a level. */
+export function hthBonuses(hthId: string, level: number): CombatBonuses {
+  const out: CombatBonuses = {};
+  const t = hthById.get(hthId);
+  if (!t) return out;
+  for (const lv of t.levels) {
+    if (lv.level > level || !lv.bonuses) continue;
+    for (const [k, v] of Object.entries(lv.bonuses)) {
+      out[k] = (out[k] ?? 0) + v;
+    }
+  }
+  return out;
+}
+
+export interface SaveTarget {
+  target?: number;
+  targetRange?: { min: number; max: number };
+}
+
+/** The d20 target to save against a given effect (e.g. "curses", "magic"). */
+export function savingThrowTarget(kind: string): SaveTarget | undefined {
+  const e = savingThrows.targets.find((t) => t.kind === kind);
+  if (!e) return undefined;
+  return { target: e.target, targetRange: e.targetRange };
+}
+
+/** Save-vs-psionics target for a character of the given psychic class. */
+export function psionicsSaveTarget(saverClass: string): number | undefined {
+  return savingThrows.psionics.bySaverClass.find((s) => s.saverClass === saverClass)?.target;
+}
+
+export interface CombatProfileInput {
+  attributes: Partial<Record<AttributeCode, number>>;
+  hthType: string;
+  level: number;
+}
+
+export interface CombatProfile {
+  attacksPerMelee: number;
+  strike: number;
+  parry: number;
+  dodge: number;
+  damageBonus: number;
+  saveBonuses: {
+    psionic: number;
+    insanity: number;
+    comaDeathPct: number;
+    magic: number;
+    poison: number;
+  };
+}
+
+/**
+ * Combine attribute-derived bonuses with a Hand-to-Hand progression into the
+ * combat numbers a sheet rolls with. (O.C.C.-specific save bonuses are layered
+ * on during full character assembly.)
+ */
+export function combatProfile(input: CombatProfileInput): CombatProfile {
+  const attr = deriveAttributeBonuses(input.attributes);
+  const hth = hthBonuses(input.hthType, input.level);
+  const sum = (a: number | undefined, b: number | undefined): number => (a ?? 0) + (b ?? 0);
+  return {
+    attacksPerMelee: attacksPerMelee(input.hthType, input.level),
+    strike: sum(attr.strike, hth.strike),
+    parry: sum(attr.parry, hth.parry),
+    dodge: sum(attr.dodge, hth.dodge),
+    damageBonus: sum(attr.hthDamage, hth.damage),
+    saveBonuses: {
+      psionic: attr.saveVsPsionic ?? 0,
+      insanity: attr.saveVsInsanity ?? 0,
+      comaDeathPct: attr.saveVsComaDeath ?? 0,
+      magic: attr.saveVsMagic ?? 0,
+      poison: attr.saveVsPoison ?? 0,
+    },
+  };
+}
