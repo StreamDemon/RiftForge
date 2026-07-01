@@ -1,0 +1,67 @@
+docs/rules/PAGE_MAP.md
+  s_9022c0ece1998d::t_69f2dd0116b502 1-104
+packages/rules/package.json
+  s_9022c0ece1998d::t_c1553c2e828807 1-24
+packages/rules/src/content/attribute-bonuses.json
+  s_9022c0ece1998d::t_a26c0c48b19924 1-288
+packages/rules/src/content/combat/hand-to-hand.json
+  s_9022c0ece1998d::t_87b2aa6298e13c 1-51
+packages/rules/src/content/combat/saving-throws.json
+  s_9022c0ece1998d::t_b170d445d3a691 1-36
+packages/rules/src/content/combat/vitals.json
+  s_9022c0ece1998d::t_3d6c7c122d8698 1-19
+packages/rules/src/content/occ/ley-line-walker.json
+  s_9022c0ece1998d::t_361721071126e6 1-283
+packages/rules/src/content/skills/skills.json
+  s_9022c0ece1998d::t_5685b980d0b45e 1-334
+packages/rules/src/engine/attributes.ts
+  s_9022c0ece1998d::t_47fc76cd17692f 1-76
+packages/rules/src/engine/combat.ts
+  s_9022c0ece1998d::t_26690338e8e82a 1-152
+packages/rules/src/engine/dice.ts
+  s_9022c0ece1998d::t_83c6c19da8ba3d 1-74
+packages/rules/src/engine/occ.ts
+  s_9022c0ece1998d::t_a2bf2963c1bc68 1-42
+packages/rules/src/engine/skills.ts
+  s_9022c0ece1998d::t_1ceda4ff855b40 1-79
+packages/rules/src/index.ts
+  s_9022c0ece1998d::t_619b994b1a18b6 1-9
+packages/rules/src/schema/attributes.ts
+  s_9022c0ece1998d::t_ab376429afd39e 1-60
+packages/rules/src/schema/combat.ts
+  s_9022c0ece1998d::t_3ab15a6e8fb635 1-82
+packages/rules/src/schema/occ.ts
+  s_9022c0ece1998d::t_aa73320c3c8e2a 1-136
+packages/rules/src/schema/skills.ts
+  s_9022c0ece1998d::t_494877c43176d2 1-37
+packages/rules/tests/attributes.test.ts
+  s_9022c0ece1998d::t_d350b429c01f42 1-90
+packages/rules/tests/combat.test.ts
+  s_9022c0ece1998d::t_13798f174b42f5 1-107
+packages/rules/tests/dice.test.ts
+  s_9022c0ece1998d::t_2844b5d72b567b 1-67
+packages/rules/tests/occ.test.ts
+  s_9022c0ece1998d::t_413e32262878dc 1-52
+packages/rules/tests/skills.test.ts
+  s_9022c0ece1998d::t_bdedcc45cebbe8 1-96
+packages/rules/tsconfig.json
+  s_9022c0ece1998d::t_85a36b0c6b2e65 1-22
+packages/rules/vite.config.ts
+  s_9022c0ece1998d::t_15c34cc3f1ef37 1-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "a0ecb0e0b2e1715ef0c675b65ce606d6955f3b8a",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@gmail.com>"
+    }
+  }
+}
