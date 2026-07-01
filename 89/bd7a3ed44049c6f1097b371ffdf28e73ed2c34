@@ -1,0 +1,29 @@
+packages/rules/src/index.ts
+  s_9022c0ece1998d::t_21b48b83b76ea5 5,11
+packages/rules/src/engine/spells.ts
+  s_9022c0ece1998d::t_9027aacf637215 1-49,52-58,60-89
+  s_9022c0ece1998d::t_83f1979426a2d3 50-51,59
+packages/rules/src/schema/spells.ts
+  s_9022c0ece1998d::t_fc87c1b4e8861d 1-43
+packages/rules/src/content/spells/spells.json
+  s_9022c0ece1998d::t_8bc0b08c61ba45 1-5,117,174,277,335-336
+  s_9022c0ece1998d::t_83f1979426a2d3 6-116,118-173,175-276,278-334
+packages/rules/tests/spells.test.ts
+  s_9022c0ece1998d::t_15312960bc954a 1-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "89bd7a3ed44049c6f1097b371ffdf28e73ed2c34",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
