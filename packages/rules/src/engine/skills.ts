@@ -5,19 +5,43 @@ import { bonusesForAttribute } from "./attributes.ts";
 /** The skill catalog (RUE Skill Descriptions), validated at load. */
 export const skillCatalog = skillCatalogSchema.parse(skillsRaw);
 
-const skillById = new Map<string, Skill>(skillCatalog.skills.map((s) => [s.id, s]));
-
 function normalizeName(name: string): string {
   return name.trim().toLowerCase();
 }
 
-// Name index over canonical names + aliases, so O.C.C. grants that use a book's
-// alternate wording (e.g. "Lore: Demon & Monster") still resolve to the catalog.
-const skillByName = new Map<string, Skill>();
-for (const s of skillCatalog.skills) {
-  skillByName.set(normalizeName(s.name), s);
-  for (const alias of s.aliases ?? []) skillByName.set(normalizeName(alias), s);
+/**
+ * Build the id and name indexes for a set of skills, failing fast on any
+ * collision. A duplicate id, or a name/alias that normalizes to a key already
+ * owned by a different skill, throws instead of silently shadowing the earlier
+ * entry (which would make it unresolvable). The name index spans canonical
+ * names + aliases so O.C.C. grants using a book's alternate wording resolve.
+ */
+export function buildSkillIndexes(skills: readonly Skill[]): {
+  byId: Map<string, Skill>;
+  byName: Map<string, Skill>;
+} {
+  const byId = new Map<string, Skill>();
+  const byName = new Map<string, Skill>();
+  for (const s of skills) {
+    if (byId.has(s.id)) {
+      throw new Error(`Duplicate skill id "${s.id}" in the catalog.`);
+    }
+    byId.set(s.id, s);
+    for (const name of [s.name, ...(s.aliases ?? [])]) {
+      const key = normalizeName(name);
+      const existing = byName.get(key);
+      if (existing && existing.id !== s.id) {
+        throw new Error(
+          `Skill name/alias "${name}" collides: maps to both "${existing.id}" and "${s.id}".`,
+        );
+      }
+      byName.set(key, s);
+    }
+  }
+  return { byId, byName };
 }
+
+const { byId: skillById, byName: skillByName } = buildSkillIndexes(skillCatalog.skills);
 
 export function getSkill(id: string): Skill | undefined {
   return skillById.get(id);

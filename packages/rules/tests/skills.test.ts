@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vite-plus/test";
-import { getSkillByName, iqSkillBonus, resolveSkill } from "../src/index.ts";
+import {
+  buildSkillIndexes,
+  getSkillByName,
+  iqSkillBonus,
+  resolveSkill,
+  skillCatalog,
+} from "../src/index.ts";
 
 describe("skill resolution (RUE p.299 formula)", () => {
   test("base + O.C.C. bonus at level 1 (no per-level growth yet)", () => {
@@ -59,6 +65,38 @@ describe("skill resolution (RUE p.299 formula)", () => {
     expect(iqSkillBonus(12)).toBe(0); // below threshold
     expect(iqSkillBonus(18)).toBe(4);
     expect(iqSkillBonus(30)).toBe(16);
+  });
+});
+
+describe("skill index building fails fast on collisions", () => {
+  test("the real catalog builds without id or name collisions", () => {
+    expect(() => buildSkillIndexes(skillCatalog.skills)).not.toThrow();
+  });
+
+  test("a duplicate id throws", () => {
+    expect(() =>
+      buildSkillIndexes([
+        { id: "a", name: "A", category: "X", baseSkill: 10, perLevel: 5, page: 1 },
+        { id: "a", name: "B", category: "X", baseSkill: 10, perLevel: 5, page: 1 },
+      ]),
+    ).toThrow(/Duplicate skill id/);
+  });
+
+  test("a name/alias colliding with a different skill throws (no silent shadow)", () => {
+    expect(() =>
+      buildSkillIndexes([
+        { id: "a", name: "Foo", category: "X", baseSkill: 10, perLevel: 5, page: 1 },
+        {
+          id: "b",
+          name: "Bar",
+          aliases: ["foo"],
+          category: "X",
+          baseSkill: 10,
+          perLevel: 5,
+          page: 1,
+        },
+      ]),
+    ).toThrow(/collides/);
   });
 });
 
