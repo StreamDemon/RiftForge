@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_9022c0ece1998d::t_edbaae76337fd5 8-11,17,22-23,26,31,44-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "414b4f48409f2b0e385bc3207c6b083e06bec734",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
