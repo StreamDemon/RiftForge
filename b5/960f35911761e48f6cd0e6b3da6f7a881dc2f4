@@ -1,0 +1,25 @@
+.gitattributes
+  s_9022c0ece1998d::t_45ffb85a024257 1-2
+.github/workflows/ci.yml
+  s_9022c0ece1998d::t_fd04a5878f597b 1-37
+LICENSE
+  s_9022c0ece1998d::t_22c816b825676c 1-31
+README.md
+  s_9022c0ece1998d::t_372cfaba943908 49-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "b5960f35911761e48f6cd0e6b3da6f7a881dc2f4",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@gmail.com>"
+    }
+  }
+}
