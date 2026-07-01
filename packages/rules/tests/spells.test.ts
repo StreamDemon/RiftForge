@@ -10,6 +10,7 @@ import {
   saveTargetVsSpell,
   spellBook,
   spellStrength,
+  spellStrengthFromBonus,
   spellsByLevel,
 } from "../src/index.ts";
 
@@ -54,6 +55,19 @@ describe("spell strength (RUE p.187)", () => {
     expect(occSpellStrength(leyLineWalker, 1)).toBe(12);
     expect(occSpellStrength(leyLineWalker, 7)).toBe(14);
     expect(occSpellStrength(leyLineWalker, 13)).toBe(16);
+  });
+
+  test("a flat spell-strength bonus (no atLevels) applies once at every level", () => {
+    expect(spellStrengthFromBonus({ value: 2 }, 1)).toBe(14);
+    expect(spellStrengthFromBonus({ value: 2 }, 10)).toBe(14);
+    expect(spellStrengthFromBonus({ value: 2, atLevels: [] }, 5)).toBe(14);
+  });
+
+  test("a level-gated bonus increments per level reached; no bonus = base", () => {
+    const gated = { value: 1, atLevels: [3, 7, 10, 13] };
+    expect(spellStrengthFromBonus(gated, 1)).toBe(12);
+    expect(spellStrengthFromBonus(gated, 7)).toBe(14);
+    expect(spellStrengthFromBonus(undefined, 5)).toBe(12);
   });
 
   test("save target vs a spell is the caster's spell strength", () => {

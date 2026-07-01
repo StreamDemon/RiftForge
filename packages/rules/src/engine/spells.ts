@@ -51,12 +51,32 @@ export function spellStrength(casterLevel: number, incrementLevels: readonly num
   return spellBook.spellStrengthBase + incrementLevels.filter((l) => l <= casterLevel).length;
 }
 
+/**
+ * Spell Strength from a single spell-strength bonus (or none). Handles both
+ * shapes the schema allows:
+ * - **level-gated** (`atLevels` present): apply the increment once per increment
+ *   level the caster has reached.
+ * - **flat** (no `atLevels`): apply the value once, at every level.
+ */
+export function spellStrengthFromBonus(
+  bonus: { value?: number; atLevels?: readonly number[] } | undefined,
+  casterLevel: number,
+): number {
+  const base = spellBook.spellStrengthBase;
+  if (!bonus) return base;
+  const increment = typeof bonus.value === "number" ? bonus.value : 1;
+  if (bonus.atLevels && bonus.atLevels.length > 0) {
+    return base + bonus.atLevels.filter((l) => l <= casterLevel).length * increment;
+  }
+  return base + increment;
+}
+
 /** Spell Strength for a specific O.C.C. at a given level, read from its bonuses. */
 export function occSpellStrength(occ: Occ, casterLevel: number): number {
-  const entry = occ.bonuses?.find((b) => b.type === "spellStrength");
-  const levels = entry?.atLevels ?? [];
-  const perLevel = typeof entry?.value === "number" ? entry.value : 1;
-  return spellBook.spellStrengthBase + levels.filter((l) => l <= casterLevel).length * perLevel;
+  return spellStrengthFromBonus(
+    occ.bonuses?.find((b) => b.type === "spellStrength"),
+    casterLevel,
+  );
 }
 
 /** The d20 target a victim must roll to save against a caster's spell magic. */
