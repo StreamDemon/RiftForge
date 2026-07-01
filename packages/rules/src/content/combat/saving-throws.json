@@ -1,0 +1,36 @@
+{
+  "source": {
+    "book": "Rifts Ultimate Edition",
+    "page": 346,
+    "table": "Saving Throws"
+  },
+  "targets": [
+    { "kind": "curses", "label": "Curses", "target": 15 },
+    { "kind": "disease", "label": "Disease", "target": 14 },
+    { "kind": "lethalPoison", "label": "Lethal Poison", "target": 14 },
+    { "kind": "nonLethalPoison", "label": "Non-Lethal Poison", "target": 16 },
+    { "kind": "harmfulDrugs", "label": "Harmful Drugs", "target": 15 },
+    { "kind": "insanity", "label": "Insanity", "target": 12, "note": "Sometimes higher." },
+    {
+      "kind": "magic",
+      "label": "Magic",
+      "targetRange": { "min": 12, "max": 16 },
+      "note": "12-16 depending on the power level of the spell caster."
+    },
+    { "kind": "ritualMagic", "label": "Ritual Magic", "target": 16 }
+  ],
+  "acids": { "save": false, "note": "No save possible - dodge!" },
+  "psionics": {
+    "label": "Psionics",
+    "note": "Target number is set by the psychic aptitude of the character SAVING.",
+    "bySaverClass": [
+      {
+        "saverClass": "masterPsychic",
+        "target": 10,
+        "examples": ["Mind Melter", "Psi-Stalker", "Dog Boy", "Burster"]
+      },
+      { "saverClass": "majorOrMinorPsychic", "target": 12 },
+      { "saverClass": "ordinary", "target": 15, "note": "Ordinary people and animals." }
+    ]
+  }
+}

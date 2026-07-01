@@ -1,0 +1,336 @@
+{
+  "book": "Rifts Ultimate Edition",
+  "maxPercent": 98,
+  "skills": [
+    {
+      "id": "language-native-tongue",
+      "name": "Language: Native Tongue",
+      "category": "Communication",
+      "baseSkill": 88,
+      "perLevel": 1,
+      "note": "Base 88% +1%/level. An O.C.C. skill bonus usually applies to OTHER languages, not the Native Tongue. Some O.C.C.s grant it at a flat override (e.g. Ley Line Walker: 98%).",
+      "page": 304
+    },
+    {
+      "id": "language-other",
+      "name": "Language: Other",
+      "category": "Communication",
+      "baseSkill": 50,
+      "perLevel": 3,
+      "note": "Can be taken repeatedly; one language per selection.",
+      "page": 304
+    },
+    {
+      "id": "climbing",
+      "name": "Climbing",
+      "category": "Physical",
+      "baseSkill": 40,
+      "baseSkill2": 30,
+      "perLevel": 5,
+      "note": "First % = Climbing, second % = Rappelling.",
+      "page": 316
+    },
+    {
+      "id": "math-basic",
+      "name": "Mathematics: Basic",
+      "aliases": ["Math: Basic"],
+      "category": "Science",
+      "baseSkill": 45,
+      "perLevel": 5,
+      "page": 322
+    },
+    {
+      "id": "lore-demons-monsters",
+      "name": "Lore: Demons & Monsters",
+      "aliases": ["Lore: Demon & Monster"],
+      "category": "Technical",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "note": "Can be taken repeatedly, one region per selection.",
+      "page": 325
+    },
+    {
+      "id": "pilot-automobile",
+      "name": "Pilot: Automobile",
+      "category": "Pilot",
+      "baseSkill": 60,
+      "perLevel": 2,
+      "page": 318
+    },
+    {
+      "id": "pilot-hover-craft-ground",
+      "name": "Pilot: Hover Craft (Ground)",
+      "category": "Pilot",
+      "baseSkill": 50,
+      "perLevel": 5,
+      "page": 318
+    },
+    {
+      "id": "pilot-hovercycle",
+      "name": "Pilot: Hovercycle/Skycycle/Rocket Bike",
+      "category": "Pilot",
+      "baseSkill": 70,
+      "perLevel": 3,
+      "page": 318
+    },
+    {
+      "id": "pilot-airplane",
+      "name": "Pilot: Airplane",
+      "category": "Pilot",
+      "baseSkill": 50,
+      "perLevel": 4,
+      "page": 318
+    },
+    {
+      "id": "land-navigation",
+      "name": "Land Navigation",
+      "category": "Wilderness",
+      "baseSkill": 36,
+      "perLevel": 4,
+      "note": "Literacy and Math not required.",
+      "page": 330
+    },
+    {
+      "id": "wilderness-survival",
+      "name": "Wilderness Survival",
+      "category": "Wilderness",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 330
+    },
+    {
+      "id": "boat-building",
+      "name": "Boat Building",
+      "category": "Wilderness",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "page": 329
+    },
+    {
+      "id": "carpentry",
+      "name": "Carpentry",
+      "category": "Wilderness",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "page": 329
+    },
+    {
+      "id": "dowsing",
+      "name": "Dowsing",
+      "category": "Wilderness",
+      "baseSkill": 20,
+      "perLevel": 5,
+      "page": 329
+    },
+    {
+      "id": "fasting",
+      "name": "Fasting",
+      "category": "Wilderness",
+      "baseSkill": 40,
+      "perLevel": 3,
+      "page": 330
+    },
+    {
+      "id": "identify-plants-fruit",
+      "name": "Identify Plants & Fruit",
+      "category": "Wilderness",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "page": 330
+    },
+    {
+      "id": "preserve-food",
+      "name": "Preserve Food",
+      "category": "Wilderness",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 330
+    },
+    {
+      "id": "skin-prepare-animal-hides",
+      "name": "Skin & Prepare Animal Hides",
+      "category": "Wilderness",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 330
+    },
+    {
+      "id": "spelunking",
+      "name": "Spelunking",
+      "category": "Wilderness",
+      "baseSkill": 35,
+      "perLevel": 5,
+      "page": 330
+    },
+    {
+      "id": "track-trap-animals",
+      "name": "Track & Trap Animals",
+      "category": "Wilderness",
+      "baseSkill": 20,
+      "baseSkill2": 30,
+      "perLevel": 5,
+      "note": "First % = tracking, second % = trapping. Tracking humans is at half skill.",
+      "page": 330
+    },
+    {
+      "id": "appraise-goods",
+      "name": "Appraise Goods",
+      "category": "Technical",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 323
+    },
+    {
+      "id": "art",
+      "name": "Art",
+      "category": "Technical",
+      "baseSkill": 35,
+      "perLevel": 5,
+      "page": 323
+    },
+    {
+      "id": "begging",
+      "name": "Begging",
+      "category": "Technical",
+      "baseSkill": 30,
+      "perLevel": 3,
+      "page": 323
+    },
+    {
+      "id": "calligraphy",
+      "name": "Calligraphy",
+      "category": "Technical",
+      "baseSkill": 35,
+      "perLevel": 5,
+      "requires": ["literacy"],
+      "page": 323
+    },
+    {
+      "id": "computer-operation",
+      "name": "Computer Operation",
+      "category": "Technical",
+      "baseSkill": 40,
+      "perLevel": 5,
+      "requires": ["literacy"],
+      "page": 323
+    },
+    {
+      "id": "computer-programming",
+      "name": "Computer Programming",
+      "category": "Technical",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "requires": ["computer-operation", "literacy"],
+      "page": 323
+    },
+    {
+      "id": "cybernetics-basic",
+      "name": "Cybernetics: Basic",
+      "category": "Technical",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "page": 323
+    },
+    {
+      "id": "excavation",
+      "name": "Excavation",
+      "category": "Technical",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 323
+    },
+    {
+      "id": "firefighting",
+      "name": "Firefighting",
+      "category": "Technical",
+      "baseSkill": 40,
+      "perLevel": 5,
+      "page": 323
+    },
+    {
+      "id": "gemology",
+      "name": "Gemology",
+      "category": "Technical",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "page": 323
+    },
+    {
+      "id": "general-repair-maintenance",
+      "name": "General Repair & Maintenance",
+      "category": "Technical",
+      "baseSkill": 35,
+      "perLevel": 5,
+      "page": 323
+    },
+    {
+      "id": "history-pre-rifts",
+      "name": "History: Pre-Rifts",
+      "category": "Technical",
+      "baseSkill": 32,
+      "baseSkill2": 24,
+      "perLevel": 4,
+      "note": "First % = general world history, second % = a chosen subject/region.",
+      "page": 324
+    },
+    {
+      "id": "history-post-apocalypse",
+      "name": "History: Post-Apocalypse",
+      "category": "Technical",
+      "baseSkill": 35,
+      "baseSkill2": 30,
+      "perLevel": 5,
+      "page": 324
+    },
+    {
+      "id": "jury-rig",
+      "name": "Jury-Rig",
+      "category": "Technical",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "requires": ["basic-mechanics", "basic-electronics"],
+      "page": 324
+    },
+    {
+      "id": "law-general",
+      "name": "Law (General)",
+      "category": "Technical",
+      "baseSkill": 35,
+      "perLevel": 5,
+      "page": 324
+    },
+    {
+      "id": "leather-working",
+      "name": "Leather Working",
+      "category": "Technical",
+      "baseSkill": 40,
+      "perLevel": 5,
+      "page": 324
+    },
+    {
+      "id": "lore-american-indians",
+      "name": "Lore: American Indians",
+      "category": "Technical",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "note": "+10% for characters of Native American descent.",
+      "page": 324
+    },
+    {
+      "id": "lore-cattle-animals",
+      "name": "Lore: Cattle & Animals",
+      "category": "Technical",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 324
+    },
+    {
+      "id": "lore-dbee",
+      "name": "Lore: D-Bee",
+      "category": "Technical",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "page": 324
+    }
+  ]
+}

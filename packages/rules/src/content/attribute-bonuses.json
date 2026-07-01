@@ -1,0 +1,288 @@
+{
+  "source": {
+    "book": "Rifts Ultimate Edition",
+    "page": 281,
+    "table": "Attribute Bonus Chart"
+  },
+  "minValueForBonus": 16,
+  "maxTabulatedValue": 30,
+  "attributes": [
+    {
+      "code": "IQ",
+      "name": "Intelligence Quotient",
+      "effects": [
+        {
+          "id": "skillBonus",
+          "label": "Add to all skills (one-time bonus)",
+          "unit": "percent",
+          "appliesTo": ["allSkills"],
+          "byValue": {
+            "16": 2,
+            "17": 3,
+            "18": 4,
+            "19": 5,
+            "20": 6,
+            "21": 7,
+            "22": 8,
+            "23": 9,
+            "24": 10,
+            "25": 11,
+            "26": 12,
+            "27": 13,
+            "28": 14,
+            "29": 15,
+            "30": 16
+          }
+        }
+      ]
+    },
+    {
+      "code": "ME",
+      "name": "Mental Endurance",
+      "effects": [
+        {
+          "id": "saveVsPsionic",
+          "label": "Save vs psionic attack",
+          "unit": "flat",
+          "appliesTo": ["saveVsPsionic"],
+          "byValue": {
+            "16": 1,
+            "17": 1,
+            "18": 2,
+            "19": 2,
+            "20": 3,
+            "21": 3,
+            "22": 4,
+            "23": 4,
+            "24": 5,
+            "25": 5,
+            "26": 6,
+            "27": 6,
+            "28": 7,
+            "29": 7,
+            "30": 8
+          }
+        },
+        {
+          "id": "saveVsInsanity",
+          "label": "Save vs insanity",
+          "unit": "flat",
+          "appliesTo": ["saveVsInsanity"],
+          "byValue": {
+            "16": 1,
+            "17": 1,
+            "18": 2,
+            "19": 2,
+            "20": 3,
+            "21": 4,
+            "22": 5,
+            "23": 6,
+            "24": 7,
+            "25": 8,
+            "26": 9,
+            "27": 10,
+            "28": 11,
+            "29": 12,
+            "30": 13
+          }
+        }
+      ]
+    },
+    {
+      "code": "MA",
+      "name": "Mental Affinity",
+      "effects": [
+        {
+          "id": "trustIntimidate",
+          "label": "Trust/intimidate",
+          "unit": "percent",
+          "appliesTo": ["trustIntimidate"],
+          "byValue": {
+            "16": 40,
+            "17": 45,
+            "18": 50,
+            "19": 55,
+            "20": 60,
+            "21": 65,
+            "22": 70,
+            "23": 75,
+            "24": 80,
+            "25": 84,
+            "26": 88,
+            "27": 92,
+            "28": 94,
+            "29": 96,
+            "30": 97
+          }
+        }
+      ]
+    },
+    {
+      "code": "PS",
+      "name": "Physical Strength",
+      "effects": [
+        {
+          "id": "hthDamage",
+          "label": "Hand to hand combat: damage",
+          "unit": "flat",
+          "appliesTo": ["hthDamage"],
+          "byValue": {
+            "16": 1,
+            "17": 2,
+            "18": 3,
+            "19": 4,
+            "20": 5,
+            "21": 6,
+            "22": 7,
+            "23": 8,
+            "24": 9,
+            "25": 10,
+            "26": 11,
+            "27": 12,
+            "28": 13,
+            "29": 14,
+            "30": 15
+          }
+        }
+      ]
+    },
+    {
+      "code": "PP",
+      "name": "Physical Prowess",
+      "effects": [
+        {
+          "id": "strike",
+          "label": "Bonus to strike",
+          "unit": "flat",
+          "appliesTo": ["strike"],
+          "byValue": {
+            "16": 1,
+            "17": 1,
+            "18": 2,
+            "19": 2,
+            "20": 3,
+            "21": 3,
+            "22": 4,
+            "23": 4,
+            "24": 5,
+            "25": 5,
+            "26": 6,
+            "27": 6,
+            "28": 7,
+            "29": 7,
+            "30": 8
+          }
+        },
+        {
+          "id": "parryDodge",
+          "label": "Parry and dodge bonus",
+          "unit": "flat",
+          "appliesTo": ["parry", "dodge"],
+          "byValue": {
+            "16": 1,
+            "17": 1,
+            "18": 2,
+            "19": 2,
+            "20": 3,
+            "21": 3,
+            "22": 4,
+            "23": 4,
+            "24": 5,
+            "25": 5,
+            "26": 6,
+            "27": 6,
+            "28": 7,
+            "29": 7,
+            "30": 8
+          }
+        }
+      ]
+    },
+    {
+      "code": "PE",
+      "name": "Physical Endurance",
+      "effects": [
+        {
+          "id": "saveVsComaDeath",
+          "label": "Save vs coma/death",
+          "unit": "percent",
+          "appliesTo": ["saveVsComaDeath"],
+          "byValue": {
+            "16": 4,
+            "17": 5,
+            "18": 6,
+            "19": 8,
+            "20": 10,
+            "21": 12,
+            "22": 14,
+            "23": 16,
+            "24": 18,
+            "25": 20,
+            "26": 22,
+            "27": 24,
+            "28": 26,
+            "29": 28,
+            "30": 30
+          }
+        },
+        {
+          "id": "saveVsMagicPoison",
+          "label": "Save vs magic/poison",
+          "unit": "flat",
+          "appliesTo": ["saveVsMagic", "saveVsPoison"],
+          "byValue": {
+            "16": 1,
+            "17": 1,
+            "18": 2,
+            "19": 2,
+            "20": 3,
+            "21": 3,
+            "22": 4,
+            "23": 4,
+            "24": 5,
+            "25": 5,
+            "26": 6,
+            "27": 6,
+            "28": 7,
+            "29": 7,
+            "30": 8
+          }
+        }
+      ]
+    },
+    {
+      "code": "PB",
+      "name": "Physical Beauty",
+      "effects": [
+        {
+          "id": "charmImpress",
+          "label": "Charm/impress",
+          "unit": "percent",
+          "appliesTo": ["charm", "impress"],
+          "byValue": {
+            "16": 30,
+            "17": 35,
+            "18": 40,
+            "19": 45,
+            "20": 50,
+            "21": 55,
+            "22": 60,
+            "23": 65,
+            "24": 70,
+            "25": 75,
+            "26": 80,
+            "27": 83,
+            "28": 86,
+            "29": 90,
+            "30": 92
+          }
+        }
+      ]
+    },
+    {
+      "code": "Spd",
+      "name": "Speed",
+      "effects": []
+    }
+  ]
+}

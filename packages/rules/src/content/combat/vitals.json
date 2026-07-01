@@ -1,0 +1,19 @@
+{
+  "source": {
+    "book": "Rifts Ultimate Edition",
+    "page": 287,
+    "table": "Hit Points / Physical S.D.C."
+  },
+  "hitPoints": {
+    "baseAttribute": "PE",
+    "baseBonusFormula": "1D6",
+    "perLevelFormula": "1D6",
+    "perLevelStartsAt": 2,
+    "comaDeathFloorAttribute": "PE",
+    "notes": "Base H.P. = P.E. attribute number + 1D6 at level 1; +1D6 per level from level 2. A character is comatose from 0 down to -(P.E. attribute) and dead below that."
+  },
+  "physicalSdc": {
+    "baseFormula": "2D6+12",
+    "notes": "Default when an O.C.C./R.C.C. doesn't specify S.D.C. Physical skills and O.C.C./R.C.C. bonuses add to it (all accumulative). Damage is taken from S.D.C. before Hit Points."
+  }
+}
