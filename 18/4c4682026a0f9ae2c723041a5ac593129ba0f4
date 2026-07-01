@@ -1,0 +1,32 @@
+packages/rules/src/content/skills/skills.json
+  s_9022c0ece1998d::t_fe59131216fff8 36,45
+packages/rules/src/schema/skills.ts
+  s_9022c0ece1998d::t_48d57e4e178307 23-25
+packages/rules/src/schema/combat.ts
+  s_9022c0ece1998d::t_1c274a01f3a06d 64-66
+packages/rules/tests/skills.test.ts
+  s_9022c0ece1998d::t_ca82447ecb525c 65-78
+  s_9022c0ece1998d::t_54a252a41c19a2 2
+packages/rules/tests/combat.test.ts
+  s_9022c0ece1998d::t_e0a057f1a48a0b 81-109
+  s_9022c0ece1998d::t_e7e91cfa82f23a 11
+packages/rules/src/engine/skills.ts
+  s_9022c0ece1998d::t_bc8a842debb33b 10-21,26-29
+  s_9022c0ece1998d::t_bc618db4b0b48f 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "184c4682026a0f9ae2c723041a5ac593129ba0f4",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@gmail.com>"
+    }
+  }
+}
