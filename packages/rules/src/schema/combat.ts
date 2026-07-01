@@ -61,6 +61,9 @@ export const saveTargetSchema = z
     target: z.number().int().positive().optional(),
     targetRange: z
       .object({ min: z.number().int().positive(), max: z.number().int().positive() })
+      .refine((r) => r.min <= r.max, {
+        message: "targetRange.min must be <= targetRange.max.",
+      })
       .optional(),
     note: z.string().optional(),
   })

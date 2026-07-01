@@ -20,6 +20,9 @@ export const skillSchema = z.object({
   perLevel: z.number().int().min(0),
   /** True for flat skills that never grow with level (e.g. Native Tongue 98%). */
   fixed: z.boolean().optional(),
+  /** Alternate names this skill is printed under across books/O.C.C. entries,
+   * used for name-based resolution (e.g. "Lore: Demon & Monster"). */
+  aliases: z.array(z.string().min(1)).optional(),
   /** Prerequisite skill ids/names, if any. */
   requires: z.array(z.string()).optional(),
   note: z.string().optional(),

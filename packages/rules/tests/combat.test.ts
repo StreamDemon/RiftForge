@@ -8,6 +8,7 @@ import {
   physicalSdcRange,
   psionicsSaveTarget,
   rollHitPoints,
+  saveTargetSchema,
   savingThrowTarget,
 } from "../src/index.ts";
 
@@ -76,6 +77,35 @@ describe("Saving throws (RUE p.346)", () => {
     expect(psionicsSaveTarget("masterPsychic")).toBe(10);
     expect(psionicsSaveTarget("majorOrMinorPsychic")).toBe(12);
     expect(psionicsSaveTarget("ordinary")).toBe(15);
+  });
+
+  test("saveTargetSchema rejects malformed rows", () => {
+    // exactly one of target / targetRange
+    expect(saveTargetSchema.safeParse({ kind: "x", label: "X" }).success).toBe(false);
+    expect(
+      saveTargetSchema.safeParse({
+        kind: "x",
+        label: "X",
+        target: 12,
+        targetRange: { min: 12, max: 16 },
+      }).success,
+    ).toBe(false);
+    // inverted range
+    expect(
+      saveTargetSchema.safeParse({
+        kind: "magic",
+        label: "Magic",
+        targetRange: { min: 16, max: 12 },
+      }).success,
+    ).toBe(false);
+    // valid range
+    expect(
+      saveTargetSchema.safeParse({
+        kind: "magic",
+        label: "Magic",
+        targetRange: { min: 12, max: 16 },
+      }).success,
+    ).toBe(true);
   });
 });
 

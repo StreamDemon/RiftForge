@@ -33,6 +33,7 @@
     {
       "id": "math-basic",
       "name": "Mathematics: Basic",
+      "aliases": ["Math: Basic"],
       "category": "Science",
       "baseSkill": 45,
       "perLevel": 5,
@@ -41,6 +42,7 @@
     {
       "id": "lore-demons-monsters",
       "name": "Lore: Demons & Monsters",
+      "aliases": ["Lore: Demon & Monster"],
       "category": "Technical",
       "baseSkill": 25,
       "perLevel": 5,

@@ -7,8 +7,25 @@ export const skillCatalog = skillCatalogSchema.parse(skillsRaw);
 
 const skillById = new Map<string, Skill>(skillCatalog.skills.map((s) => [s.id, s]));
 
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+// Name index over canonical names + aliases, so O.C.C. grants that use a book's
+// alternate wording (e.g. "Lore: Demon & Monster") still resolve to the catalog.
+const skillByName = new Map<string, Skill>();
+for (const s of skillCatalog.skills) {
+  skillByName.set(normalizeName(s.name), s);
+  for (const alias of s.aliases ?? []) skillByName.set(normalizeName(alias), s);
+}
+
 export function getSkill(id: string): Skill | undefined {
   return skillById.get(id);
+}
+
+/** Resolve a skill by its catalog name or any alias (case/space-insensitive). */
+export function getSkillByName(name: string): Skill | undefined {
+  return skillByName.get(normalizeName(name));
 }
 
 export interface ResolveSkillOptions {

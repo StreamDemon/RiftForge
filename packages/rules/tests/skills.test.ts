@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { iqSkillBonus, resolveSkill } from "../src/index.ts";
+import { getSkillByName, iqSkillBonus, resolveSkill } from "../src/index.ts";
 
 describe("skill resolution (RUE p.299 formula)", () => {
   test("base + O.C.C. bonus at level 1 (no per-level growth yet)", () => {
@@ -59,6 +59,20 @@ describe("skill resolution (RUE p.299 formula)", () => {
     expect(iqSkillBonus(12)).toBe(0); // below threshold
     expect(iqSkillBonus(18)).toBe(4);
     expect(iqSkillBonus(30)).toBe(16);
+  });
+});
+
+describe("name-based resolution handles the book's naming variants", () => {
+  test("O.C.C.-grant names resolve to catalog entries via aliases", () => {
+    // LLW grants use the O.C.C.-entry wording, which differs from the skill-description name.
+    expect(getSkillByName("Lore: Demon & Monster")?.id).toBe("lore-demons-monsters");
+    expect(getSkillByName("Math: Basic")?.id).toBe("math-basic");
+  });
+
+  test("canonical names and casing/whitespace also resolve", () => {
+    expect(getSkillByName("Lore: Demons & Monsters")?.id).toBe("lore-demons-monsters");
+    expect(getSkillByName("  wilderness survival  ")?.id).toBe("wilderness-survival");
+    expect(getSkillByName("no such skill")).toBeUndefined();
   });
 });
 
