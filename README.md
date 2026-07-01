@@ -46,3 +46,15 @@ vp run ready          # check + test + build across the workspace
 The `Rifts Ultimate Edition` rulebook PDF is **not** committed (it's copyrighted by
 Palladium Books); it lives locally under `docs/rules/` and is git-ignored.
 `docs/rules/PAGE_MAP.md` indexes where each rule is transcribed from.
+
+## License & intellectual property
+
+The RiftForge **software** — the code, schemas, and engine — is licensed under the
+[MIT License](LICENSE).
+
+The **Rifts® game rules content** transcribed from *Rifts® Ultimate Edition* (the data
+under `packages/rules/src/content/` and `docs/`) is **© Palladium Books Inc.** and is
+**not** covered by the MIT license. Rifts® is a registered trademark of Kevin Siembieda
+and Palladium Books Inc. That content is included here for personal reference only and
+is not licensed for redistribution. RiftForge is an unofficial, fan-made project and is
+not affiliated with or endorsed by Palladium Books.
