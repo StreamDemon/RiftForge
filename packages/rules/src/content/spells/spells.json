@@ -1,0 +1,336 @@
+{
+  "book": "Rifts Ultimate Edition",
+  "spellStrengthBase": 12,
+  "ritualSaveTarget": 16,
+  "spells": [
+    {
+      "id": "blinding-flash",
+      "name": "Blinding Flash",
+      "level": 1,
+      "ppe": 1,
+      "range": "10 ft (3 m) radius, up to 60 ft (18.3 m) away",
+      "duration": "Instant",
+      "savingThrow": "standard",
+      "savingThrowNote": "-1 to save if 3 P.P.E. are pumped in; does not affect robotic/bionic/cybernetic eyes",
+      "description": "Blinds everyone in a 10 ft radius for 1D4 melees (-10 strike/parry/dodge).",
+      "page": 198
+    },
+    {
+      "id": "cloud-of-smoke",
+      "name": "Cloud of Smoke",
+      "level": 1,
+      "ppe": 2,
+      "range": "90 ft (27.4 m)",
+      "duration": "4 melees (1 minute) per level",
+      "savingThrow": "none",
+      "description": "Dense black smoke up to 30x30x30 ft; victims inside are -5 strike/parry/dodge/disarm/entangle.",
+      "page": 198
+    },
+    {
+      "id": "death-trance",
+      "name": "Death Trance",
+      "level": 1,
+      "ppe": 1,
+      "range": "Self only",
+      "duration": "10 melees (2.5 minutes) per level",
+      "savingThrow": "none",
+      "description": "The caster appears dead (no breathing/pulse). Helpless while in the trance; cancelable at will.",
+      "page": 198
+    },
+    {
+      "id": "globe-of-daylight",
+      "name": "Globe of Daylight",
+      "level": 1,
+      "ppe": 2,
+      "range": "Near self or up to 30 ft (9.1 m) away",
+      "duration": "12 melees (3 minutes) per level",
+      "savingThrow": "none",
+      "description": "A globe of true daylight lighting a 12 ft area per level; wards off vampires/undead.",
+      "page": 198
+    },
+    {
+      "id": "lantern-light",
+      "name": "Lantern Light",
+      "level": 1,
+      "ppe": 1,
+      "range": "10 ft (3 m); can light up a room",
+      "duration": "30 minutes per level",
+      "savingThrow": "none",
+      "description": "A dimmable floating light (50-300 watt equivalent). Not sunlight; no effect on vampires.",
+      "page": 198
+    },
+    {
+      "id": "see-aura",
+      "name": "See Aura",
+      "level": 1,
+      "ppe": 6,
+      "range": "100 ft (30.5 m)",
+      "duration": "One melee",
+      "savingThrow": "none",
+      "description": "Reveals level of experience, presence of magic/psionics, base P.P.E., possession, and health.",
+      "page": 199
+    },
+    {
+      "id": "see-the-invisible",
+      "name": "See the Invisible",
+      "level": 1,
+      "ppe": 4,
+      "range": "200 ft (61 m)",
+      "duration": "One minute (4 melees) per level",
+      "savingThrow": "none",
+      "description": "See astral beings, entities, elementals, ghosts, and naturally/magically invisible things.",
+      "page": 199
+    },
+    {
+      "id": "sense-evil",
+      "name": "Sense Evil",
+      "level": 1,
+      "ppe": 2,
+      "range": "90 ft (27.4 m) area",
+      "duration": "Two minutes (8 melees) per level",
+      "savingThrow": "none",
+      "description": "Sense the presence and approximate number/location of (especially supernatural) evil.",
+      "page": 199
+    },
+    {
+      "id": "sense-magic",
+      "name": "Sense Magic",
+      "level": 1,
+      "ppe": 4,
+      "range": "120 ft (36 m) area",
+      "duration": "Two minutes (8 melees) per level",
+      "savingThrow": "none",
+      "description": "Sense magic being used/enchantments nearby, like a Geiger counter. Not psionics.",
+      "page": 199
+    },
+    {
+      "id": "thunderclap",
+      "name": "Thunderclap",
+      "level": 1,
+      "ppe": 4,
+      "range": "30 ft (9.1 m); heard up to 1 mile",
+      "duration": "Instant",
+      "savingThrow": "horrorFactor",
+      "description": "A booming thunderclap. Caster gets +5 initiative, +1 strike/parry/dodge; creates Horror Factor 8.",
+      "page": 199
+    },
+
+    {
+      "id": "befuddle",
+      "name": "Befuddle",
+      "level": 2,
+      "ppe": 6,
+      "range": "100 ft (30.5 m)",
+      "duration": "Two minutes (8 melees) per level",
+      "savingThrow": "standard",
+      "description": "Confuses one victim: -2 strike/parry/dodge, attacks halved, all skills -20%.",
+      "page": 199
+    },
+    {
+      "id": "chameleon",
+      "name": "Chameleon",
+      "level": 2,
+      "ppe": 6,
+      "range": "Self or others by touch",
+      "duration": "18 melees (4.5 minutes) per level",
+      "savingThrow": "none",
+      "description": "Blend into surroundings: 90% undetectable if still, less while moving; ineffective if moving fast.",
+      "page": 199
+    },
+    {
+      "id": "heavy-breathing",
+      "name": "Heavy Breathing",
+      "level": 2,
+      "ppe": 5,
+      "range": "60 ft (18.3 m)",
+      "duration": "75 seconds (5 melees) per level",
+      "savingThrow": "standard",
+      "savingThrowNote": "those who save are not affected/fearful",
+      "description": "Conjures frightful breathing sounds; those who fail may flee, others are -2 strike / -1 parry/dodge.",
+      "page": 201
+    },
+    {
+      "id": "levitation",
+      "name": "Levitation",
+      "level": 2,
+      "ppe": 5,
+      "range": "Up to 60 ft (18.3 m) away",
+      "duration": "Three minutes (12 melees) per level",
+      "savingThrow": "standard",
+      "description": "Raise self/others/an object straight up and hover; up to 200 lbs +20 lbs per level.",
+      "page": 201
+    },
+    {
+      "id": "turn-dead",
+      "name": "Turn Dead",
+      "level": 2,
+      "ppe": 6,
+      "range": "Up to 60 ft (18.3 m) away",
+      "duration": "Instant",
+      "savingThrow": "standard",
+      "description": "Turns/repels 1D6 animated dead per level for 24 hours. Not vampires/zombies/possessed corpses.",
+      "page": 201
+    },
+
+    {
+      "id": "armor-of-ithan",
+      "name": "Armor of Ithan",
+      "level": 3,
+      "ppe": 10,
+      "range": "Self or other by touch",
+      "duration": "One minute (4 melees) per level",
+      "savingThrow": "none",
+      "description": "Invisible mystic armor with M.D.C. 10 per level. Magic fire/lightning/cold do half damage to it.",
+      "page": 202
+    },
+    {
+      "id": "breathe-without-air",
+      "name": "Breathe Without Air",
+      "level": 3,
+      "ppe": 5,
+      "range": "Self or others by touch",
+      "duration": "12 melees (3 minutes) per level",
+      "savingThrow": "none",
+      "description": "Function normally without air (underwater, vacuum). Protects vs natural/man-made gases, not magic toxins.",
+      "page": 202
+    },
+    {
+      "id": "energy-bolt",
+      "name": "Energy Bolt",
+      "level": 3,
+      "ppe": 5,
+      "range": "150 ft (45.7 m)",
+      "duration": "Instant",
+      "savingThrow": "dodge",
+      "savingThrowNote": "dodge of 18 or higher",
+      "damage": "4D6 S.D.C. (6D6 on a ley line, 8D6 at a nexus)",
+      "description": "A mentally-directed energy bolt; one target per casting.",
+      "page": 202
+    },
+    {
+      "id": "fingers-of-the-wind",
+      "name": "Fingers of the Wind",
+      "level": 3,
+      "ppe": 5,
+      "range": "90 ft (27.4 m)",
+      "duration": "Three melees per level",
+      "savingThrow": "none",
+      "description": "Conjure and manipulate wind to touch/tap/press objects under 10 lbs.",
+      "page": 202
+    },
+    {
+      "id": "float-in-air",
+      "name": "Float in Air",
+      "level": 3,
+      "ppe": 5,
+      "range": "Self or others within 30 ft (9.1 m)",
+      "duration": "10 melees per level",
+      "savingThrow": "none",
+      "description": "Hover 1-2 ft above ground; slow a fall or float on water. -1 to all combat, half speed.",
+      "page": 202
+    },
+    {
+      "id": "fuel-flame",
+      "name": "Fuel Flame",
+      "level": 3,
+      "ppe": 5,
+      "range": "120 ft (36.6 m)",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "description": "Doubles the size of an existing fire, up to a 100 ft area.",
+      "page": 202
+    },
+    {
+      "id": "ignite-fire",
+      "name": "Ignite Fire",
+      "level": 3,
+      "ppe": 6,
+      "range": "40 ft (12.2 m)",
+      "duration": "Instant (fire lasts until put out)",
+      "savingThrow": "none",
+      "damage": "2D6 S.D.C. per melee (clothes/hair, after first 2 melees)",
+      "description": "Spontaneous combustion of flammable material (max 3 ft area). Cannot ignite contained volatiles.",
+      "page": 202
+    },
+    {
+      "id": "impervious-to-fire",
+      "name": "Impervious to Fire",
+      "level": 3,
+      "ppe": 5,
+      "range": "Self or others up to 60 ft (18.3 m) away",
+      "duration": "Five minutes (20 melees) per level",
+      "savingThrow": "none",
+      "description": "Normal, magical, and Mega-Damage fire do no damage to the protected person or their gear.",
+      "page": 202
+    },
+    {
+      "id": "impervious-to-poison",
+      "name": "Impervious to Poison",
+      "level": 3,
+      "ppe": 5,
+      "range": "Self or others by touch",
+      "duration": "Five minutes (20 melees) per level",
+      "savingThrow": "none",
+      "description": "Temporarily impervious to poisons, venom, toxins, pollution, and poison gas.",
+      "page": 202
+    },
+
+    {
+      "id": "blind",
+      "name": "Blind",
+      "level": 4,
+      "ppe": 6,
+      "range": "Touch or 10 ft (3 m) away",
+      "duration": "One minute (4 melees) per level",
+      "savingThrow": "standard",
+      "description": "Blinds one victim: -5 strike, -10 parry/dodge, 50% chance to stumble per 10 ft. Not vs enclosed armor/robots.",
+      "page": 204
+    },
+    {
+      "id": "carpet-of-adhesion",
+      "name": "Carpet of Adhesion",
+      "level": 4,
+      "ppe": 10,
+      "range": "30 ft (9.1 m) +10 ft per level",
+      "duration": "10 melees (2.5 minutes) per level",
+      "savingThrow": "special",
+      "description": "A sticky carpet (up to 10x20 ft) anyone touching adheres to. Works even on cyborgs/robots/Supernatural P.S.",
+      "page": 204
+    },
+    {
+      "id": "charismatic-aura",
+      "name": "Charismatic Aura",
+      "level": 4,
+      "ppe": 10,
+      "range": "60 ft (18.3 m) radius",
+      "duration": "Six melees per level",
+      "savingThrow": "standard",
+      "description": "Boosts P.B. by 8 and charms all in radius. Can invoke friendship/trust, power/fear (Horror Factor 13), or deception.",
+      "page": 204
+    },
+    {
+      "id": "cure-minor-disorders",
+      "name": "Cure Minor Disorders",
+      "level": 4,
+      "ppe": 10,
+      "range": "Touch or 10 ft (3 m)",
+      "duration": "Instant",
+      "savingThrow": "standard",
+      "savingThrowNote": "only if unwanted",
+      "description": "Instantly relieves minor ailments (headache, nausea, low fever, muscle stiffness) and negates minor-disorder curses.",
+      "page": 204
+    },
+    {
+      "id": "electric-arc",
+      "name": "Electric Arc",
+      "level": 4,
+      "ppe": 8,
+      "range": "30 ft (9 m) per level",
+      "duration": "One melee round",
+      "savingThrow": "dodge",
+      "damage": "2D6 M.D.",
+      "description": "A crackling bolt of blue energy; +2 to strike. Each blast counts as one melee attack.",
+      "page": 204
+    }
+  ]
+}
