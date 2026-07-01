@@ -1,0 +1,22 @@
+packages/rules/src/engine/spells.ts
+  s_9022c0ece1998d::t_66d417f3ce9a9e 54-73,76-79
+packages/rules/tests/spells.test.ts
+  s_9022c0ece1998d::t_1eaadadaa54bd1 13
+  s_9022c0ece1998d::t_c0a4722f2bb95d 60-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "cceeefcebb65a064566279331bbebb0363089a33",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
