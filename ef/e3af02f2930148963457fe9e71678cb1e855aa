@@ -1,0 +1,35 @@
+packages/rules/tests/character.test.ts
+  s_9022c0ece1998d::t_9c236a2b43e911 2,4
+  s_9022c0ece1998d::t_b15ac31d2af0b8 84-114
+packages/rules/src/engine/occ.ts
+  s_9022c0ece1998d::t_4840c95bb5d201 36
+  s_9022c0ece1998d::t_16c75d61921618 24-26,28,31-32,34-35,40-42
+  s_9022c0ece1998d::t_52897b9c7934fd 43-44
+packages/rules/src/engine/character.ts
+  s_9022c0ece1998d::t_4840c95bb5d201 158
+  s_9022c0ece1998d::t_612d1b4ee7b360 80
+  s_9022c0ece1998d::t_86bc0c7049ad71 15
+  s_9022c0ece1998d::t_f683ca21e39939 1
+  s_9022c0ece1998d::t_3b9c052b1bce3a 103
+packages/rules/src/schema/character.ts
+  s_9022c0ece1998d::t_e1ecd3beaf268d 24,26-27
+  s_9022c0ece1998d::t_4840c95bb5d201 25
+  s_9022c0ece1998d::t_37a2f36c975d3b 63,65-66
+  s_9022c0ece1998d::t_eb6cb23f62eaa4 41-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "efe3af02f2930148963457fe9e71678cb1e855aa",
+  "prompts": {},
+  "sessions": {
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
