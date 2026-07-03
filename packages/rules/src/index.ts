@@ -11,3 +11,4 @@ export * from "./engine/combat.ts";
 export * from "./engine/skills.ts";
 export * from "./engine/spells.ts";
 export * from "./engine/character.ts";
+export * from "./engine/rolls.ts";

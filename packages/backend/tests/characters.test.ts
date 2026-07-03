@@ -77,6 +77,45 @@ describe("characters — a saved Ley Line Walker round-trips", () => {
     ).rejects.toThrow(/Unknown spell/);
   });
 
+  test("rollVitals pins concrete rolls the sheet then shows", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    const rolled = await t.mutation(api.characters.rollVitals, { id });
+
+    // P.E. 14, level 1: H.P. = 14 + 1D6 -> 15-20; S.D.C. = 2D6+12 -> 14-24;
+    // Ley Line Walker P.P.E. at level 1 -> 64-214.
+    expect(rolled.hitPoints).toBeGreaterThanOrEqual(15);
+    expect(rolled.hitPoints).toBeLessThanOrEqual(20);
+    expect(rolled.sdc).toBeGreaterThanOrEqual(14);
+    expect(rolled.sdc).toBeLessThanOrEqual(24);
+    expect(rolled.ppe).toBeGreaterThanOrEqual(64);
+    expect(rolled.ppe).toBeLessThanOrEqual(214);
+
+    const sheet = await t.query(api.characters.sheet, { id });
+    if (sheet === null) throw new Error("sheet should exist for a saved character");
+    expect(sheet.vitals.hitPoints.rolled).toBe(rolled.hitPoints);
+    expect(sheet.vitals.sdc.rolled).toBe(rolled.sdc);
+    expect(sheet.ppe?.rolled).toBe(rolled.ppe);
+  });
+
+  test("rollVitals replaces earlier rolls wholesale", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await t.mutation(api.characters.rollVitals, { id });
+    const second = await t.mutation(api.characters.rollVitals, { id });
+    const stored = await t.query(api.characters.get, { id });
+    expect(stored?.rolled).toEqual(second);
+  });
+
+  test("rollVitals on a missing character throws", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await t.run(async (ctx) => {
+      await ctx.db.delete(id);
+    });
+    await expect(t.mutation(api.characters.rollVitals, { id })).rejects.toThrow(/not found/);
+  });
+
   test("sheet of a missing character is null", async () => {
     const t = convexTest(schema, modules);
     const id = await t.mutation(api.characters.create, vesper);

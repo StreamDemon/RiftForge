@@ -42,9 +42,27 @@ export function basePpeRange(occ: Occ, peAttribute: number): PpeRange {
   return ppeRange(occ, peAttribute, 1);
 }
 
-/** Roll a concrete level-1 permanent P.P.E. total for a character. */
-export function rollBasePpe(occ: Occ, peAttribute: number, rng: Rng = Math.random): number {
+/**
+ * Roll a concrete permanent P.P.E. total for a character at a given level:
+ * the base formula plus one per-level roll for each level reached (the dice
+ * counterpart of {@link ppeRange}). Returns 0 for O.C.C.s without P.P.E.
+ */
+export function rollPpe(
+  occ: Occ,
+  peAttribute: number,
+  level: number,
+  rng: Rng = Math.random,
+): number {
   if (!occ.ppe) return 0;
   const add = occ.ppe.addPeAttribute ? peAttribute : 0;
-  return rollDice(occ.ppe.baseFormula, rng) + add;
+  let ppe = rollDice(occ.ppe.baseFormula, rng) + add;
+  for (let l = occ.ppe.perLevelStartsAt; l <= level; l++) {
+    ppe += rollDice(occ.ppe.perLevelFormula, rng);
+  }
+  return ppe;
+}
+
+/** Roll a concrete level-1 permanent P.P.E. total for a character. */
+export function rollBasePpe(occ: Occ, peAttribute: number, rng: Rng = Math.random): number {
+  return rollPpe(occ, peAttribute, 1, rng);
 }

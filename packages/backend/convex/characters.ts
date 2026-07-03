@@ -1,4 +1,12 @@
-import { characterSchema, deriveSheet, type Character } from "@riftforge/rules";
+import {
+  characterSchema,
+  deriveSheet,
+  getOcc,
+  rollHitPoints,
+  rollPhysicalSdc,
+  rollPpe,
+  type Character,
+} from "@riftforge/rules";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { characterFields } from "./schema";
@@ -46,6 +54,41 @@ export const update = mutation({
   handler: async (ctx, { id, character }) => {
     await ctx.db.replace(id, validateCharacter(character));
     return null;
+  },
+});
+
+/**
+ * Roll the character's dice-derived vitals — Hit Points, physical S.D.C., and
+ * (for P.P.E.-bearing O.C.C.s) permanent P.P.E. — and pin the results on the
+ * document, so the sheet shows concrete values instead of ranges. Rerolls and
+ * replaces any previous results.
+ *
+ * A mutation, not an action: Convex mutations get seeded randomness
+ * (`Math.random` is replay-safe here), and rolling + persisting in one
+ * transaction means a roll can never be observed and then lost.
+ */
+export const rollVitals = mutation({
+  args: { id: v.id("characters") },
+  returns: v.object({
+    hitPoints: v.number(),
+    sdc: v.number(),
+    ppe: v.optional(v.number()),
+  }),
+  handler: async (ctx, { id }) => {
+    const doc = await ctx.db.get(id);
+    if (doc === null) throw new Error(`Character ${id} not found.`);
+    const { _id, _creationTime, ...stored } = doc;
+    const character = characterSchema.parse(stored);
+    const occ = getOcc(character.occId);
+    if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
+    const pe = character.attributes.PE;
+    const rolled = {
+      hitPoints: rollHitPoints(pe, character.level),
+      sdc: rollPhysicalSdc(),
+      ...(occ.ppe ? { ppe: rollPpe(occ, pe, character.level) } : {}),
+    };
+    await ctx.db.patch(id, { rolled });
+    return rolled;
   },
 });
 
