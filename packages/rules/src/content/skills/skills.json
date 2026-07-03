@@ -47,6 +47,7 @@
       "category": "Technical",
       "baseSkill": 25,
       "perLevel": 5,
+      "repeatable": true,
       "note": "Can be taken repeatedly, one region per selection.",
       "page": 325
     },
