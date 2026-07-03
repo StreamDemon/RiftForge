@@ -1,0 +1,19 @@
+packages/rules/src/content/skills/skills.json
+  s_752516245fab9e::t_f247fe2f7f1749 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "c5647ccb55edca28d100d92834ec3845da4ec03e",
+  "prompts": {},
+  "sessions": {
+    "s_752516245fab9e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1d77d195-7466-49a4-8ed6-52d143129a87",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
