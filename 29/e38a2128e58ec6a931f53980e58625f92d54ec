@@ -1,0 +1,63 @@
+packages/backend/package.json
+  s_752516245fab9e::t_181ac034349818 1-23
+packages/backend/tests/characters.test.ts
+  s_752516245fab9e::t_77402a98cf9cfd 6-9
+  s_752516245fab9e::t_cc69fa86058998 1-5,10-38,40-61,63-88
+  s_752516245fab9e::t_546f7da7c7cd04 62
+  s_752516245fab9e::t_35cc6c8c185f90 39
+packages/backend/vite.config.ts
+  s_752516245fab9e::t_57d485a128a481 1-17
+pnpm-workspace.yaml
+  s_752516245fab9e::t_68cc74e925e808 25
+  s_752516245fab9e::t_3cd74f9a15f8a3 24
+packages/backend/tsconfig.json
+  s_752516245fab9e::t_b27f94ab486879 1-21
+packages/backend/convex/tsconfig.json
+  s_752516245fab9e::t_66839dba3efad3 4-16
+  s_752516245fab9e::t_f2790ba33fa8df 1-3
+  s_752516245fab9e::t_443fe7a95b7f45 17-19
+  s_752516245fab9e::t_8e211d76d87720 20-30
+packages/backend/tests/import-meta-glob.d.ts
+  s_752516245fab9e::t_e94a291e62c359 1-6
+packages/backend/convex/characters.ts
+  s_752516245fab9e::t_64995a170f3624 22-27,29-32
+  s_752516245fab9e::t_c24a24aa12beeb 6-12,37,45,48,55,65-68,72
+  s_752516245fab9e::t_2c6030df340b4d 39
+  s_752516245fab9e::t_7bfb8f8f413bcc 47
+  s_752516245fab9e::t_a8f0ce3c673fcc 13-20
+  s_752516245fab9e::t_4d7885722d09c0 1-5,21,28,33-35,38,40-43,46,49-54,56-64,69-71,73-79
+  s_752516245fab9e::t_c19310ac8da26b 44
+  s_752516245fab9e::t_2dc703f1b56b62 36
+packages/backend/convex/schema.ts
+  s_752516245fab9e::t_15a3fdbb19dba5 1-52
+pnpm-lock.yaml
+  s_752516245fab9e::t_f7e2ce91f76434 228-253,269,288-295,305-460,1069-1092,1107-1111,1282-1286,1494-1499,1516-1593,1838,1842-1843,1850,1854-1855,1862,1865,1871,1879,1882,1888,1905,1911,1913,1919,1945,1953,1959,1967,2011-2023,2032-2060,2140,2163,2165,2188,2199,2221,2223,2245,2261-2262,2334,2338-2339,2341,2347-2349,2351,2394,2398-2399,2401,2407-2409,2411,2454,2463,2468,2477,2482,2485,2502,2505,2507,2511,2514,2531,2534,2536
+packages/backend/.gitignore
+  s_752516245fab9e::t_976555869c5f97 1-2
+packages/backend/convex/_generated/api.d.ts
+  s_752516245fab9e::t_0b4a91afc9a0cc 1-39
+packages/backend/convex/_generated/api.js
+  s_752516245fab9e::t_6f2d3c0f68f894 1-23
+packages/backend/convex/_generated/dataModel.d.ts
+  s_752516245fab9e::t_ad033c5974f00f 1-56
+packages/backend/convex/_generated/server.d.ts
+  s_752516245fab9e::t_63168fbb559277 1-143
+packages/backend/convex/_generated/server.js
+  s_752516245fab9e::t_e6c6a632d6504a 1-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "29e38a2128e58ec6a931f53980e58625f92d54ec",
+  "prompts": {},
+  "sessions": {
+    "s_752516245fab9e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1d77d195-7466-49a4-8ed6-52d143129a87",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
