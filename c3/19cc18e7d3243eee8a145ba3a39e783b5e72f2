@@ -1,0 +1,34 @@
+packages/rules/tests/character.test.ts
+  s_752516245fab9e::t_dcf0626d7149d6 110,115-149
+packages/rules/src/engine/skills.ts
+  s_752516245fab9e::t_521519f37c22fd 74-75
+packages/rules/src/schema/skills.ts
+  s_752516245fab9e::t_1f7f9a009488a6 23-24
+packages/rules/src/schema/character.ts
+  s_752516245fab9e::t_9ca7d952611b63 8-12
+  s_752516245fab9e::t_5271ac948365bc 48-50
+docs/reviews/2026-07-03-rules-layer-review.md
+  s_752516245fab9e::t_90202ceba06857 1-115
+  s_752516245fab9e::t_03de2ac9dce96b 116-118
+packages/rules/src/engine/character.ts
+  s_752516245fab9e::t_c208c3871b3197 125-142,144-148
+  s_752516245fab9e::t_af6883f7f53cf8 16
+packages/rules/src/content/skills/skills.json
+  s_752516245fab9e::t_8239590ed3a677 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "c319cc18e7d3243eee8a145ba3a39e783b5e72f2",
+  "prompts": {},
+  "sessions": {
+    "s_752516245fab9e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1d77d195-7466-49a4-8ed6-52d143129a87",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
