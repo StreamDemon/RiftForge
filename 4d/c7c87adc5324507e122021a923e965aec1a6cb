@@ -1,0 +1,36 @@
+packages/backend/tests/characters.test.ts
+  s_6006ec54fd1802::t_759d8736e17d17 95
+  s_6006ec54fd1802::t_4ed4df5fc96091 85-86,89-90
+  s_6006ec54fd1802::t_f5846871c6c8f4 80-84,87-88,91-94,96-97,99-118
+  s_6006ec54fd1802::t_9f5e327d034edb 98
+packages/rules/src/index.ts
+  s_6006ec54fd1802::t_e5c24ccd1fd15e 14
+packages/rules/src/engine/rolls.ts
+  s_6006ec54fd1802::t_340b7e336e391d 6
+  s_6006ec54fd1802::t_cac6d2ec3859a1 1-5,7-45,47-96,98-100
+  s_6006ec54fd1802::t_49850eb3605f38 46,97
+packages/rules/src/engine/occ.ts
+  s_6006ec54fd1802::t_49850eb3605f38 50-55
+  s_6006ec54fd1802::t_47ca728795cb57 45-49,58-67
+packages/rules/tests/rolls.test.ts
+  s_6006ec54fd1802::t_3a5ec230b93334 1-113
+packages/backend/convex/characters.ts
+  s_6006ec54fd1802::t_75015a49d0105a 60-94
+  s_6006ec54fd1802::t_a94ea6e307a1b8 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.9",
+  "base_commit_sha": "4dc7c87adc5324507e122021a923e965aec1a6cb",
+  "prompts": {},
+  "sessions": {
+    "s_6006ec54fd1802": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ba04ba7-84d3-42e0-80ef-ad5cb58f8ddb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
