@@ -5,6 +5,11 @@ export const characterSkillSchema = z.object({
   skillId: z.string().min(1),
   occBonus: z.number().int().optional(),
   categoryBonus: z.number().int().optional(),
+  /** O.C.C.-granted flat value that replaces the computed percentage
+   * (e.g. Ley Line Walker: Language: Native Tongue at 98%). */
+  overrideValue: z.number().int().positive().optional(),
+  /** Distinguishes repeated picks of a repeatable skill (e.g. which language). */
+  label: z.string().min(1).optional(),
 });
 export type CharacterSkill = z.infer<typeof characterSkillSchema>;
 
@@ -40,12 +45,9 @@ export const characterSchema = z.object({
   hthType: z.string().min(1),
   /** The character's psychic aptitude (sets the save-vs-psionics target). */
   psychicClass: psychicClassSchema.default("ordinary"),
-  skills: z
-    .array(characterSkillSchema)
-    .refine((arr) => new Set(arr.map((s) => s.skillId)).size === arr.length, {
-      message: "A skill cannot be taken twice (duplicate skillId).",
-    })
-    .default([]),
+  /** Duplicate skillIds are checked in `deriveSheet`, where the catalog's
+   * per-skill `repeatable` flag is available (schemas can't see content). */
+  skills: z.array(characterSkillSchema).default([]),
   spellIds: z
     .array(z.string().min(1))
     .refine((arr) => new Set(arr).size === arr.length, {
