@@ -13,7 +13,7 @@ import {
   type StatRange,
 } from "./combat.ts";
 import { getOcc, ppeRange } from "./occ.ts";
-import { iqSkillBonus, resolveSkill, type ResolvedSkill } from "./skills.ts";
+import { getSkill, iqSkillBonus, resolveSkill, type ResolvedSkill } from "./skills.ts";
 import { getSpell, occSpellStrength } from "./spells.ts";
 
 /** A dice-derived stat: its range, plus the concrete roll if one was recorded. */
@@ -122,20 +122,30 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     comaDeath: { bonus: combat.saveBonuses.comaDeathPct, percent: true },
   };
 
-  const skills = character.skills
-    .map((s) =>
-      resolveSkill(s.skillId, {
-        level,
-        occBonus: s.occBonus,
-        categoryBonus: s.categoryBonus,
-        iqBonus,
-      }),
-    )
-    .filter((r): r is ResolvedSkill => r !== undefined);
+  const seenSkillIds = new Set<string>();
+  const skills = character.skills.map((s): ResolvedSkill => {
+    const skill = getSkill(s.skillId);
+    if (!skill) throw new Error(`Unknown skill "${s.skillId}".`);
+    if (seenSkillIds.has(skill.id) && !skill.repeatable) {
+      throw new Error(`Skill "${skill.id}" cannot be taken twice.`);
+    }
+    seenSkillIds.add(skill.id);
+    const resolved = resolveSkill(skill.id, {
+      level,
+      occBonus: s.occBonus,
+      categoryBonus: s.categoryBonus,
+      iqBonus,
+      overrideValue: s.overrideValue,
+    });
+    if (!resolved) throw new Error(`Unknown skill "${s.skillId}".`);
+    return s.label === undefined ? resolved : { ...resolved, label: s.label };
+  });
 
-  const knownSpells = character.spellIds
-    .map((id) => getSpell(id))
-    .filter((s): s is Spell => s !== undefined);
+  const knownSpells = character.spellIds.map((id): Spell => {
+    const spell = getSpell(id);
+    if (!spell) throw new Error(`Unknown spell "${id}".`);
+    return spell;
+  });
 
   return {
     name: character.name,

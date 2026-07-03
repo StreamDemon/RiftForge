@@ -107,9 +107,44 @@ describe("deriveSheet — edge cases", () => {
           { skillId: "math-basic", occBonus: 10 },
         ],
       }),
-    ).toThrow();
+    ).toThrow(/cannot be taken twice/);
     expect(() =>
       deriveSheet({ ...leyLineWalker, spellIds: ["globe-of-daylight", "globe-of-daylight"] }),
     ).toThrow();
+  });
+
+  test("a repeatable skill can be taken twice (LLW: Language: Other x2, RUE p.115)", () => {
+    const sheet = deriveSheet({
+      ...leyLineWalker,
+      skills: [
+        { skillId: "language-other", occBonus: 20, label: "Dragonese" },
+        { skillId: "language-other", occBonus: 20, label: "Spanish" },
+      ],
+    });
+    expect(sheet.skills.map((s) => ({ id: s.id, value: s.value, label: s.label }))).toEqual([
+      { id: "language-other", value: 74, label: "Dragonese" }, // 50 + 20 + I.Q. 4
+      { id: "language-other", value: 74, label: "Spanish" },
+    ]);
+  });
+
+  test("unknown skill and spell ids throw instead of silently dropping", () => {
+    expect(() =>
+      deriveSheet({ ...leyLineWalker, skills: [{ skillId: "underwater-basket-weaving" }] }),
+    ).toThrow(/Unknown skill "underwater-basket-weaving"/);
+    expect(() => deriveSheet({ ...leyLineWalker, spellIds: ["fireball-xxl"] })).toThrow(
+      /Unknown spell "fireball-xxl"/,
+    );
+  });
+
+  test("an O.C.C. flat-value grant overrides the computed percentage (Native Tongue 98%)", () => {
+    const sheet = deriveSheet({
+      ...leyLineWalker,
+      skills: [{ skillId: "language-native-tongue", overrideValue: 98 }],
+    });
+    expect(sheet.skills[0]).toMatchObject({
+      id: "language-native-tongue",
+      value: 98, // flat 98%, not base 88 + I.Q. bonus
+      capped: false,
+    });
   });
 });

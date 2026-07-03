@@ -71,6 +71,8 @@ export interface ResolvedSkill {
   id: string;
   name: string;
   category: string;
+  /** Distinguishes repeated picks of a repeatable skill (e.g. which language). */
+  label?: string;
   /** Final proficiency percentage (capped at the catalog max). */
   value: number;
   /** Final second percentage for two-value skills. */

@@ -17,6 +17,7 @@
       "category": "Communication",
       "baseSkill": 50,
       "perLevel": 3,
+      "repeatable": true,
       "note": "Can be taken repeatedly; one language per selection.",
       "page": 304
     },
@@ -46,6 +47,7 @@
       "category": "Technical",
       "baseSkill": 25,
       "perLevel": 5,
+      "repeatable": true,
       "note": "Can be taken repeatedly, one region per selection.",
       "page": 325
     },
