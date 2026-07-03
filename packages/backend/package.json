@@ -1,0 +1,23 @@
+{
+  "name": "@riftforge/backend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Convex backend: character storage and derived-sheet queries.",
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "test": "vp test",
+    "check": "vp check"
+  },
+  "dependencies": {
+    "@riftforge/rules": "workspace:*",
+    "convex": "^1"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5",
+    "@types/node": "catalog:",
+    "convex-test": "^0.0.38",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}
