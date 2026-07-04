@@ -4,6 +4,7 @@ import { MarketingLayout } from "./layouts/marketing.tsx";
 import { CharacterSheetPage } from "./pages/character-sheet.tsx";
 import { CharactersPage } from "./pages/characters.tsx";
 import { LandingPage } from "./pages/landing.tsx";
+import { NewCharacterPage } from "./pages/new-character.tsx";
 
 /**
  * Route surface (see issue #8): `/` belongs to a future landing page and
@@ -19,6 +20,7 @@ export function App() {
       </Route>
       <Route component={AppLayout}>
         <Route path="/characters" component={CharactersPage} />
+        <Route path="/characters/new" component={NewCharacterPage} />
         <Route path="/characters/:id" component={CharacterSheetPage} />
       </Route>
     </Router>
