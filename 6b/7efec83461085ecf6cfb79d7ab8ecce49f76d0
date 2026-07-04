@@ -1,0 +1,27 @@
+apps/web/src/pages/characters.tsx
+  s_1a82bc70ad4a3f::t_efcefa2290ef8f 35,38
+  s_1a82bc70ad4a3f::t_6588ab19488994 11
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_1390656c9e0954 35,37-38
+  s_1a82bc70ad4a3f::t_b7fe4f3a432dd6 53-55
+apps/web/tests/convex.test.ts
+  s_1a82bc70ad4a3f::t_f2ec7627ecbd5f 45-47,52,55,63,65,70,75-76,79-80,86-87,90,94,97,99-105
+apps/web/src/lib/convex.ts
+  s_1a82bc70ad4a3f::t_0fea6a0fe9f81e 12-19,21,26-29,35-37,42-43,47-51,55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6b7efec83461085ecf6cfb79d7ab8ecce49f76d0",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
