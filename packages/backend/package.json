@@ -4,6 +4,16 @@
   "private": true,
   "description": "Convex backend: character storage and derived-sheet queries.",
   "type": "module",
+  "exports": {
+    "./api": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./dataModel": {
+      "types": "./convex/_generated/dataModel.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "dev": "convex dev",
     "test": "vp test",

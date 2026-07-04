@@ -107,6 +107,17 @@ describe("characters — a saved Ley Line Walker round-trips", () => {
     expect(stored?.rolled).toEqual(second);
   });
 
+  test("list returns roster summaries, newest first", async () => {
+    const t = convexTest(schema, modules);
+    expect(await t.query(api.characters.list, {})).toEqual([]);
+    const first = await t.mutation(api.characters.create, vesper);
+    const second = await t.mutation(api.characters.create, { ...vesper, name: "Kestrel" });
+    expect(await t.query(api.characters.list, {})).toEqual([
+      { _id: second, name: "Kestrel", occId: "ley-line-walker", level: 1 },
+      { _id: first, name: "Vesper", occId: "ley-line-walker", level: 1 },
+    ]);
+  });
+
   test("rollVitals on a missing character throws", async () => {
     const t = convexTest(schema, modules);
     const id = await t.mutation(api.characters.create, vesper);
