@@ -1,0 +1,58 @@
+packages/rules/src/engine/builder.ts
+  s_1a82bc70ad4a3f::t_97f8e66b1f577c 1-552
+packages/rules/src/content/alignments.json
+  s_1a82bc70ad4a3f::t_a6b95b969b7572 46
+  s_1a82bc70ad4a3f::t_540d47ff99e542 1-45,47-52,54-56
+  s_1a82bc70ad4a3f::t_7ce68b415e8027 53
+packages/backend/tests/characters.test.ts
+  s_1a82bc70ad4a3f::t_af42d2baa29abe 114
+  s_1a82bc70ad4a3f::t_6a038e499baa7c 110-113,115-120
+packages/rules/tests/builder.test.ts
+  s_1a82bc70ad4a3f::t_1b9c260545da2e 1-418
+  s_1a82bc70ad4a3f::t_127ee36327ba59 419-421
+  s_1a82bc70ad4a3f::t_c6e292ea1b93da 422-423
+packages/rules/src/index.ts
+  s_1a82bc70ad4a3f::t_8f8e990679fd47 17
+  s_1a82bc70ad4a3f::t_844984e1e30506 1
+  s_1a82bc70ad4a3f::t_b23a48a83cddb9 8
+packages/rules/src/content/skills/skills.json
+  s_1a82bc70ad4a3f::t_aa2edbb1c3c507 336-386
+packages/rules/src/engine/attributes.ts
+  s_1a82bc70ad4a3f::t_0a2868c496df70 79-114
+  s_1a82bc70ad4a3f::t_97f264c21d60a9 2,10
+packages/rules/tests/attribute-rolls.test.ts
+  s_1a82bc70ad4a3f::t_7c54075a56a8ba 1-21,23-58
+  s_1a82bc70ad4a3f::t_35677046fe9b4a 22
+packages/rules/src/schema/character.ts
+  s_1a82bc70ad4a3f::t_0c756f0cf14d64 42-45
+packages/rules/src/engine/character.ts
+  s_1a82bc70ad4a3f::t_8481fac5a5d78d 1,6
+  s_1a82bc70ad4a3f::t_7b29cae3f69644 89-94
+  s_1a82bc70ad4a3f::t_686633a5992ff7 163
+  s_1a82bc70ad4a3f::t_d9480c3d40c02e 38-39
+packages/backend/convex/schema.ts
+  s_1a82bc70ad4a3f::t_67fca214d831a8 14
+packages/rules/src/schema/alignments.ts
+  s_1a82bc70ad4a3f::t_37d35d83b394a5 1-31
+packages/rules/tests/alignments.test.ts
+  s_1a82bc70ad4a3f::t_aad254028c8e62 26-30
+  s_1a82bc70ad4a3f::t_271ce37921d0c8 1-25,31-56
+packages/rules/src/engine/alignments.ts
+  s_1a82bc70ad4a3f::t_8cdcd8b9f97fd0 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "64ec4a3ef94c72f0b6ba59e905a1aea9874380ad",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
