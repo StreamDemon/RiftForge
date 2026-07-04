@@ -1,0 +1,25 @@
+packages/rules/tests/builder.test.ts
+  s_1a82bc70ad4a3f::t_2f0a0b12b994b7 423-498
+packages/rules/src/engine/builder.ts
+  s_1a82bc70ad4a3f::t_61443a36a42146 370-371
+  s_1a82bc70ad4a3f::t_cc3e2d6d05a778 460-465
+  s_1a82bc70ad4a3f::t_c0d6bad056de8a 221-226,232,236-241,247
+packages/rules/src/content/skills/skills.json
+  s_1a82bc70ad4a3f::t_3be4c9f87747a7 386-387
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a1e0051dbc4c755c5e1d84bb321c2e8e9a29e592",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
