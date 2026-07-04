@@ -1,0 +1,23 @@
+apps/web/src/lib/telemetry.ts
+  s_1a82bc70ad4a3f::t_4303c9f27a39e3 21-22,25-26,29-30
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_ef729bff6e8b90 109-117
+  s_1a82bc70ad4a3f::t_91f1a829bb8a61 118-120
+  s_1a82bc70ad4a3f::t_378bc7b0d1ba82 121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e1f8bb2d018994f32e8f01c74364015a6c18e187",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
