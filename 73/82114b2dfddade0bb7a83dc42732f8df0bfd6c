@@ -1,0 +1,21 @@
+DESIGN.md
+  s_1a82bc70ad4a3f::t_af4936e502bfab 11,13,22,28-34,41,44,51,53,58,111-118
+docs/design/ley-terminal-preview.html
+  s_1a82bc70ad4a3f::t_cf3669d25ac83e 3-97,99-114,116-170,172-198,200-221,223-313,315-352,354-477,479-606,608-627,629-678,680-731,733-787,789-799,801-804,807-812,814-818,820-823,827-971,973-977,979,981-995,998-1001,1003
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "7382114b2dfddade0bb7a83dc42732f8df0bfd6c",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "unknown"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
