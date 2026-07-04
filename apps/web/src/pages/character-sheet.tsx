@@ -32,19 +32,10 @@ function saveBonus(save: SheetSave): string {
 export function CharacterSheetPage() {
   const params = useParams<{ id: string }>();
   const id = () => params.id as Id<"characters">;
-  const [error, setError] = createSignal<Error>();
+  const query = createQuery(convex, api.characters.sheet, () => ({ id: id() }));
   // `characters.sheet` validates as `v.any()` (shape owned by @riftforge/rules),
-  // so re-pin the rules-layer type here. The args accessor also clears any
-  // stale error when the route id changes (it re-runs with the resubscription).
-  const sheet = createQuery(
-    convex,
-    api.characters.sheet,
-    () => {
-      setError(undefined);
-      return { id: id() };
-    },
-    setError,
-  ) as Accessor<CharacterSheet | null | undefined>;
+  // so re-pin the rules-layer type here.
+  const sheet = query.data as Accessor<CharacterSheet | null | undefined>;
   const rollVitals = createMutation(convex, api.characters.rollVitals);
   const [rollError, setRollError] = createSignal<Error>();
 
@@ -59,7 +50,9 @@ export function CharacterSheetPage() {
 
   return (
     <Switch fallback={<p>Loading…</p>}>
-      <Match when={error()}>{(err) => <p>Couldn't load this character: {err().message}</p>}</Match>
+      <Match when={query.error()}>
+        {(err) => <p>Couldn't load this character: {err().message}</p>}
+      </Match>
       <Match when={sheet() === null}>
         <p>No such character.</p>
       </Match>

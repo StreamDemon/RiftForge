@@ -7,9 +7,8 @@ import { createMutation, createQuery } from "../lib/convex.ts";
 
 /** Dev-grade character list: roster + a seed button until the builder (#9). */
 export function CharactersPage() {
-  const [listError, setListError] = createSignal<Error>();
   const [seedError, setSeedError] = createSignal<Error>();
-  const characters = createQuery(convex, api.characters.list, {}, setListError);
+  const characters = createQuery(convex, api.characters.list, {});
   const create = createMutation(convex, api.characters.create);
   const navigate = useNavigate();
 
@@ -33,10 +32,10 @@ export function CharactersPage() {
         {(err) => <p>Couldn't create the character: {err().message}</p>}
       </Show>
       <Switch fallback={<p>Loading…</p>}>
-        <Match when={listError()}>
+        <Match when={characters.error()}>
           {(err) => <p>Couldn't load characters: {err().message}</p>}
         </Match>
-        <Match when={characters()}>
+        <Match when={characters.data()}>
           {(list) => (
             <ul class="list-disc pl-6">
               <For each={list()} fallback={<li>No characters yet.</li>}>
