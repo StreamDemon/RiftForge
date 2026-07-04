@@ -122,6 +122,36 @@ body::after {
   animation: ppe-pulse 2.5s ease-in-out infinite;
 }
 
+/* Dot-matrix strike: a live stat just got struck onto the page. */
+@keyframes strike-flash {
+  0% {
+    background: rgb(255 174 61 / 0.45);
+    box-shadow: 0 0 14px rgb(255 174 61 / 0.5);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+.strike-flash {
+  animation: strike-flash 0.6s ease-out;
+}
+
+/* Scanline reveal: the dossier renders top-to-bottom on load. */
+@keyframes sheet-reveal {
+  from {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0.4;
+  }
+  to {
+    clip-path: inset(0 0 0% 0);
+    opacity: 1;
+  }
+}
+.sheet-reveal {
+  animation: sheet-reveal 0.45s ease-out;
+}
+
 /* Telemetry cursor blink */
 @keyframes cursor-blink {
   0%,
@@ -142,7 +172,9 @@ body::after {
     animation: none;
     box-shadow: 0 0 12px rgb(79 216 255 / 0.5);
   }
-  .cursor-blink {
+  .cursor-blink,
+  .strike-flash,
+  .sheet-reveal {
     animation: none;
   }
 }

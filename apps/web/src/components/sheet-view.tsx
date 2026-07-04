@@ -1,5 +1,12 @@
-import type { Appearance, CharacterSheet, SheetSave, StatValue } from "@riftforge/rules";
-import { For, Show, type JSX } from "solid-js";
+import type {
+  Appearance,
+  CharacterSheet,
+  ResolvedSkill,
+  SheetSave,
+  Spell,
+  StatValue,
+} from "@riftforge/rules";
+import { createEffect, createSignal, For, on, onCleanup, Show, type JSX } from "solid-js";
 import { Chip, DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
 
 /** "rolled 17" once vitals are pinned, otherwise the possible range. */
@@ -28,6 +35,15 @@ const APPEARANCE_ROWS = [
   ["origin", "ORIGIN"],
   ["disposition", "DISPOSITION"],
 ] as const satisfies readonly (readonly [keyof Appearance, string])[];
+
+/** Roll handlers the dossier page wires in; absent (e.g. in the wizard's
+ * review preview) the sheet renders read-only. */
+export interface SheetActions {
+  rollSave: (name: string, save: SheetSave) => void;
+  rollSkill: (skill: ResolvedSkill) => void;
+  castSpell: (spell: Spell) => void;
+  rollCombat: (kind: "strike" | "parry" | "dodge", bonus: number) => void;
+}
 
 /** Schematic silhouette — the portrait frame ships before upload does. */
 function PortraitFrame() {
@@ -61,15 +77,94 @@ function PortraitFrame() {
   );
 }
 
-function StatRow(props: { label: JSX.Element; value: JSX.Element; live?: boolean }) {
+/** A stat line; clickable (and amber on hover) when the page wires a roll. */
+function StatRow(props: {
+  label: JSX.Element;
+  value: JSX.Element;
+  live?: boolean;
+  onRoll?: () => void;
+}) {
+  const value = () => (
+    <span
+      class={`font-data text-[12.5px] font-semibold ${props.live ? "text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.6)]" : ""}`}
+    >
+      {props.value}
+    </span>
+  );
   return (
-    <div class="flex items-baseline justify-between border-b border-dotted border-line py-1 text-[13.5px] last:border-b-0">
-      <span>{props.label}</span>
-      <span
-        class={`font-data text-[12.5px] font-semibold ${props.live ? "text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.6)]" : ""}`}
+    <Show
+      when={props.onRoll}
+      fallback={
+        <div class="flex items-baseline justify-between border-b border-dotted border-line py-1 text-[13.5px] last:border-b-0">
+          <span>{props.label}</span>
+          {value()}
+        </div>
+      }
+    >
+      <button
+        type="button"
+        title="Roll"
+        class="flex w-full cursor-pointer items-baseline justify-between gap-3 border-b border-dotted border-line py-1 text-left text-[13.5px] last:border-b-0 hover:bg-amber/5 hover:text-amber"
+        onClick={() => props.onRoll?.()}
       >
-        {props.value}
-      </span>
+        <span>{props.label}</span>
+        {value()}
+      </button>
+    </Show>
+  );
+}
+
+const barFill = {
+  blood: "bg-gradient-to-r from-[#7a2018] to-blood shadow-[0_0_10px_rgb(226_59_46/0.4)]",
+  amber: "bg-gradient-to-r from-[#7a5a17] to-amber shadow-[0_0_10px_rgb(255_174_61/0.35)]",
+  ley: "bg-gradient-to-r from-[#14606e] to-ley ppe-pulse",
+} as const;
+
+/**
+ * A vital as a resource bar: fill = rolled value against the range maximum,
+ * empty until rolled. The value flashes like a dot-matrix strike when a new
+ * roll lands (fine-grained update — the sheet is NOT remounted).
+ */
+function VitalBar(props: { label: string; stat: StatValue; tone: keyof typeof barFill }) {
+  const [flash, setFlash] = createSignal(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  createEffect(
+    on(
+      () => props.stat.rolled,
+      (rolled, previous) => {
+        if (rolled === undefined || rolled === previous) return;
+        setFlash(false);
+        requestAnimationFrame(() => setFlash(true));
+        clearTimeout(timer);
+        timer = setTimeout(() => setFlash(false), 700);
+      },
+      { defer: true },
+    ),
+  );
+  onCleanup(() => clearTimeout(timer));
+
+  const pct = () =>
+    props.stat.rolled === undefined || props.stat.max <= 0
+      ? 0
+      : Math.min(100, Math.round((props.stat.rolled / props.stat.max) * 100));
+
+  return (
+    <div class="py-1">
+      <div class="flex items-baseline justify-between font-mono text-[11px] text-muted">
+        <span>{props.label}</span>
+        <span
+          classList={{ "strike-flash": flash() }}
+          class={`font-data text-[12.5px] font-semibold ${props.tone === "ley" ? "text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.6)]" : "text-fg"}`}
+        >
+          {statValue(props.stat)}
+        </span>
+      </div>
+      <div class="relative mt-1 h-[7px] border border-line bg-noir">
+        <div
+          class={`absolute inset-y-0 left-0 ${barFill[props.tone]}`}
+          style={{ width: `${pct()}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -77,11 +172,12 @@ function StatRow(props: { label: JSX.Element; value: JSX.Element; live?: boolean
 /**
  * Every `deriveSheet` section in Ley Terminal chrome (DESIGN.md). Shared by
  * the live sheet page and the builder's review preview so they never drift.
+ * With `actions`, saves/skills/spells/combat rows roll on click.
  */
-export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Element }) {
+export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions }) {
   const s = () => props.sheet;
   return (
-    <article class="space-y-4">
+    <article class="sheet-reveal space-y-4">
       <header class="flex gap-5">
         <PortraitFrame />
         <div class="min-w-0 flex-1">
@@ -155,26 +251,43 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
           <Panel class="p-4">
             <SectionTitle>VITALS</SectionTitle>
             <div class="mt-2">
-              <StatRow label="Hit Points" value={statValue(s().vitals.hitPoints)} />
-              <StatRow label="S.D.C." value={statValue(s().vitals.sdc)} />
-              <StatRow label="Coma / Death" value={s().vitals.comaDeathFloor} />
+              <VitalBar label="HIT POINTS" stat={s().vitals.hitPoints} tone="blood" />
+              <VitalBar label="S.D.C." stat={s().vitals.sdc} tone="amber" />
               <Show when={s().ppe}>
-                {(ppe) => <StatRow label="P.P.E." value={statValue(ppe())} live />}
+                {(ppe) => <VitalBar label="P.P.E. ◈ LIVE" stat={ppe()} tone="ley" />}
               </Show>
+              <StatRow label="Coma / Death" value={s().vitals.comaDeathFloor} />
               <Show when={s().spellStrength}>
                 {(strength) => <StatRow label="Spell Strength" value={strength()} live />}
               </Show>
             </div>
-            {props.vitalsExtra}
           </Panel>
 
           <Panel class="p-4">
             <SectionTitle>COMBAT</SectionTitle>
             <div class="mt-2">
               <StatRow label="Attacks / Melee" value={s().combat.attacksPerMelee} />
-              <StatRow label="Strike" value={`+${s().combat.strike}`} />
-              <StatRow label="Parry" value={`+${s().combat.parry}`} />
-              <StatRow label="Dodge" value={`+${s().combat.dodge}`} />
+              <StatRow
+                label="Strike"
+                value={`+${s().combat.strike}`}
+                onRoll={
+                  props.actions && (() => props.actions!.rollCombat("strike", s().combat.strike))
+                }
+              />
+              <StatRow
+                label="Parry"
+                value={`+${s().combat.parry}`}
+                onRoll={
+                  props.actions && (() => props.actions!.rollCombat("parry", s().combat.parry))
+                }
+              />
+              <StatRow
+                label="Dodge"
+                value={`+${s().combat.dodge}`}
+                onRoll={
+                  props.actions && (() => props.actions!.rollCombat("dodge", s().combat.dodge))
+                }
+              />
               <StatRow label="Damage Bonus" value={`+${s().combat.damageBonus}`} />
             </div>
           </Panel>
@@ -182,11 +295,26 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
       </div>
 
       <Panel class="p-4">
-        <SectionTitle>SAVING THROWS</SectionTitle>
+        <div class="flex items-baseline justify-between">
+          <SectionTitle>SAVING THROWS</SectionTitle>
+          <Show when={props.actions}>
+            <MonoLabel class="text-dead">CLICK TO ROLL</MonoLabel>
+          </Show>
+        </div>
         <div class="mt-2 grid gap-x-8 md:grid-cols-2">
           <For each={Object.entries(s().saves)}>
             {([name, save]) => (
-              <StatRow label={name} value={`${saveTarget(save)} / ${saveBonus(save)}`} />
+              <StatRow
+                label={name}
+                value={`${saveTarget(save)} / ${saveBonus(save)}`}
+                onRoll={
+                  // Percentile saves (coma/death) are a different mechanic —
+                  // they stay display-only for now.
+                  props.actions && !save.percent
+                    ? () => props.actions!.rollSave(name, save)
+                    : undefined
+                }
+              />
             )}
           </For>
         </div>
@@ -194,7 +322,12 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
 
       <div class="grid gap-4 lg:grid-cols-2">
         <Panel class="p-4">
-          <SectionTitle>SKILLS — FIELD RATED</SectionTitle>
+          <div class="flex items-baseline justify-between">
+            <SectionTitle>SKILLS — FIELD RATED</SectionTitle>
+            <Show when={props.actions}>
+              <MonoLabel class="text-dead">CLICK TO ROLL</MonoLabel>
+            </Show>
+          </div>
           <div class="mt-2">
             <For each={s().skills}>
               {(skill) => (
@@ -213,6 +346,7 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
                       <Show when={skill.value2 !== undefined}> / {skill.value2}%</Show>
                     </>
                   }
+                  onRoll={props.actions && (() => props.actions!.rollSkill(skill))}
                 />
               )}
             </For>
@@ -220,7 +354,12 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
         </Panel>
 
         <Panel class="p-4">
-          <SectionTitle>SPELL KNOWLEDGE ({s().spells.count})</SectionTitle>
+          <div class="flex items-baseline justify-between">
+            <SectionTitle>SPELL KNOWLEDGE ({s().spells.count})</SectionTitle>
+            <Show when={props.actions}>
+              <MonoLabel class="text-dead">CLICK TO CAST</MonoLabel>
+            </Show>
+          </div>
           <div class="mt-2">
             <For each={s().spells.known}>
               {(spell) => (
@@ -235,6 +374,7 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
                       {spell.ppe} PPE
                     </span>
                   }
+                  onRoll={props.actions && (() => props.actions!.castSpell(spell))}
                 />
               )}
             </For>

@@ -1,15 +1,23 @@
 import { api } from "@riftforge/backend/api";
 import type { Id } from "@riftforge/backend/dataModel";
-import type { CharacterSheet, Narrative } from "@riftforge/rules";
+import {
+  rollD20,
+  rollSave,
+  rollSkillCheck,
+  type CharacterSheet,
+  type Narrative,
+} from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
 import { createEffect, createSignal, Match, on, Show, Switch, type Accessor } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { NarrativeFields } from "../components/narrative-fields.tsx";
-import { SheetView } from "../components/sheet-view.tsx";
+import { SheetView, type SheetActions } from "../components/sheet-view.tsx";
+import { TelemetryRail } from "../components/telemetry-rail.tsx";
 import { Alert, Button, MonoLabel, Panel } from "../components/ui.tsx";
 import { convex } from "../lib/client.ts";
 import { createMutation, createQuery } from "../lib/convex.ts";
 import { fromNarrative, toNarrative } from "../lib/narrative.ts";
+import { createTelemetry, d20Line, machineName } from "../lib/telemetry.ts";
 
 /** Edit the player-authored file fields in place; saves via updateNarrative. */
 function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | undefined }) {
@@ -81,7 +89,12 @@ function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | u
   );
 }
 
-/** The live sheet: `SheetView` fed by the `characters.sheet` subscription. */
+/**
+ * The dossier: the live sheet plus the field-telemetry rail. Gameplay rolls
+ * (saves, skills, strikes, casts) run CLIENT-SIDE through the isomorphic
+ * engine and print to the log — moments at the table, not records. Only
+ * `rollVitals` persists, via its mutation.
+ */
 export function CharacterSheetPage() {
   const params = useParams<{ id: string }>();
   const id = () => params.id as Id<"characters">;
@@ -90,19 +103,66 @@ export function CharacterSheetPage() {
   // so re-pin the rules-layer type here.
   const sheet = query.data as Accessor<CharacterSheet | null | undefined>;
   const rollVitals = createMutation(convex, api.characters.rollVitals);
+  const telemetry = createTelemetry(["// ley-link established", "// awaiting command…"]);
   const [rollError, setRollError] = createSignal<Error>();
 
+  // A new dossier starts with a fresh log: rolls belong to the character
+  // they were rolled for, not whoever the page shows next.
+  createEffect(
+    on(
+      id,
+      () => {
+        telemetry.reset();
+        setRollError(undefined);
+      },
+      { defer: true },
+    ),
+  );
+
+  const actions: SheetActions = {
+    rollSave: (name, save) => {
+      const roll = rollSave(save);
+      telemetry.log(
+        `> SAVE VS ${machineName(name)} :: ${d20Line(roll)}`,
+        roll.success === undefined ? "machine" : roll.success ? "good" : "bad",
+      );
+    },
+    rollSkill: (skill) => {
+      const check = rollSkillCheck(skill.value);
+      const label = skill.label ? ` (${skill.label.toUpperCase()})` : "";
+      telemetry.log(
+        `> SKILL :: ${skill.name.toUpperCase()}${label} d%[${check.roll}] vs ${check.value}% ${check.success ? "✓" : "✗"}`,
+        check.success ? "good" : "bad",
+      );
+    },
+    castSpell: (spell) => {
+      telemetry.log(`> CAST :: ${spell.name.toUpperCase()} — ${spell.ppe} P.P.E.`, "magic");
+    },
+    rollCombat: (kind, bonus) => {
+      telemetry.log(`> ${kind.toUpperCase()} :: ${d20Line(rollD20(bonus))}`);
+    },
+  };
+
   const roll = async () => {
+    // If the dossier switches while the mutation is in flight, the result
+    // belongs to the character it was rolled for — drop it silently.
+    const rolledFor = id();
     setRollError(undefined);
     try {
-      await rollVitals({ id: id() });
+      const rolled = await rollVitals({ id: rolledFor });
+      if (id() !== rolledFor) return;
+      telemetry.log(
+        `> ROLL VITALS :: H.P. ${rolled.hitPoints} · S.D.C. ${rolled.sdc}${rolled.ppe !== undefined ? ` · P.P.E. ${rolled.ppe}` : ""} — LOCKED`,
+      );
     } catch (error) {
+      if (id() !== rolledFor) return;
       setRollError(error instanceof Error ? error : new Error(String(error)));
+      telemetry.log("> ROLL VITALS :: WRITE FAILED", "bad");
     }
   };
 
   return (
-    <div class="mx-auto max-w-4xl">
+    <div class="mx-auto max-w-6xl">
       <Switch fallback={<p class="font-mono text-[12.5px] text-muted">// loading dossier…</p>}>
         <Match when={query.error()}>
           {(err) => <Alert tone="danger">COULDN'T LOAD DOSSIER — {err().message}</Alert>}
@@ -110,13 +170,20 @@ export function CharacterSheetPage() {
         <Match when={sheet() === null}>
           <Alert tone="warn">NO FILE ON RECORD.</Alert>
         </Match>
-        <Match when={sheet()}>
-          {(s) => (
-            <SheetView
-              sheet={s()}
-              vitalsExtra={
-                <div class="mt-3 space-y-2">
-                  <Button variant="primary" onClick={() => void roll()}>
+        <Match when={sheet() != null}>
+          {/* Non-keyed on purpose: subscription updates flow through
+              fine-grained reactivity instead of remounting the sheet, so the
+              strike flash can see values change and editor state survives. */}
+          <div class="gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div class="min-w-0 space-y-4">
+              <SheetView sheet={sheet()!} actions={actions} />
+              <NarrativeEditor id={id()} narrative={sheet()?.narrative} />
+            </div>
+            <TelemetryRail
+              entries={telemetry.entries()}
+              actions={
+                <div class="space-y-2">
+                  <Button variant="primary" class="w-full text-left" onClick={() => void roll()}>
                     {"> Roll Vitals"}
                   </Button>
                   <Show when={rollError()}>
@@ -125,16 +192,9 @@ export function CharacterSheetPage() {
                 </div>
               }
             />
-          )}
+          </div>
         </Match>
       </Switch>
-      {/* Outside the keyed Match: live sheet updates (e.g. rolling vitals
-          mid-edit) must not remount the editor and wipe typed text. */}
-      <Show when={sheet() != null}>
-        <div class="mt-4">
-          <NarrativeEditor id={id()} narrative={sheet()?.narrative} />
-        </div>
-      </Show>
     </div>
   );
 }
