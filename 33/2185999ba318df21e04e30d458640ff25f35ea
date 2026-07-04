@@ -1,0 +1,52 @@
+packages/backend/convex/schema.ts
+  s_1a82bc70ad4a3f::t_93e357c69329bc 49-65
+packages/rules/src/engine/character.ts
+  s_1a82bc70ad4a3f::t_904d33ec321f0d 40-41
+  s_1a82bc70ad4a3f::t_80a32849e1a6de 2
+  s_1a82bc70ad4a3f::t_dfcd89696054cd 166
+packages/backend/tests/characters.test.ts
+  s_1a82bc70ad4a3f::t_97d1dd5938d61e 117,130-132
+  s_1a82bc70ad4a3f::t_2694d3542a3a06 110-116,118-129,133-151
+apps/web/src/components/narrative-fields.tsx
+  s_1a82bc70ad4a3f::t_ff1d5ba7790003 1-68
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_018f3e0cb0c0f5 3,5-7,9,12-62
+  s_1a82bc70ad4a3f::t_a01e517c7b5871 111-117
+packages/backend/convex/characters.ts
+  s_1a82bc70ad4a3f::t_5d024a0a7fdbf0 61-81
+  s_1a82bc70ad4a3f::t_86769fc3ee3f07 60
+apps/web/src/builder/steps/identity.tsx
+  s_1a82bc70ad4a3f::t_50fd6f1dc04a84 1-3,7-8,10,21-46
+packages/rules/src/schema/character.ts
+  s_1a82bc70ad4a3f::t_e3c67cf592450f 95-96
+  s_1a82bc70ad4a3f::t_81a56852ca36bd 33-59
+apps/web/src/lib/narrative.ts
+  s_1a82bc70ad4a3f::t_bcb05f39a10485 1-71
+apps/web/src/components/sheet-view.tsx
+  s_1a82bc70ad4a3f::t_dba107a048b545 23-63
+  s_1a82bc70ad4a3f::t_2332f92485db9c 85-90,92-105,113-126
+  s_1a82bc70ad4a3f::t_cdb7c7d2a970b2 242-255
+  s_1a82bc70ad4a3f::t_37ade6dd9868ec 1,3
+packages/rules/tests/narrative.test.ts
+  s_1a82bc70ad4a3f::t_04c03b5ae70dc7 1-56
+apps/web/src/builder/store.ts
+  s_1a82bc70ad4a3f::t_7733e5cde6cfd0 58
+  s_1a82bc70ad4a3f::t_0d385a265b6d89 19,24-25
+  s_1a82bc70ad4a3f::t_cfb67601f9f02e 101,112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "332185999ba318df21e04e30d458640ff25f35ea",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
