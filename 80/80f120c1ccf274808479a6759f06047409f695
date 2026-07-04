@@ -1,0 +1,53 @@
+apps/web/src/builder/steps/review.tsx
+  s_1a82bc70ad4a3f::t_0c77a2e766aa9e 1-29
+apps/web/src/builder/steps/psionics.tsx
+  s_1a82bc70ad4a3f::t_f3e6c9079b654e 1-40,43-46,49-52
+  s_1a82bc70ad4a3f::t_09c81a0034aa22 41-42
+  s_1a82bc70ad4a3f::t_0818e8f7b5e354 47-48
+apps/web/src/pages/characters.tsx
+  s_1a82bc70ad4a3f::t_8a0789337beccb 2-3,5,7,14-16
+apps/web/src/builder/steps/occ-skills.tsx
+  s_1a82bc70ad4a3f::t_0c4bd30eb659ae 1-37,48-87,106-132
+  s_1a82bc70ad4a3f::t_e78b310831c91e 38-47
+  s_1a82bc70ad4a3f::t_ec57df3286a922 88-105
+apps/web/src/builder/steps/identity.tsx
+  s_1a82bc70ad4a3f::t_61c61a49590a08 1-18
+apps/web/src/builder/steps/attributes.tsx
+  s_1a82bc70ad4a3f::t_bba9896ce95162 1-40
+apps/web/src/builder/steps/related-skills.tsx
+  s_1a82bc70ad4a3f::t_fd47939861b9f8 1-190
+apps/web/src/builder/steps/spells.tsx
+  s_1a82bc70ad4a3f::t_71a55aab1153d2 1-62
+apps/web/src/components/sheet-view.tsx
+  s_1a82bc70ad4a3f::t_a06b12333976d8 1-137
+apps/web/src/app.tsx
+  s_1a82bc70ad4a3f::t_a04b2a8f19a0cd 7,23
+apps/web/src/builder/steps/occ.tsx
+  s_1a82bc70ad4a3f::t_140c79769b7f02 1-56
+apps/web/src/pages/new-character.tsx
+  s_1a82bc70ad4a3f::t_8da6a16d3254e3 1-137
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_e23eb2cc4bdcd3 3,5-6,10,40-48,50-52
+apps/web/src/builder/store.ts
+  s_1a82bc70ad4a3f::t_5097e9c261dd3f 1-5,7-137,149-153
+  s_1a82bc70ad4a3f::t_4a93ba2baf1d02 6
+  s_1a82bc70ad4a3f::t_8cdaebe8dc31a1 138-148
+apps/web/src/builder/steps/alignment.tsx
+  s_1a82bc70ad4a3f::t_f2beab36f6af90 1-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8080f120c1ccf274808479a6759f06047409f695",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
