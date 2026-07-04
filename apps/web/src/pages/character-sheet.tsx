@@ -46,6 +46,16 @@ export function CharacterSheetPage() {
     setError,
   ) as Accessor<CharacterSheet | null | undefined>;
   const rollVitals = createMutation(convex, api.characters.rollVitals);
+  const [rollError, setRollError] = createSignal<Error>();
+
+  const roll = async () => {
+    setRollError(undefined);
+    try {
+      await rollVitals({ id: id() });
+    } catch (error) {
+      setRollError(error instanceof Error ? error : new Error(String(error)));
+    }
+  };
 
   return (
     <Switch fallback={<p>Loading…</p>}>
@@ -111,13 +121,12 @@ export function CharacterSheetPage() {
                   {(strength) => <li>Spell strength: {strength()}</li>}
                 </Show>
               </ul>
-              <button
-                type="button"
-                class="mt-2 border px-2 py-1"
-                onClick={() => void rollVitals({ id: id() })}
-              >
+              <button type="button" class="mt-2 border px-2 py-1" onClick={() => void roll()}>
                 Roll vitals
               </button>
+              <Show when={rollError()}>
+                {(err) => <p>Couldn't roll vitals: {err().message}</p>}
+              </Show>
             </section>
 
             <section>

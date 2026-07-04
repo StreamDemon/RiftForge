@@ -44,7 +44,7 @@ Tooling is [Vite+](https://viteplus.dev) (`vp`) over a pnpm workspace.
 ```bash
 vp install            # install dependencies
 vp run rules#test     # run the rules-engine tests
-vp run rules#check    # format + lint + typecheck (also backend#/web#)
+vp run rules#check    # format + lint + typecheck one package (same for backend#, web#)
 vp run ready          # check + test + build across the workspace
 
 vp run backend#dev    # local anonymous Convex deployment (http://127.0.0.1:3210)
