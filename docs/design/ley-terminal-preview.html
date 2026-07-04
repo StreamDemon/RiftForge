@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RiftForge — Ley Terminal (AAA HUD)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Staatliches&family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Martian+Mono:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0B0D0F; --surface: #14181C; --inset: #1B2127; --line: #2C343B;
+    --text: #E6ECEF; --muted: #7E8A92; --dead: #40484F;
+    --amber: #FFAE3D; --cyan: #4FD8FF; --blood: #E23B2E; --ok: #57E389;
+    --rust: #A87932;
+    --display: "Staatliches", sans-serif;
+    --hud: "Chakra Petch", sans-serif;
+    --serif: "IBM Plex Serif", serif;
+    --mono: "IBM Plex Mono", monospace;
+    --data: "Martian Mono", monospace;
+    --notch: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--hud);
+    font-size: 15px; line-height: 1.55; position: relative;
+  }
+  /* CRT: scanlines + vignette + faint noise */
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.14) 0 1px, transparent 1px 3px); opacity: 0.5; }
+  body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 998;
+    background: radial-gradient(120% 100% at 50% 40%, transparent 55%, rgba(0,0,0,0.5) 100%); }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 48px 32px 96px; position: relative; }
+  h1, h2 { font-family: var(--display); letter-spacing: 0.04em; font-weight: 400; }
+  h2 { font-size: 26px; color: var(--amber); margin: 64px 0 6px; }
+  h2::before { content: "// "; color: var(--dead); }
+  .sub { color: var(--muted); margin-bottom: 20px; font-size: 13.5px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); clip-path: var(--notch); position: relative; }
+  .panel::before { content: ""; position: absolute; top: 0; left: 12px; right: 0; height: 2px; background: linear-gradient(90deg, var(--amber), transparent 40%); opacity: 0.6; }
+
+  /* hero */
+  .hero { padding: 44px 40px; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; overflow: hidden; }
+  .hero::after { content: "RIFT-OS v0.9 // RECOVERED HARDWARE // PROPERTY UNKNOWN"; position: absolute; bottom: 10px; right: 16px; font-family: var(--mono); font-size: 10px; color: var(--dead); letter-spacing: 0.12em; }
+  .hero h1 { font-size: 84px; line-height: 0.9; text-shadow: 0 0 24px rgba(79,216,255,0.25); }
+  .hero h1 em { font-style: normal; color: var(--cyan); }
+  .hero .thesis { color: var(--muted); max-width: 560px; margin-top: 14px; }
+  .glitch { position: relative; display: inline-block; }
+  .glitch::before { content: attr(data-t); position: absolute; left: 2px; top: 0; color: var(--blood); opacity: 0.5; clip-path: inset(62% 0 8% 0); }
+  .glitch::after { content: attr(data-t); position: absolute; left: -2px; top: 0; color: var(--cyan); opacity: 0.5; clip-path: inset(8% 0 74% 0); }
+
+  /* palette */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .swatch { border: 1px solid var(--line); background: var(--surface); clip-path: var(--notch); }
+  .swatch .chip { height: 62px; }
+  .swatch .meta { padding: 8px 12px; font-family: var(--mono); font-size: 11.5px; }
+  .swatch .meta b { display: block; color: var(--text); font-weight: 500; }
+  .swatch .meta span { color: var(--muted); }
+
+  /* type specimens */
+  .spec { border: 1px solid var(--line); background: var(--surface); clip-path: var(--notch); padding: 24px 28px; margin-bottom: 12px; display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: baseline; }
+  .spec .role { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .spec .role b { color: var(--amber); display: block; font-weight: 500; }
+
+  /* components */
+  .components { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 26px; }
+  .btn { font-family: var(--hud); font-weight: 700; font-size: 13px; letter-spacing: 0.08em; padding: 10px 20px; cursor: pointer; border: 1px solid transparent; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); text-transform: uppercase; }
+  .btn-primary { background: var(--amber); color: #191104; }
+  .btn-secondary { background: transparent; color: var(--text); border-color: var(--line); background: var(--inset); }
+  .btn-ghost { background: transparent; color: var(--cyan); border: none; text-decoration: underline; text-underline-offset: 3px; clip-path: none; }
+  .input { background: var(--bg); border: 1px solid var(--line); color: var(--text); font-family: var(--mono); font-size: 13px; padding: 10px 12px; outline: none; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+  .input:focus { border-color: var(--amber); box-shadow: 0 0 12px rgba(255,174,61,0.25); }
+  .alert { font-family: var(--mono); font-size: 12.5px; padding: 8px 12px; border-left: 3px solid; }
+  .alert-ok { border-color: var(--ok); color: var(--ok); background: rgba(87,227,137,0.06); }
+  .alert-warn { border-color: var(--amber); color: var(--amber); background: rgba(255,174,61,0.06); }
+  .alert-danger { border-color: var(--blood); color: #ff6a5e; background: rgba(226,59,46,0.08); }
+  .alert-info { border-color: var(--cyan); color: var(--cyan); background: rgba(79,216,255,0.06); }
+
+  /* ===== THE MOCKUP: AAA character screen ===== */
+  .mockup { border: 1px solid var(--line); background: var(--bg); position: relative; overflow: hidden; }
+  .mockup::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+    background: radial-gradient(900px 500px at 30% 0%, rgba(79,216,255,0.06), transparent 60%), radial-gradient(700px 400px at 90% 100%, rgba(255,174,61,0.05), transparent 60%); }
+  .mock-titlebar { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: var(--surface); border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .mock-titlebar .brand { font-family: var(--display); font-size: 18px; color: var(--text); letter-spacing: 0.06em; }
+  .mock-titlebar .brand em { font-style: normal; color: var(--cyan); }
+
+  /* identity band — the ownership hero */
+  .identity { display: grid; grid-template-columns: 210px 1fr 300px; gap: 24px; padding: 26px 26px 20px; border-bottom: 1px solid var(--line); position: relative; }
+  .portrait { width: 210px; height: 240px; background: var(--inset); border: 1px solid var(--line); clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); display: flex; align-items: center; justify-content: center; position: relative; }
+  .portrait svg { opacity: 0.85; filter: drop-shadow(0 0 14px rgba(79,216,255,0.4)); }
+  .portrait .scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(79,216,255,0.05) 0 1px, transparent 1px 4px); }
+  .portrait .cap { position: absolute; bottom: 6px; left: 10px; font-family: var(--mono); font-size: 9.5px; color: var(--dead); letter-spacing: 0.14em; }
+  .id-main .kicker { font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: 0.16em; }
+  .id-main h3 { font-family: var(--display); font-size: 64px; line-height: 0.95; letter-spacing: 0.02em; }
+  .id-main .epithet { font-family: var(--serif); font-style: italic; font-size: 16px; color: #B9C4CA; margin: 2px 0 12px; }
+  .traits { display: flex; flex-wrap: wrap; gap: 8px; }
+  .trait { font-family: var(--hud); font-weight: 600; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); background: var(--inset); border: 1px solid var(--line); padding: 4px 10px; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+  .trait.arc { color: var(--cyan); border-color: rgba(79,216,255,0.4); }
+  .trait.warn { color: var(--amber); border-color: rgba(255,174,61,0.4); }
+  .physical { font-family: var(--mono); font-size: 12px; color: var(--muted); align-self: end; line-height: 2; }
+  .physical b { color: var(--text); font-weight: 500; }
+  .alignment-badge { position: absolute; top: 22px; right: 26px; font-family: var(--display); color: var(--blood); border: 2px solid var(--blood); padding: 2px 12px; letter-spacing: 0.12em; transform: rotate(3deg); opacity: 0.85; font-size: 15px; }
+
+  .mock-body { display: grid; grid-template-columns: 1fr 1fr 300px; gap: 18px; padding: 22px 26px 26px; }
+  .hudpanel { background: var(--surface); border: 1px solid var(--line); clip-path: var(--notch); padding: 16px 18px; }
+  .hudpanel .h { font-family: var(--display); font-size: 15px; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 10px; }
+  .hudpanel .h em { font-style: normal; color: var(--amber); }
+  .attr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .attr { text-align: center; background: var(--inset); border: 1px solid var(--line); padding: 8px 2px 6px; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+  .attr b { display: block; font-family: var(--data); font-size: 19px; font-weight: 800; }
+  .attr span { font-family: var(--mono); font-size: 9.5px; color: var(--muted); letter-spacing: 0.1em; }
+  .bar { margin: 8px 0 4px; }
+  .bar .lab { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .bar .lab .v { font-family: var(--data); font-weight: 600; color: var(--text); }
+  .bar .track { height: 7px; background: var(--bg); border: 1px solid var(--line); position: relative; }
+  .bar .fill { position: absolute; inset: 0; }
+  .fill.hp { width: 90%; background: linear-gradient(90deg, #7a2018, var(--blood)); box-shadow: 0 0 10px rgba(226,59,46,0.4); }
+  .fill.sdc { width: 66%; background: linear-gradient(90deg, #7a5a17, var(--amber)); box-shadow: 0 0 10px rgba(255,174,61,0.35); }
+  .fill.ppe { width: 40%; background: linear-gradient(90deg, #14606e, var(--cyan)); animation: ppe-pulse 2.5s ease-in-out infinite; }
+  @keyframes ppe-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(79,216,255,0.35); opacity: 0.82; }
+    50% { box-shadow: 0 0 20px rgba(79,216,255,0.8); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .fill.ppe { animation: none; box-shadow: 0 0 12px rgba(79,216,255,0.5); } }
+  .statline { display: flex; justify-content: space-between; font-size: 13.5px; padding: 3px 0; border-bottom: 1px dotted var(--line); }
+  .statline .v { font-family: var(--data); font-size: 12.5px; font-weight: 600; }
+  .statline .v.live { color: var(--cyan); text-shadow: 0 0 10px rgba(79,216,255,0.6); }
+
+  .backstory { grid-column: 1 / 3; }
+  .backstory p { font-family: var(--serif); font-size: 14.5px; color: #C9CFC7; max-width: 68ch; }
+  .backstory p::first-letter { font-family: var(--display); font-size: 30px; color: var(--amber); padding-right: 4px; }
+  .backstory .redact { background: var(--dead); color: var(--dead); border-radius: 1px; }
+
+  .telemetry { grid-row: 1 / 3; grid-column: 3; display: flex; flex-direction: column; gap: 10px; }
+  .tlog { flex: 1; background: var(--bg); border: 1px solid var(--line); padding: 12px; font-family: var(--mono); font-size: 11.5px; line-height: 1.95; }
+  .tlog .amber { color: var(--amber); } .tlog .cyan { color: var(--cyan); } .tlog .ok { color: var(--ok); } .tlog .dim { color: var(--dead); }
+  .t-actions { display: flex; flex-direction: column; gap: 8px; }
+  .t-actions .btn { width: 100%; text-align: left; }
+  .mock-status { display: flex; gap: 24px; padding: 8px 18px; background: var(--surface); border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .mock-status .ok { color: var(--ok); }
+
+  .wizardstrip { padding: 18px 24px; font-family: var(--mono); font-size: 13px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .wizardstrip .step { color: var(--dead); }
+  .wizardstrip .step.done { color: var(--ok); }
+  .wizardstrip .step.now { color: var(--amber); text-shadow: 0 0 8px rgba(255,174,61,0.5); }
+  footer { margin-top: 72px; color: var(--dead); font-family: var(--mono); font-size: 11.5px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="panel hero">
+    <div>
+      <h1 class="glitch" data-t="RIFTFORGE">RIFT<em>FORGE</em></h1>
+      <p class="thesis">Ley Terminal — a AAA character screen running on a salvaged CRT. Cyberpunk's angles, Fallout's phosphor grime, Watchmen's dread. Your character isn't a form. It's a save file with a soul.</p>
+    </div>
+    <div style="font-family:var(--mono); font-size:12px; color:var(--amber); border:1px solid var(--line); padding:6px 10px; background:var(--bg)">SYS 09.2 // LEY-LINK ACTIVE</div>
+  </div>
+
+  <h2>COLOR — NOIR CHASSIS, AMBER MACHINE, CYAN MAGIC</h2>
+  <p class="sub">Watchmen-dark chassis. Amber = the machine's voice. Ley cyan = magic ONLY (P.P.E., arcane, live). Blood red = damage &amp; dread. Green confirms. Rust for worn metal.</p>
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#0B0D0F"></div><div class="meta"><b>#0B0D0F</b><span>bg / noir</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#14181C"></div><div class="meta"><b>#14181C</b><span>surface</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#1B2127"></div><div class="meta"><b>#1B2127</b><span>inset</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#2C343B"></div><div class="meta"><b>#2C343B</b><span>hairline</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#FFAE3D"></div><div class="meta"><b>#FFAE3D</b><span>phosphor amber</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#4FD8FF"></div><div class="meta"><b>#4FD8FF</b><span>ley cyan</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#E23B2E"></div><div class="meta"><b>#E23B2E</b><span>blood red</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#57E389"></div><div class="meta"><b>#57E389</b><span>confirmed</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#A87932"></div><div class="meta"><b>#A87932</b><span>rust / worn metal</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#E6ECEF"></div><div class="meta"><b>#E6ECEF</b><span>primary text</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#7E8A92"></div><div class="meta"><b>#7E8A92</b><span>muted text</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#40484F"></div><div class="meta"><b>#40484F</b><span>dead / disabled</span></div></div>
+  </div>
+
+  <h2>TYPOGRAPHY — HUD &amp; HUMANITY</h2>
+  <p class="sub">Staatliches stencils the headers. Chakra Petch is the squared game-HUD chrome. Martian Mono owns every number. Plex Mono is the terminal. Plex Serif is the one human voice — reserved for backstory and lore, so YOUR words feel different from the machine's.</p>
+  <div class="spec"><div class="role"><b>Staatliches</b>display / headers</div><div style="font-family:var(--display); font-size:44px;">LEY LINE WALKER // COMBAT PROFILE</div></div>
+  <div class="spec"><div class="role"><b>Chakra Petch</b>HUD chrome / labels</div><div style="font-weight:600; letter-spacing:0.04em;">ATTRIBUTE REQUIREMENTS MET — O.C.C. UNLOCKED. SELECT 7 RELATED SKILLS.</div></div>
+  <div class="spec"><div class="role"><b>IBM Plex Serif</b>the human voice — backstory &amp; lore</div><div style="font-family:var(--serif); font-style:italic;">She walked out of the Magic Zone on her fourteenth birthday, and the ley lines have whispered to her ever since.</div></div>
+  <div class="spec"><div class="role"><b>Martian Mono</b>stats &amp; numbers</div><div style="font-family:var(--data); font-size:22px; font-weight:600;">P.P.E. 84&nbsp;&nbsp;H.P. 18&nbsp;&nbsp;S.D.C. 16&nbsp;&nbsp;SPELL STR 12</div></div>
+  <div class="spec"><div class="role"><b>IBM Plex Mono</b>telemetry log</div><div style="font-family:var(--mono); font-size:14px; color:var(--cyan)">&gt; ROLL 3d6 :: [5][6][3] = 14 → P.E. 14 LOCKED</div></div>
+
+  <h2>COMPONENTS</h2>
+  <p class="sub">Notched corners everywhere (clip-path, no border-radius). Amber commands. Phosphor glow on focus.</p>
+  <div class="panel components">
+    <button class="btn btn-primary">Roll Vitals</button>
+    <button class="btn btn-secondary">Back</button>
+    <button class="btn btn-ghost">raw dossier</button>
+    <input class="input" value="KESTREL" />
+    <span class="alert alert-ok">✓ BUILD LEGAL — 26 SKILLS RESOLVED</span>
+    <span class="alert alert-warn">! PICK 2 MORE FROM SCIENCE</span>
+    <span class="alert alert-danger">✕ P.E. 9 — REQUIREMENT NOT MET</span>
+    <span class="alert alert-info">◈ P.P.E. STREAMING LIVE</span>
+  </div>
+
+  <h2>THE CHARACTER SCREEN — OWNERSHIP FIRST</h2>
+  <p class="sub">Identity is the hero: portrait, name, epithet, traits, physicals, and a backstory written in the one serif voice. Stats are HUD modules below. Telemetry streams on the right.</p>
+  <div class="mockup">
+    <div class="mock-titlebar">
+      <span class="brand">RIFT<em>FORGE</em></span>
+      <span>OPERATOR: STREAMDEMON // LEY-LINK: <span style="color:var(--ok)">STABLE</span></span>
+    </div>
+
+    <div class="identity">
+      <div class="portrait">
+        <div class="scan"></div>
+        <svg width="120" height="150" viewBox="0 0 120 150" fill="none">
+          <path d="M60 12 C40 12 30 30 30 48 C30 66 40 80 60 80 C80 80 90 66 90 48 C90 30 80 12 60 12 Z" stroke="#4FD8FF" stroke-width="1.5"/>
+          <path d="M18 148 C18 112 36 94 60 94 C84 94 102 112 102 148" stroke="#4FD8FF" stroke-width="1.5"/>
+          <path d="M30 40 L14 26 M90 40 L106 26 M60 6 L60 -6" stroke="#FFAE3D" stroke-width="1" opacity="0.7"/>
+        </svg>
+        <div class="cap">NO IMAGE ON FILE — UPLOAD</div>
+      </div>
+      <div class="id-main">
+        <div class="kicker">FILE № RF-0447-K // LEVEL 1 // LEY LINE WALKER</div>
+        <h3>KESTREL</h3>
+        <div class="epithet">“The ley lines whisper, and she whispers back.”</div>
+        <div class="traits">
+          <span class="trait arc">TECHNO-WIZARD APPRENTICE</span>
+          <span class="trait">MAGIC ZONE SURVIVOR</span>
+          <span class="trait warn">COALITION WATCHLIST</span>
+          <span class="trait">D-BEE SYMPATHIZER</span>
+        </div>
+      </div>
+      <div class="physical">
+        HEIGHT <b>5'7"</b> · WEIGHT <b>128 LBS</b><br/>
+        AGE <b>19</b> · EYES <b>GREY (FAINT GLOW)</b><br/>
+        ORIGIN <b>MAGIC ZONE FRINGE</b><br/>
+        DISPOSITION <b>QUIET, WATCHFUL</b>
+      </div>
+      <div class="alignment-badge">SCRUPULOUS</div>
+    </div>
+
+    <div class="mock-body">
+      <div class="hudpanel">
+        <div class="h">// <em>VITALS</em></div>
+        <div class="bar"><div class="lab"><span>HIT POINTS</span><span class="v">18 / 20</span></div><div class="track"><div class="fill hp"></div></div></div>
+        <div class="bar"><div class="lab"><span>S.D.C.</span><span class="v">16 / 24</span></div><div class="track"><div class="fill sdc"></div></div></div>
+        <div class="bar"><div class="lab"><span>P.P.E. ◈ PULSING</span><span class="v" style="color:var(--cyan)">84 / 214</span></div><div class="track"><div class="fill ppe"></div></div></div>
+        <div class="statline"><span>Spell Strength</span><span class="v live">12</span></div>
+        <div class="statline"><span>Coma / Death</span><span class="v">-14%</span></div>
+      </div>
+      <div class="hudpanel">
+        <div class="h">// <em>ATTRIBUTES</em></div>
+        <div class="attr-grid">
+          <div class="attr"><b>12</b><span>IQ</span></div>
+          <div class="attr"><b>3</b><span>ME</span></div>
+          <div class="attr"><b>15</b><span>MA</span></div>
+          <div class="attr"><b>8</b><span>PS</span></div>
+          <div class="attr"><b>9</b><span>PP</span></div>
+          <div class="attr"><b>14</b><span>PE</span></div>
+          <div class="attr"><b>7</b><span>PB</span></div>
+          <div class="attr"><b>12</b><span>SPD</span></div>
+        </div>
+        <div style="height:10px"></div>
+        <div class="statline"><span>Attacks / Melee</span><span class="v">4</span></div>
+        <div class="statline"><span>Strike / Parry / Dodge</span><span class="v">+0 / +0 / +0</span></div>
+      </div>
+
+      <aside class="telemetry">
+        <div class="tlog">
+          <div class="dim">// ley-link established 09:14:22</div>
+          <div>&gt; DERIVE :: sheet v14 <span class="ok">OK</span></div>
+          <div>&gt; ROLL 1d6 :: [4] → <span class="amber">H.P. 18 LOCKED</span></div>
+          <div>&gt; ROLL 2d6 :: [1][3] → <span class="amber">S.D.C. 16</span></div>
+          <div>&gt; ROLL PPE :: 64–214 → <span class="cyan">84 ◈ LIVE</span></div>
+          <div class="dim">// awaiting command…</div>
+          <div><span class="amber">█</span></div>
+        </div>
+        <div class="t-actions">
+          <button class="btn btn-primary">&gt; Roll Vitals</button>
+          <button class="btn btn-secondary">&gt; Save vs Magic</button>
+          <button class="btn btn-secondary">&gt; Skill Check…</button>
+        </div>
+      </aside>
+
+      <div class="hudpanel backstory">
+        <div class="h">// <em>PERSONNEL FILE — NARRATIVE</em> <span style="float:right; font-family:var(--mono); font-size:10px; color:var(--dead)">OPTIONAL — AUTHOR: PLAYER</span></div>
+        <p>She walked out of the Magic Zone on her fourteenth birthday with a dead man's pack and a living book. The Coalition has a file on her <span class="redact">██████████</span> and the file is wrong. Kestrel reads ley lines the way other people read weather — and somewhere east of old Chi-Town, a rift she opened is still <span class="redact">████████</span>.</p>
+      </div>
+    </div>
+
+    <div class="mock-status">
+      <span>RULES: RUE v1.0 // 150 TESTS <span class="ok">PASS</span></span>
+      <span>SYNC: <span class="ok">LIVE</span></span>
+      <span>FILE: RF-0447-K</span>
+    </div>
+  </div>
+
+  <h2>WIZARD — THE TERMINAL INTERROGATES YOU</h2>
+  <p class="sub">Steps as a boot sequence. Identity steps (name, epithet, traits, backstory) make ownership part of creation, not an afterthought.</p>
+  <div class="panel wizardstrip">
+    <span class="step done">01 IDENT ✓</span>
+    <span class="step done">02 ATTRIBUTES ✓</span>
+    <span class="step done">03 O.C.C. ✓</span>
+    <span class="step now">▸ 04/09 :: DECLARE ALIGNMENT</span>
+    <span class="step">05 PSIONICS</span>
+    <span class="step">06 SKILLS</span>
+    <span class="step">07 RELATED</span>
+    <span class="step">08 SPELLS</span>
+    <span class="step">09 FORGE</span>
+  </div>
+
+  <footer>RIFTFORGE DESIGN SYSTEM PREVIEW v2 — "LEY TERMINAL" // CP2077 × FALLOUT × WATCHMEN // 2026-07-04</footer>
+</div>
+</body>
+</html>
