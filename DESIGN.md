@@ -17,7 +17,10 @@ Your character isn't a form. It's a save file with a soul.
 - **Direction:** Industrial/utilitarian AAA game HUD — CP2077 angles × Fallout phosphor × Watchmen noir.
 - **Decoration level:** Intentional — CRT scanlines + vignette overlay on the chassis, subtle grunge/noise on panels, glitch chromatic-aberration accents on display type. No fog, no blobs, no glassmorphism.
 - **Mood:** Dense, legible, dangerous. The terminal is old, recovered, and running software it was never meant to run.
-- **Hard rule — zero painted fantasy art.** Schematic linework, halftone, and typography carry all flavor. This is the loudest anti-D&D-Beyond signal available.
+- **Hard rule — zero painted fantasy art.** Schematic linework, halftone, and typography carry all flavor. This is the loudest anti-D&D-Beyond signal available. Scope:
+  - **App surfaces (wizard, sheet, roster):** fully art-free — no illustration of any kind in RiftForge's own chrome.
+  - **Marketing shell (`/` landing, future):** same ban on painted/illustrated splash art, but *procedural and schematic* visuals are the sanctioned way to be dramatic — the three.js ley-line scene, wireframe/blueprint renderings, CRT effects.
+  - **Player content is always exempt:** uploaded portraits, and future VTT maps/tokens, are the player's material. The ban is on us decorating with stock fantasy art, never on what players bring. The machine stays austere; the humanity comes from the player.
 - **Reference points:** CP2077 character/inventory screens (angular panels, notched corners), Fallout Pip-Boy (phosphor mono telemetry), Watchmen (noir chassis, blood-red punctuation).
 
 ## Typography
@@ -107,3 +110,4 @@ Purple gradients · 3-column icon grids · centered hero/paragraph/CTA stacks ·
 | 2026-07-04 | Pivot from "paper dossier artifact" (v1) to AAA HUD "Ley Terminal" (v2) | User direction: CP2077 × Fallout × Watchmen; keep terminal + CRT. Paper dossier concept retired (may return as print/export view someday). |
 | 2026-07-04 | Ownership-first identity band + optional narrative fields | User: "users need to own their characters" — epithet/appearance/traits/backstory/portrait spec'd for #10+. |
 | 2026-07-04 | Ley cyan `#4FD8FF` → deep ley amber `#C9821F` | User call: full phosphor monochrome. Magic vs machine is now brightness, not hue — tighter, more period-correct CRT. |
+| 2026-07-04 | Art-ban scope clarified | Whole-brand rule for RiftForge's own chrome: app fully art-free; landing may use procedural/schematic visuals (ley-line scene); player-provided content (portraits, VTT maps/tokens) always exempt. |
