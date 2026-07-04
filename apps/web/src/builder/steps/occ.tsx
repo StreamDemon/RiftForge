@@ -27,7 +27,7 @@ export function OccStep(props: { store: BuilderStore }) {
               <input
                 type="radio"
                 name="occ"
-                class="accent-[#FFAE3D]"
+                class="accent-amber"
                 checked={props.store.draft.occId === occ.id}
                 onChange={() => props.store.setDraft("occId", occ.id)}
               />

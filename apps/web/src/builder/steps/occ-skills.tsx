@@ -102,7 +102,7 @@ export function OccSkillsStep(props: { store: BuilderStore }) {
                           <label class="flex cursor-pointer items-center gap-2 font-mono text-[13px] hover:text-amber">
                             <input
                               type="checkbox"
-                              class="accent-[#FFAE3D]"
+                              class="accent-amber"
                               checked={picks(slot).some((p) => p.skillId === option.id)}
                               onChange={() => toggle(slot, option.id)}
                             />

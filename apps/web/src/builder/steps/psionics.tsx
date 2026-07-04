@@ -34,7 +34,7 @@ export function PsionicsStep(props: { store: BuilderStore }) {
               <input
                 type="radio"
                 name="psychicClass"
-                class="mr-2 accent-[#FFAE3D]"
+                class="mr-2 accent-amber"
                 checked={props.store.draft.psychicClass === entry.value}
                 onChange={() => props.store.setDraft("psychicClass", entry.value)}
               />

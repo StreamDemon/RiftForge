@@ -41,7 +41,7 @@ export function AlignmentStep(props: { store: BuilderStore }) {
                       <input
                         type="radio"
                         name="alignment"
-                        class="accent-[#FFAE3D]"
+                        class="accent-amber"
                         checked={props.store.draft.alignmentId === alignment.id}
                         onChange={() => props.store.setDraft("alignmentId", alignment.id)}
                       />

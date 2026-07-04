@@ -85,7 +85,7 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
             <div class="mt-2">
               <StatRow label="Hit Points" value={statValue(s().vitals.hitPoints)} />
               <StatRow label="S.D.C." value={statValue(s().vitals.sdc)} />
-              <StatRow label="Coma / Death" value={`${s().vitals.comaDeathFloor}%`} />
+              <StatRow label="Coma / Death" value={s().vitals.comaDeathFloor} />
               <Show when={s().ppe}>
                 {(ppe) => <StatRow label="P.P.E." value={statValue(ppe())} live />}
               </Show>
@@ -153,7 +153,11 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
             <For each={s().spells.known}>
               {(spell) => (
                 <StatRow
-                  label={spell.name}
+                  label={
+                    <>
+                      {spell.name} <span class="text-muted">LVL {spell.level}</span>
+                    </>
+                  }
                   value={
                     <span class="text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.5)]">
                       {spell.ppe} PPE

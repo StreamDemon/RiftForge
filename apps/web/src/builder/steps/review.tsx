@@ -9,7 +9,10 @@ import type { BuilderStore } from "../store.ts";
  */
 export function ReviewStep(props: { store: BuilderStore }) {
   return (
-    <div class="space-y-3">
+    <section class="space-y-3" aria-labelledby="review-heading">
+      <h2 id="review-heading" class="font-display text-2xl tracking-[0.03em]">
+        REVIEW
+      </h2>
       <Show
         when={props.store.preview().sheet}
         fallback={<Alert tone="danger">NOT DERIVABLE YET — {props.store.preview().error}</Alert>}
@@ -23,6 +26,6 @@ export function ReviewStep(props: { store: BuilderStore }) {
           </>
         )}
       </Show>
-    </div>
+    </section>
   );
 }

@@ -57,7 +57,7 @@ export function SpellsStep(props: { store: BuilderStore }) {
                         <label class="flex cursor-pointer items-center gap-2 font-mono text-[13px] hover:text-amber">
                           <input
                             type="checkbox"
-                            class="accent-[#FFAE3D]"
+                            class="accent-amber"
                             checked={props.store.draft.spellIds.includes(spell.id)}
                             onChange={() => toggle(spell.id, levelIds, choice.choose)}
                           />

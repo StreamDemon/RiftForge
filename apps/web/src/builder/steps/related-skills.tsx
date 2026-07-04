@@ -43,7 +43,7 @@ function CheckboxPool(props: {
                   <label class="flex cursor-pointer items-center gap-2 font-mono text-[13px] hover:text-amber">
                     <input
                       type="checkbox"
-                      class="accent-[#FFAE3D]"
+                      class="accent-amber"
                       checked={props.picks.some((p) => p.skillId === skill.id)}
                       onChange={() => props.onToggle(skill.id)}
                     />
@@ -110,7 +110,7 @@ export function RelatedSkillsStep(props: { store: BuilderStore }) {
               <input
                 type="radio"
                 name="hth"
-                class="accent-[#FFAE3D]"
+                class="accent-amber"
                 checked={(props.store.draft.hthId ?? grant().hthId) === grant().hthId}
                 onChange={() => props.store.setDraft("hthId", grant().hthId)}
               />
@@ -128,7 +128,7 @@ export function RelatedSkillsStep(props: { store: BuilderStore }) {
                   <input
                     type="radio"
                     name="hth"
-                    class="accent-[#FFAE3D]"
+                    class="accent-amber"
                     disabled={!upgrade.available}
                     checked={
                       upgrade.hthId !== undefined && props.store.draft.hthId === upgrade.hthId
