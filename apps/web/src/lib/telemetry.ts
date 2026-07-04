@@ -18,14 +18,16 @@ const MAX_ENTRIES = 60;
 export function createTelemetry(boot: string[] = []): {
   entries: Accessor<TelemetryEntry[]>;
   log: (text: string, tone?: TelemetryTone) => void;
+  /** Back to the boot lines — e.g. when the dossier switches characters. */
+  reset: () => void;
 } {
   let nextId = 0;
-  const [entries, setEntries] = createSignal<TelemetryEntry[]>(
-    boot.map((text) => ({ id: nextId++, text, tone: "dim" })),
-  );
+  const bootEntries = () => boot.map((text) => ({ id: nextId++, text, tone: "dim" as const }));
+  const [entries, setEntries] = createSignal<TelemetryEntry[]>(bootEntries());
   const log = (text: string, tone: TelemetryTone = "machine") =>
     setEntries((current) => [...current, { id: nextId++, text, tone }].slice(-MAX_ENTRIES));
-  return { entries, log };
+  const reset = () => setEntries(bootEntries());
+  return { entries, log, reset };
 }
 
 /** "horrorFactor" -> "HORROR FACTOR" for the machine voice. */

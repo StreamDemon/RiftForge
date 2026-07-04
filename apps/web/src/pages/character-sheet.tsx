@@ -106,6 +106,19 @@ export function CharacterSheetPage() {
   const telemetry = createTelemetry(["// ley-link established", "// awaiting command…"]);
   const [rollError, setRollError] = createSignal<Error>();
 
+  // A new dossier starts with a fresh log: rolls belong to the character
+  // they were rolled for, not whoever the page shows next.
+  createEffect(
+    on(
+      id,
+      () => {
+        telemetry.reset();
+        setRollError(undefined);
+      },
+      { defer: true },
+    ),
+  );
+
   const actions: SheetActions = {
     rollSave: (name, save) => {
       const roll = rollSave(save);
