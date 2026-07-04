@@ -83,8 +83,9 @@ const alertMark: Record<AlertTone, string> = {
 export function Alert(props: ParentProps<{ tone: AlertTone; class?: string }>) {
   return (
     <p
+      // The roles imply their live regions (alert=assertive, status=polite);
+      // an explicit aria-live alongside them double-speaks on VoiceOver iOS.
       role={props.tone === "danger" ? "alert" : "status"}
-      aria-live={props.tone === "danger" ? "assertive" : "polite"}
       class={`border-l-3 px-3 py-2 font-mono text-[12.5px] ${alertClass[props.tone]} ${props.class ?? ""}`}
     >
       {alertMark[props.tone]} {props.children}
