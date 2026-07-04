@@ -30,6 +30,33 @@ export type CharacterAttributes = z.infer<typeof characterAttributesSchema>;
 export const psychicClassSchema = z.enum(["masterPsychic", "majorOrMinorPsychic", "ordinary"]);
 export type PsychicClass = z.infer<typeof psychicClassSchema>;
 
+/** Player-authored physical description — free text, no mechanics. */
+export const appearanceSchema = z.object({
+  height: z.string().max(40).optional(),
+  weight: z.string().max(40).optional(),
+  age: z.string().max(40).optional(),
+  eyes: z.string().max(80).optional(),
+  origin: z.string().max(120).optional(),
+  disposition: z.string().max(120).optional(),
+});
+export type Appearance = z.infer<typeof appearanceSchema>;
+
+/**
+ * Player-authored narrative identity ("users own their characters" — see
+ * DESIGN.md). The rules engine ignores every field: this is story, not
+ * mechanics, so nothing here can affect a derived number.
+ */
+export const narrativeSchema = z.object({
+  /** One-line quote/tagline rendered under the name. */
+  epithet: z.string().min(1).max(200).optional(),
+  appearance: appearanceSchema.optional(),
+  /** Short identity chips (e.g. "MAGIC ZONE SURVIVOR"). */
+  traits: z.array(z.string().min(1).max(60)).max(12).optional(),
+  /** Long-form prose. Generous but bounded (~a few pages). */
+  backstory: z.string().min(1).max(20_000).optional(),
+});
+export type Narrative = z.infer<typeof narrativeSchema>;
+
 /**
  * A built character — the player's *choices*. Derived stats (bonuses, attacks,
  * save targets, resolved skill %s, spell strength, …) are computed by
@@ -65,6 +92,8 @@ export const characterSchema = z.object({
       ppe: z.number().int().nonnegative().optional(),
     })
     .optional(),
+  /** Optional player-authored identity; passed through to the sheet untouched. */
+  narrative: narrativeSchema.optional(),
 });
 /** A fully-resolved character (defaulted fields present) — e.g. after parsing/from storage. */
 export type Character = z.infer<typeof characterSchema>;
