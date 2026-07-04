@@ -1,5 +1,6 @@
 import type { CharacterSheet, SheetSave, StatValue } from "@riftforge/rules";
 import { For, Show, type JSX } from "solid-js";
+import { DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
 
 /** "rolled 17" once vitals are pinned, otherwise the possible range. */
 function statValue(stat: StatValue): string {
@@ -19,119 +20,151 @@ function saveBonus(save: SheetSave): string {
   return `${sign}${save.bonus}${save.percent ? "%" : ""}`;
 }
 
+function StatRow(props: { label: JSX.Element; value: JSX.Element; live?: boolean }) {
+  return (
+    <div class="flex items-baseline justify-between border-b border-dotted border-line py-1 text-[13.5px] last:border-b-0">
+      <span>{props.label}</span>
+      <span
+        class={`font-data text-[12.5px] font-semibold ${props.live ? "text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.6)]" : ""}`}
+      >
+        {props.value}
+      </span>
+    </div>
+  );
+}
+
 /**
- * Every `deriveSheet` section, unstyled (visual design is #10). Shared by the
- * live sheet page and the builder's review preview so they can never drift.
+ * Every `deriveSheet` section in Ley Terminal chrome (DESIGN.md). Shared by
+ * the live sheet page and the builder's review preview so they never drift.
  */
 export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Element }) {
   const s = () => props.sheet;
   return (
-    <article class="space-y-6">
+    <article class="space-y-4">
       <header>
-        <h1 class="text-xl font-bold">{s().name}</h1>
-        <p>
-          Level {s().level} {s().occ.name} ({s().occ.category})
-        </p>
-        <Show when={s().alignment}>
-          {(alignment) => (
-            <p>
-              {alignment().name} ({alignment().category})
-            </p>
-          )}
-        </Show>
+        <MonoLabel>
+          LEVEL {s().level} // {s().occ.name.toUpperCase()} // {s().occ.category.toUpperCase()}
+        </MonoLabel>
+        <div class="flex items-start justify-between gap-4">
+          <h1 class="font-display text-5xl leading-none tracking-[0.02em]">{s().name}</h1>
+          <Show when={s().alignment}>
+            {(alignment) => (
+              <span class="mt-1 inline-block rotate-2 border-2 border-blood px-3 py-0.5 font-display text-[15px] tracking-[0.12em] text-blood opacity-85">
+                {alignment().name.toUpperCase()}
+              </span>
+            )}
+          </Show>
+        </div>
       </header>
 
-      <section>
-        <h2 class="font-bold">Attributes</h2>
-        <ul class="flex flex-wrap gap-4">
-          <For each={Object.entries(s().attributes)}>
-            {([name, value]) => (
-              <li>
-                {name} {value}
-              </li>
-            )}
-          </For>
-        </ul>
-        <Show when={Object.keys(s().attributeBonuses).length > 0}>
-          <h3 class="mt-2 font-bold">Attribute bonuses</h3>
-          <ul>
-            <For each={Object.entries(s().attributeBonuses)}>
-              {([target, bonus]) => (
-                <li>
-                  {target}: {bonus >= 0 ? "+" : ""}
-                  {bonus}
-                </li>
-              )}
+      <div class="grid gap-4 lg:grid-cols-2">
+        <Panel class="p-4">
+          <SectionTitle>ATTRIBUTES</SectionTitle>
+          <div class="mt-3 grid grid-cols-4 gap-2">
+            <For each={Object.entries(s().attributes)}>
+              {([name, value]) => <DataValue label={name} value={value} />}
             </For>
-          </ul>
-        </Show>
-      </section>
-
-      <section>
-        <h2 class="font-bold">Combat</h2>
-        <ul>
-          <li>Attacks per melee: {s().combat.attacksPerMelee}</li>
-          <li>Strike: +{s().combat.strike}</li>
-          <li>Parry: +{s().combat.parry}</li>
-          <li>Dodge: +{s().combat.dodge}</li>
-          <li>Damage bonus: +{s().combat.damageBonus}</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2 class="font-bold">Vitals</h2>
-        <ul>
-          <li>Hit Points: {statValue(s().vitals.hitPoints)}</li>
-          <li>S.D.C.: {statValue(s().vitals.sdc)}</li>
-          <li>Coma/death floor: {s().vitals.comaDeathFloor}</li>
-          <Show when={s().ppe}>{(ppe) => <li>P.P.E.: {statValue(ppe())}</li>}</Show>
-          <Show when={s().spellStrength}>
-            {(strength) => <li>Spell strength: {strength()}</li>}
+          </div>
+          <Show when={Object.keys(s().attributeBonuses).length > 0}>
+            <div class="mt-3">
+              <MonoLabel>DERIVED BONUSES</MonoLabel>
+              <div class="mt-1">
+                <For each={Object.entries(s().attributeBonuses)}>
+                  {([target, bonus]) => (
+                    <StatRow label={target} value={`${bonus >= 0 ? "+" : ""}${bonus}`} />
+                  )}
+                </For>
+              </div>
+            </div>
           </Show>
-        </ul>
-        {props.vitalsExtra}
-      </section>
+        </Panel>
 
-      <section>
-        <h2 class="font-bold">Saving throws</h2>
-        <ul>
+        <div class="space-y-4">
+          <Panel class="p-4">
+            <SectionTitle>VITALS</SectionTitle>
+            <div class="mt-2">
+              <StatRow label="Hit Points" value={statValue(s().vitals.hitPoints)} />
+              <StatRow label="S.D.C." value={statValue(s().vitals.sdc)} />
+              <StatRow label="Coma / Death" value={`${s().vitals.comaDeathFloor}%`} />
+              <Show when={s().ppe}>
+                {(ppe) => <StatRow label="P.P.E." value={statValue(ppe())} live />}
+              </Show>
+              <Show when={s().spellStrength}>
+                {(strength) => <StatRow label="Spell Strength" value={strength()} live />}
+              </Show>
+            </div>
+            {props.vitalsExtra}
+          </Panel>
+
+          <Panel class="p-4">
+            <SectionTitle>COMBAT</SectionTitle>
+            <div class="mt-2">
+              <StatRow label="Attacks / Melee" value={s().combat.attacksPerMelee} />
+              <StatRow label="Strike" value={`+${s().combat.strike}`} />
+              <StatRow label="Parry" value={`+${s().combat.parry}`} />
+              <StatRow label="Dodge" value={`+${s().combat.dodge}`} />
+              <StatRow label="Damage Bonus" value={`+${s().combat.damageBonus}`} />
+            </div>
+          </Panel>
+        </div>
+      </div>
+
+      <Panel class="p-4">
+        <SectionTitle>SAVING THROWS</SectionTitle>
+        <div class="mt-2 grid gap-x-8 md:grid-cols-2">
           <For each={Object.entries(s().saves)}>
             {([name, save]) => (
-              <li>
-                {name}: {saveTarget(save)} / {saveBonus(save)}
-              </li>
+              <StatRow label={name} value={`${saveTarget(save)} / ${saveBonus(save)}`} />
             )}
           </For>
-        </ul>
-      </section>
+        </div>
+      </Panel>
 
-      <section>
-        <h2 class="font-bold">Skills</h2>
-        <ul>
-          <For each={s().skills}>
-            {(skill) => (
-              <li>
-                {skill.name}
-                <Show when={skill.label}> ({skill.label})</Show>: {skill.value}%
-                <Show when={skill.value2 !== undefined}> / {skill.value2}%</Show>
-              </li>
-            )}
-          </For>
-        </ul>
-      </section>
+      <div class="grid gap-4 lg:grid-cols-2">
+        <Panel class="p-4">
+          <SectionTitle>SKILLS — FIELD RATED</SectionTitle>
+          <div class="mt-2">
+            <For each={s().skills}>
+              {(skill) => (
+                <StatRow
+                  label={
+                    <>
+                      {skill.name}
+                      <Show when={skill.label}>
+                        {(label) => <span class="text-muted"> ({label()})</span>}
+                      </Show>
+                    </>
+                  }
+                  value={
+                    <>
+                      {skill.value}%
+                      <Show when={skill.value2 !== undefined}> / {skill.value2}%</Show>
+                    </>
+                  }
+                />
+              )}
+            </For>
+          </div>
+        </Panel>
 
-      <section>
-        <h2 class="font-bold">Spells ({s().spells.count})</h2>
-        <ul>
-          <For each={s().spells.known}>
-            {(spell) => (
-              <li>
-                {spell.name} — level {spell.level}, {spell.ppe} P.P.E.
-              </li>
-            )}
-          </For>
-        </ul>
-      </section>
+        <Panel class="p-4">
+          <SectionTitle>SPELL KNOWLEDGE ({s().spells.count})</SectionTitle>
+          <div class="mt-2">
+            <For each={s().spells.known}>
+              {(spell) => (
+                <StatRow
+                  label={spell.name}
+                  value={
+                    <span class="text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.5)]">
+                      {spell.ppe} PPE
+                    </span>
+                  }
+                />
+              )}
+            </For>
+          </div>
+        </Panel>
+      </div>
     </article>
   );
 }

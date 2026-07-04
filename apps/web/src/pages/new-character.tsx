@@ -11,6 +11,7 @@ import { RelatedSkillsStep } from "../builder/steps/related-skills.tsx";
 import { ReviewStep } from "../builder/steps/review.tsx";
 import { SpellsStep } from "../builder/steps/spells.tsx";
 import { createBuilderStore, stepValidity } from "../builder/store.ts";
+import { Alert, Button, MonoLabel } from "../components/ui.tsx";
 import { convex } from "../lib/client.ts";
 import { createMutation } from "../lib/convex.ts";
 
@@ -56,16 +57,33 @@ export function NewCharacterPage() {
   };
 
   return (
-    <div class="space-y-4">
-      <h1 class="text-xl font-bold">New character</h1>
-      <ol class="flex flex-wrap gap-2">
+    <div class="mx-auto max-w-4xl space-y-4">
+      <div>
+        <MonoLabel>CHARACTER FORGE // BOOT SEQUENCE</MonoLabel>
+        <h1 class="font-display text-4xl tracking-[0.02em]">NEW FILE</h1>
+      </div>
+      <ol class="flex flex-wrap gap-x-4 gap-y-1 border border-line bg-surface px-4 py-2.5 font-mono text-[12px]">
         <For each={steps}>
           {(entry, index) => (
-            <li>
-              <span classList={{ "font-bold": index() === step() }}>
-                {index() + 1}. {entry.title}
-              </span>
-              <Show when={index() < steps.length - 1}> →</Show>
+            <li
+              classList={{
+                "text-amber [text-shadow:0_0_8px_rgb(255_174_61/0.5)]": index() === step(),
+                "text-ok": index() < step(),
+                "text-dead": index() > step(),
+              }}
+            >
+              <Show
+                when={index() === step()}
+                fallback={
+                  <>
+                    {String(index() + 1).padStart(2, "0")} {entry.title.toUpperCase()}
+                    {index() < step() ? " ✓" : ""}
+                  </>
+                }
+              >
+                ▸ {String(index() + 1).padStart(2, "0")}/{String(steps.length).padStart(2, "0")} ::{" "}
+                {entry.title.toUpperCase()}
+              </Show>
             </li>
           )}
         </For>
@@ -102,39 +120,32 @@ export function NewCharacterPage() {
       </Switch>
 
       <div class="flex gap-2">
-        <button
-          type="button"
-          class="border px-2 py-1"
-          disabled={step() === 0}
-          onClick={() => setStep((s) => Math.max(0, s - 1))}
-        >
+        <Button disabled={step() === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
           Back
-        </button>
+        </Button>
         <Show
           when={isLast()}
           fallback={
-            <button
-              type="button"
-              class="border px-2 py-1"
+            <Button
+              variant="primary"
               disabled={!canAdvance()}
               onClick={() => setStep((s) => s + 1)}
             >
               Next
-            </button>
+            </Button>
           }
         >
-          <button
-            type="button"
-            class="border px-2 py-1"
+          <Button
+            variant="primary"
             disabled={!canAdvance() || submitting()}
             onClick={() => void submit()}
           >
-            {submitting() ? "Creating…" : "Create character"}
-          </button>
+            {submitting() ? "> Forging…" : "> Forge Character"}
+          </Button>
         </Show>
       </div>
       <Show when={createError()}>
-        {(err) => <p>Couldn't create the character: {err().message}</p>}
+        {(err) => <Alert tone="danger">FORGE FAILED — {err().message}</Alert>}
       </Show>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   type SkillPick,
 } from "@riftforge/rules";
 import { createMemo, For, Show } from "solid-js";
+import { Alert, Panel } from "../../components/ui.tsx";
 import type { BuilderStore } from "../store.ts";
 
 function groupByCategory(skills: Skill[]): [string, Skill[]][] {
@@ -26,28 +27,35 @@ function CheckboxPool(props: {
   onToggle: (skillId: string) => void;
 }) {
   return (
-    <For each={groupByCategory(props.options)}>
-      {([category, skills]) => (
-        <div>
-          <h4 class="font-bold">
-            {category}
-            <Show when={props.bonuses?.[category]}> (+{props.bonuses![category]}%)</Show>
-          </h4>
-          <For each={skills}>
-            {(skill) => (
-              <label class="block">
-                <input
-                  type="checkbox"
-                  checked={props.picks.some((p) => p.skillId === skill.id)}
-                  onChange={() => props.onToggle(skill.id)}
-                />{" "}
-                {skill.name} (base {skill.baseSkill}%)
-              </label>
-            )}
-          </For>
-        </div>
-      )}
-    </For>
+    <div class="mt-2 grid gap-x-8 gap-y-3 md:grid-cols-2">
+      <For each={groupByCategory(props.options)}>
+        {([category, skills]) => (
+          <div>
+            <h4 class="font-mono text-[11.5px] tracking-[0.12em] text-muted uppercase">
+              {category}
+              <Show when={props.bonuses?.[category]}>
+                <span class="text-amber"> +{props.bonuses![category]}%</span>
+              </Show>
+            </h4>
+            <div class="mt-1 space-y-0.5">
+              <For each={skills}>
+                {(skill) => (
+                  <label class="flex cursor-pointer items-center gap-2 font-mono text-[13px] hover:text-amber">
+                    <input
+                      type="checkbox"
+                      class="accent-[#FFAE3D]"
+                      checked={props.picks.some((p) => p.skillId === skill.id)}
+                      onChange={() => props.onToggle(skill.id)}
+                    />
+                    {skill.name} <span class="text-dead">(base {skill.baseSkill}%)</span>
+                  </label>
+                )}
+              </For>
+            </div>
+          </div>
+        )}
+      </For>
+    </div>
   );
 }
 
@@ -86,68 +94,90 @@ export function RelatedSkillsStep(props: { store: BuilderStore }) {
     );
   };
 
+  const countBadge = (have: number, want: number) => (
+    <span classList={{ "text-ok": have === want, "text-amber": have !== want }}>
+      [{have}/{want}]
+    </span>
+  );
+
   return (
-    <section class="space-y-4">
+    <div class="space-y-4">
       <Show when={hth()}>
         {(grant) => (
-          <div>
-            <h3 class="font-bold">Hand to hand</h3>
-            <label class="block">
+          <Panel class="space-y-1.5 p-5">
+            <h3 class="font-display text-[15px] tracking-[0.1em] text-muted">// HAND TO HAND</h3>
+            <label class="flex cursor-pointer items-center gap-2 font-mono text-[13px]">
               <input
                 type="radio"
                 name="hth"
+                class="accent-[#FFAE3D]"
                 checked={(props.store.draft.hthId ?? grant().hthId) === grant().hthId}
                 onChange={() => props.store.setDraft("hthId", grant().hthId)}
-              />{" "}
-              {grant().name} (granted)
+              />
+              {grant().name} <span class="text-ok">(GRANTED)</span>
             </label>
             <For each={grant().upgrades}>
               {(upgrade) => (
-                <label class="block">
+                <label
+                  class="flex items-center gap-2 font-mono text-[13px]"
+                  classList={{
+                    "cursor-pointer": upgrade.available,
+                    "text-dead": !upgrade.available,
+                  }}
+                >
                   <input
                     type="radio"
                     name="hth"
+                    class="accent-[#FFAE3D]"
                     disabled={!upgrade.available}
                     checked={
                       upgrade.hthId !== undefined && props.store.draft.hthId === upgrade.hthId
                     }
                     onChange={() => props.store.setDraft("hthId", upgrade.hthId)}
-                  />{" "}
+                  />
                   {upgrade.to} — costs {upgrade.cost} O.C.C. Related{" "}
                   {upgrade.cost === 1 ? "selection" : "selections"}
                   <Show when={upgrade.requiresAlignmentCategory}>
-                    {(category) => <>, requires an {category()} alignment</>}
+                    {(category) => <span class="text-blood-text">, requires {category()}</span>}
                   </Show>
-                  <Show when={!upgrade.available}> (not modeled yet — #15)</Show>
+                  <Show when={!upgrade.available}>
+                    <span>[NOT MODELED — #15]</span>
+                  </Show>
                 </label>
               )}
             </For>
-          </div>
+          </Panel>
         )}
       </Show>
 
       <Show when={related()}>
         {(plan) => (
-          <div>
-            <h3 class="font-bold">
-              O.C.C. Related skills — pick {relatedTarget()} ({props.store.draft.related.length}/
-              {relatedTarget()})
+          <Panel class="p-5">
+            <h3 class="font-display text-[15px] tracking-[0.1em] text-muted">
+              // O.C.C. RELATED SKILLS — PICK {relatedTarget()}{" "}
+              {countBadge(props.store.draft.related.length, relatedTarget())}
             </h3>
-            <ul>
+            <ul class="mt-1 font-mono text-[12px] text-muted">
               <For each={plan().constraints}>
-                {(constraint) => (
-                  <li>
-                    At least {constraint.min} from {constraint.fromCategory} (
-                    {
-                      props.store.draft.related.filter((p) =>
-                        plan()
-                          .options.filter((s) => s.category === constraint.fromCategory)
-                          .some((s) => s.id === p.skillId),
-                      ).length
-                    }{" "}
-                    so far)
-                  </li>
-                )}
+                {(constraint) => {
+                  const have = () =>
+                    props.store.draft.related.filter((p) =>
+                      plan()
+                        .options.filter((s) => s.category === constraint.fromCategory)
+                        .some((s) => s.id === p.skillId),
+                    ).length;
+                  return (
+                    <li
+                      classList={{
+                        "text-ok": have() >= constraint.min,
+                        "text-amber": have() < constraint.min,
+                      }}
+                    >
+                      AT LEAST {constraint.min} FROM {constraint.fromCategory.toUpperCase()} (
+                      {have()} SO FAR)
+                    </li>
+                  );
+                }}
               </For>
             </ul>
             <CheckboxPool
@@ -157,36 +187,37 @@ export function RelatedSkillsStep(props: { store: BuilderStore }) {
               bonuses={plan().categoryBonuses}
               onToggle={toggle("related", relatedTarget())}
             />
-          </div>
+          </Panel>
         )}
       </Show>
 
       <Show when={secondary()}>
         {(plan) => (
-          <div>
-            <h3 class="font-bold">
-              Secondary skills — pick {plan().count} ({props.store.draft.secondary.length}/
-              {plan().count})
+          <Panel class="p-5">
+            <h3 class="font-display text-[15px] tracking-[0.1em] text-muted">
+              // SECONDARY SKILLS — PICK {plan().count}{" "}
+              {countBadge(props.store.draft.secondary.length, plan().count)}
             </h3>
-            <p>No O.C.C. bonuses apply to secondary skills.</p>
+            <p class="mt-1 font-mono text-[12px] text-dead">
+              // no O.C.C. bonuses apply to secondary skills
+            </p>
             <CheckboxPool
               options={plan().options}
               picks={props.store.draft.secondary}
               max={plan().count}
               onToggle={toggle("secondary", plan().count)}
             />
-          </div>
+          </Panel>
         )}
       </Show>
 
       <Show when={(props.store.assembled()?.errors.length ?? 0) > 0}>
-        <div>
-          <h3 class="font-bold">Not legal yet</h3>
-          <ul>
-            <For each={props.store.assembled()?.errors}>{(error) => <li>{error}</li>}</For>
-          </ul>
+        <div class="space-y-1.5">
+          <For each={props.store.assembled()?.errors}>
+            {(error) => <Alert tone="warn">{error.toUpperCase()}</Alert>}
+          </For>
         </div>
       </Show>
-    </section>
+    </div>
   );
 }

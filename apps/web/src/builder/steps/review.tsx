@@ -1,5 +1,6 @@
 import { Show } from "solid-js";
 import { SheetView } from "../../components/sheet-view.tsx";
+import { Alert, MonoLabel } from "../../components/ui.tsx";
 import type { BuilderStore } from "../store.ts";
 
 /**
@@ -8,22 +9,20 @@ import type { BuilderStore } from "../store.ts";
  */
 export function ReviewStep(props: { store: BuilderStore }) {
   return (
-    <section class="space-y-2">
-      <h2 class="font-bold">Review</h2>
+    <div class="space-y-3">
       <Show
         when={props.store.preview().sheet}
-        fallback={<p>Not derivable yet: {props.store.preview().error}</p>}
+        fallback={<Alert tone="danger">NOT DERIVABLE YET — {props.store.preview().error}</Alert>}
       >
         {(sheet) => (
           <>
-            <p>
-              This is the live sheet as it will derive — vitals show ranges until you roll them on
-              the sheet page.
-            </p>
+            <MonoLabel>
+              // PRE-FORGE PREVIEW — vitals show ranges until rolled on the dossier
+            </MonoLabel>
             <SheetView sheet={sheet()} />
           </>
         )}
       </Show>
-    </section>
+    </div>
   );
 }

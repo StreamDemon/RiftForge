@@ -1,5 +1,6 @@
 import { initialSpellChoices } from "@riftforge/rules";
 import { createMemo, For, Show } from "solid-js";
+import { Alert, Panel } from "../../components/ui.tsx";
 import type { BuilderStore } from "../store.ts";
 
 /** Initial spell knowledge (e.g. LLW: three from each of spell levels 1-4). */
@@ -23,40 +24,64 @@ export function SpellsStep(props: { store: BuilderStore }) {
   };
 
   return (
-    <section class="space-y-4">
-      <h2 class="font-bold">Initial spell knowledge</h2>
-      <Show when={choices().length > 0} fallback={<p>This O.C.C. has no initial spells.</p>}>
-        <For each={choices()}>
-          {(choice) => {
-            const levelIds = new Set(choice.options.map((s) => s.id));
-            const picked = () => props.store.draft.spellIds.filter((id) => levelIds.has(id)).length;
-            return (
-              <div>
-                <h3 class="font-bold">
-                  Level {choice.level} — pick {choice.choose} ({picked()}/{choice.choose})
-                </h3>
-                <For each={choice.options}>
-                  {(spell) => (
-                    <label class="block">
-                      <input
-                        type="checkbox"
-                        checked={props.store.draft.spellIds.includes(spell.id)}
-                        onChange={() => toggle(spell.id, levelIds, choice.choose)}
-                      />{" "}
-                      {spell.name} ({spell.ppe} P.P.E.)
-                    </label>
-                  )}
-                </For>
-              </div>
-            );
-          }}
-        </For>
+    <Panel class="space-y-4 p-5">
+      <h2 class="font-display text-2xl tracking-[0.03em]">INITIAL SPELL KNOWLEDGE</h2>
+      <Show
+        when={choices().length > 0}
+        fallback={
+          <p class="font-mono text-[12.5px] text-dead">// this O.C.C. has no initial spells</p>
+        }
+      >
+        <div class="grid gap-x-8 gap-y-4 md:grid-cols-2">
+          <For each={choices()}>
+            {(choice) => {
+              const levelIds = new Set(choice.options.map((s) => s.id));
+              const picked = () =>
+                props.store.draft.spellIds.filter((id) => levelIds.has(id)).length;
+              return (
+                <div>
+                  <h3 class="font-display text-[15px] tracking-[0.1em] text-muted">
+                    // LEVEL {choice.level} — PICK {choice.choose}{" "}
+                    <span
+                      classList={{
+                        "text-ok": picked() === choice.choose,
+                        "text-amber": picked() !== choice.choose,
+                      }}
+                    >
+                      [{picked()}/{choice.choose}]
+                    </span>
+                  </h3>
+                  <div class="mt-1 space-y-0.5">
+                    <For each={choice.options}>
+                      {(spell) => (
+                        <label class="flex cursor-pointer items-center gap-2 font-mono text-[13px] hover:text-amber">
+                          <input
+                            type="checkbox"
+                            class="accent-[#FFAE3D]"
+                            checked={props.store.draft.spellIds.includes(spell.id)}
+                            onChange={() => toggle(spell.id, levelIds, choice.choose)}
+                          />
+                          {spell.name}{" "}
+                          <span class="text-ley [text-shadow:0_0_8px_rgb(79_216_255/0.4)]">
+                            {spell.ppe} PPE
+                          </span>
+                        </label>
+                      )}
+                    </For>
+                  </div>
+                </div>
+              );
+            }}
+          </For>
+        </div>
       </Show>
       <Show when={props.store.spellErrors().length > 0}>
-        <ul>
-          <For each={props.store.spellErrors()}>{(error) => <li>{error}</li>}</For>
-        </ul>
+        <div class="space-y-1.5">
+          <For each={props.store.spellErrors()}>
+            {(error) => <Alert tone="warn">{error.toUpperCase()}</Alert>}
+          </For>
+        </div>
       </Show>
-    </section>
+    </Panel>
   );
 }
