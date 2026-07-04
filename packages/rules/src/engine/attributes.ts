@@ -1,4 +1,5 @@
 import {
+  ATTRIBUTE_CODES,
   attributeBonusChartSchema,
   type AttributeBonusChart,
   type AttributeCode,
@@ -6,6 +7,7 @@ import {
   type AttributeEffect,
 } from "../schema/attributes.ts";
 import rawChart from "../content/attribute-bonuses.json" with { type: "json" };
+import { rollDie, type Rng } from "./dice.ts";
 
 /**
  * The Attribute Bonus Chart (Rifts Ultimate Edition, p.281), validated at load.
@@ -71,6 +73,42 @@ export function deriveAttributeBonuses(
     )) {
       out[target] = (out[target] ?? 0) + bonus;
     }
+  }
+  return out;
+}
+
+/** One attribute's initial generation roll, with the dice kept for display. */
+export interface AttributeRoll {
+  total: number;
+  /** Every die in roll order: the three base D6s, then any exceptional bonus dice. */
+  dice: number[];
+  /** True when the base 3D6 came up 16-18 and earned a bonus die. */
+  exceptional: boolean;
+}
+
+/**
+ * Roll one attribute per character creation Step 1 (RUE p.279): 3D6, and if
+ * the initial three dice total 16, 17, or 18 the attribute is *exceptional* —
+ * roll one additional 1D6. If that bonus die comes up a 6 (a rarity), roll yet
+ * another 1D6, then stop; no further dice regardless of the second bonus die.
+ */
+export function rollAttribute(rng: Rng = Math.random): AttributeRoll {
+  const dice = [rollDie(6, rng), rollDie(6, rng), rollDie(6, rng)];
+  const base = dice[0]! + dice[1]! + dice[2]!;
+  const exceptional = base >= 16;
+  if (exceptional) {
+    const bonus = rollDie(6, rng);
+    dice.push(bonus);
+    if (bonus === 6) dice.push(rollDie(6, rng));
+  }
+  return { total: dice.reduce((sum, d) => sum + d, 0), dice, exceptional };
+}
+
+/** Roll all eight attributes in book order (I.Q. first — RUE p.279). */
+export function rollAttributes(rng: Rng = Math.random): Record<AttributeCode, AttributeRoll> {
+  const out = {} as Record<AttributeCode, AttributeRoll>;
+  for (const code of ATTRIBUTE_CODES) {
+    out[code] = rollAttribute(rng);
   }
   return out;
 }

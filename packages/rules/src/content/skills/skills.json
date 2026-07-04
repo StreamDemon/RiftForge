@@ -333,6 +333,57 @@
       "baseSkill": 25,
       "perLevel": 5,
       "page": 324
+    },
+    {
+      "id": "math-advanced",
+      "name": "Mathematics: Advanced",
+      "aliases": ["Math: Advanced"],
+      "category": "Science",
+      "baseSkill": 45,
+      "perLevel": 5,
+      "requires": ["math-basic"],
+      "page": 322
+    },
+    {
+      "id": "biology",
+      "name": "Biology",
+      "category": "Science",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 322
+    },
+    {
+      "id": "chemistry",
+      "name": "Chemistry",
+      "category": "Science",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 322
+    },
+    {
+      "id": "botany",
+      "name": "Botany",
+      "category": "Science",
+      "baseSkill": 25,
+      "perLevel": 5,
+      "page": 322
+    },
+    {
+      "id": "xenology",
+      "name": "Xenology",
+      "category": "Science",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "page": 322
+    },
+    {
+      "id": "zoology",
+      "name": "Zoology",
+      "category": "Science",
+      "baseSkill": 30,
+      "perLevel": 5,
+      "note": "May be specialized by taking the skill twice (+20% one-time bonus for the chosen specialty).",
+      "page": 322
     }
   ]
 }
