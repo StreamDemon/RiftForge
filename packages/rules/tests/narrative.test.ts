@@ -53,4 +53,10 @@ describe("narrative identity — story, not mechanics", () => {
     ).toThrow();
     expect(() => deriveSheet({ ...base, narrative: { epithet: "" } })).toThrow();
   });
+
+  test("traits cannot contain commas — they must round-trip through comma-separated editors", () => {
+    expect(() => deriveSheet({ ...base, narrative: { traits: ["survivor, allegedly"] } })).toThrow(
+      /comma/,
+    );
+  });
 });

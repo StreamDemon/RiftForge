@@ -50,8 +50,20 @@ export const narrativeSchema = z.object({
   /** One-line quote/tagline rendered under the name. */
   epithet: z.string().min(1).max(200).optional(),
   appearance: appearanceSchema.optional(),
-  /** Short identity chips (e.g. "MAGIC ZONE SURVIVOR"). */
-  traits: z.array(z.string().min(1).max(60)).max(12).optional(),
+  /** Short identity chips (e.g. "MAGIC ZONE SURVIVOR"). No commas — chips
+   * are comma-separated in editors, so a comma would split on round-trip. */
+  traits: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(60)
+        .refine((t) => !t.includes(","), {
+          message: "A trait cannot contain a comma.",
+        }),
+    )
+    .max(12)
+    .optional(),
   /** Long-form prose. Generous but bounded (~a few pages). */
   backstory: z.string().min(1).max(20_000).optional(),
 });

@@ -110,19 +110,21 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
               </span>
             )}
           </Show>
-          <Show when={s().narrative?.appearance}>
-            {(appearance) => (
-              <dl class="text-right font-mono text-[11.5px] leading-[1.9] text-muted">
-                <For each={APPEARANCE_ROWS.filter(([field]) => appearance()[field])}>
-                  {([field, label]) => (
-                    <div>
-                      <dt class="inline">{label} </dt>
-                      <dd class="inline text-fg">{appearance()[field]}</dd>
-                    </div>
-                  )}
-                </For>
-              </dl>
-            )}
+          <Show
+            // An `appearance: {}` written via the API is valid but has nothing
+            // to show — hide the block unless at least one row has a value.
+            when={APPEARANCE_ROWS.some(([field]) => s().narrative?.appearance?.[field])}
+          >
+            <dl class="text-right font-mono text-[11.5px] leading-[1.9] text-muted">
+              <For each={APPEARANCE_ROWS.filter(([field]) => s().narrative?.appearance?.[field])}>
+                {([field, label]) => (
+                  <div>
+                    <dt class="inline">{label} </dt>
+                    <dd class="inline text-fg">{s().narrative!.appearance![field]}</dd>
+                  </div>
+                )}
+              </For>
+            </dl>
           </Show>
         </div>
       </header>

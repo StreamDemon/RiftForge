@@ -23,7 +23,13 @@ export function IdentityStep(props: { store: BuilderStore }) {
         <div class="flex items-baseline gap-3">
           <h3 class="font-display text-[15px] tracking-[0.1em] text-muted">// PERSONNEL FILE</h3>
           <MonoLabel class="text-dead">OPTIONAL — AUTHOR: PLAYER</MonoLabel>
-          <Button variant="ghost" class="ml-auto" onClick={() => setShowFile((v) => !v)}>
+          <Button
+            variant="ghost"
+            class="ml-auto"
+            aria-expanded={showFile()}
+            aria-controls="personnel-file-fields"
+            onClick={() => setShowFile((v) => !v)}
+          >
             {showFile() ? "collapse" : "expand"}
           </Button>
         </div>
@@ -36,7 +42,7 @@ export function IdentityStep(props: { store: BuilderStore }) {
             </p>
           }
         >
-          <div class="mt-3">
+          <div class="mt-3" id="personnel-file-fields">
             <NarrativeFields
               form={props.store.draft.narrative}
               onChange={(field, value) => props.store.setDraft("narrative", field, value)}

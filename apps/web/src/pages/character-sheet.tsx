@@ -2,8 +2,8 @@ import { api } from "@riftforge/backend/api";
 import type { Id } from "@riftforge/backend/dataModel";
 import type { CharacterSheet, Narrative } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
-import { createSignal, Match, Show, Switch, type Accessor } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createEffect, createSignal, Match, on, Show, Switch, type Accessor } from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
 import { NarrativeFields } from "../components/narrative-fields.tsx";
 import { SheetView } from "../components/sheet-view.tsx";
 import { Alert, Button, MonoLabel, Panel } from "../components/ui.tsx";
@@ -18,6 +18,20 @@ function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | u
   const [form, setForm] = createStore(fromNarrative(props.narrative));
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<Error>();
+
+  // Never carry one character's draft into another's file: reset the form
+  // whenever the route id changes, regardless of mount timing.
+  createEffect(
+    on(
+      () => props.id,
+      () => {
+        setForm(reconcile(fromNarrative(props.narrative)));
+        setOpen(false);
+        setError(undefined);
+      },
+      { defer: true },
+    ),
+  );
 
   const save = async () => {
     if (saving()) return;
@@ -40,12 +54,18 @@ function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | u
           <span class="text-dead">// </span>EDIT FILE
         </h2>
         <MonoLabel class="text-dead">EPITHET / APPEARANCE / TRAITS / BACKSTORY</MonoLabel>
-        <Button variant="ghost" class="ml-auto" onClick={() => setOpen((v) => !v)}>
+        <Button
+          variant="ghost"
+          class="ml-auto"
+          aria-expanded={open()}
+          aria-controls="edit-file-fields"
+          onClick={() => setOpen((v) => !v)}
+        >
           {open() ? "close" : "open"}
         </Button>
       </div>
       <Show when={open()}>
-        <div class="mt-3 space-y-3">
+        <div class="mt-3 space-y-3" id="edit-file-fields">
           <NarrativeFields form={form} onChange={(field, value) => setForm(field, value)} />
           <div class="flex items-center gap-3">
             <Button variant="primary" disabled={saving()} onClick={() => void save()}>
