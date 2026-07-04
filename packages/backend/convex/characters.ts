@@ -58,6 +58,28 @@ export const update = mutation({
 });
 
 /**
+ * Replace the player-authored narrative (epithet, appearance, traits,
+ * backstory) without resubmitting the whole build. Story, not mechanics —
+ * but it still round-trips through the rules layer so bounds (trait count,
+ * lengths) are enforced at the write. Passing no narrative clears it.
+ */
+export const updateNarrative = mutation({
+  args: {
+    id: v.id("characters"),
+    narrative: characterFields.narrative,
+  },
+  returns: v.null(),
+  handler: async (ctx, { id, narrative }) => {
+    const doc = await ctx.db.get(id);
+    if (doc === null) throw new Error(`Character ${id} not found.`);
+    const { _id, _creationTime, ...stored } = doc;
+    validateCharacter({ ...stored, narrative });
+    await ctx.db.patch(id, { narrative });
+    return null;
+  },
+});
+
+/**
  * Roll the character's dice-derived vitals — Hit Points, physical S.D.C., and
  * (for P.P.E.-bearing O.C.C.s) permanent P.P.E. — and pin the results on the
  * document, so the sheet shows concrete values instead of ranges. Rerolls and

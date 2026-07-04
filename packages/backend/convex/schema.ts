@@ -46,6 +46,23 @@ export const characterFields = {
       ppe: v.optional(v.number()),
     }),
   ),
+  narrative: v.optional(
+    v.object({
+      epithet: v.optional(v.string()),
+      appearance: v.optional(
+        v.object({
+          height: v.optional(v.string()),
+          weight: v.optional(v.string()),
+          age: v.optional(v.string()),
+          eyes: v.optional(v.string()),
+          origin: v.optional(v.string()),
+          disposition: v.optional(v.string()),
+        }),
+      ),
+      traits: v.optional(v.array(v.string())),
+      backstory: v.optional(v.string()),
+    }),
+  ),
 };
 
 export default defineSchema({

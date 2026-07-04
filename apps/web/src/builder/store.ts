@@ -16,10 +16,13 @@ import {
 } from "@riftforge/rules";
 import { createMemo, type Accessor } from "solid-js";
 import { createStore, type SetStoreFunction } from "solid-js/store";
+import { emptyNarrativeForm, toNarrative, type NarrativeForm } from "../lib/narrative.ts";
 
 /** Everything the player has chosen so far. */
 export interface Draft {
   name: string;
+  /** Optional player-authored identity (raw form strings). */
+  narrative: NarrativeForm;
   attributes?: Record<AttributeCode, AttributeRoll>;
   occId?: string;
   alignmentId?: string;
@@ -52,6 +55,7 @@ export interface BuilderStore {
 export function createBuilderStore(): BuilderStore {
   const [draft, setDraft] = createStore<Draft>({
     name: "",
+    narrative: { ...emptyNarrativeForm },
     psychicClass: "ordinary",
     occChoices: {},
     related: [],
@@ -94,6 +98,7 @@ export function createBuilderStore(): BuilderStore {
     const attributes = attributeTotals();
     const skills = assembled();
     if (!draft.occId || !attributes || !skills) return undefined;
+    const narrative = toNarrative(draft.narrative);
     return {
       name: draft.name.trim(),
       occId: draft.occId,
@@ -104,6 +109,7 @@ export function createBuilderStore(): BuilderStore {
       psychicClass: draft.psychicClass,
       skills: skills.skills,
       spellIds: draft.spellIds,
+      ...(narrative !== undefined ? { narrative } : {}),
     };
   });
 

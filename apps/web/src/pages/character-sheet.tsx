@@ -1,12 +1,85 @@
 import { api } from "@riftforge/backend/api";
 import type { Id } from "@riftforge/backend/dataModel";
-import type { CharacterSheet } from "@riftforge/rules";
+import type { CharacterSheet, Narrative } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
-import { type Accessor, createSignal, Match, Show, Switch } from "solid-js";
+import { createEffect, createSignal, Match, on, Show, Switch, type Accessor } from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
+import { NarrativeFields } from "../components/narrative-fields.tsx";
 import { SheetView } from "../components/sheet-view.tsx";
-import { Alert, Button } from "../components/ui.tsx";
+import { Alert, Button, MonoLabel, Panel } from "../components/ui.tsx";
 import { convex } from "../lib/client.ts";
 import { createMutation, createQuery } from "../lib/convex.ts";
+import { fromNarrative, toNarrative } from "../lib/narrative.ts";
+
+/** Edit the player-authored file fields in place; saves via updateNarrative. */
+function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | undefined }) {
+  const updateNarrative = createMutation(convex, api.characters.updateNarrative);
+  const [open, setOpen] = createSignal(false);
+  const [form, setForm] = createStore(fromNarrative(props.narrative));
+  const [saving, setSaving] = createSignal(false);
+  const [error, setError] = createSignal<Error>();
+
+  // Never carry one character's draft into another's file: reset the form
+  // whenever the route id changes, regardless of mount timing.
+  createEffect(
+    on(
+      () => props.id,
+      () => {
+        setForm(reconcile(fromNarrative(props.narrative)));
+        setOpen(false);
+        setError(undefined);
+      },
+      { defer: true },
+    ),
+  );
+
+  const save = async () => {
+    if (saving()) return;
+    setError(undefined);
+    setSaving(true);
+    try {
+      await updateNarrative({ id: props.id, narrative: toNarrative({ ...form }) });
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Panel class="p-4">
+      <div class="flex items-baseline gap-3">
+        <h2 class="font-display text-[17px] tracking-[0.12em] text-muted">
+          <span class="text-dead">// </span>EDIT FILE
+        </h2>
+        <MonoLabel class="text-dead">EPITHET / APPEARANCE / TRAITS / BACKSTORY</MonoLabel>
+        <Button
+          variant="ghost"
+          class="ml-auto"
+          aria-expanded={open()}
+          aria-controls="edit-file-fields"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open() ? "close" : "open"}
+        </Button>
+      </div>
+      <Show when={open()}>
+        <div class="mt-3 space-y-3" id="edit-file-fields">
+          <NarrativeFields form={form} onChange={(field, value) => setForm(field, value)} />
+          <div class="flex items-center gap-3">
+            <Button variant="primary" disabled={saving()} onClick={() => void save()}>
+              {saving() ? "> Writing…" : "> Commit to File"}
+            </Button>
+            <Show when={error()}>
+              {(err) => <Alert tone="danger">WRITE FAILED — {err().message}</Alert>}
+            </Show>
+          </div>
+        </div>
+      </Show>
+    </Panel>
+  );
+}
 
 /** The live sheet: `SheetView` fed by the `characters.sheet` subscription. */
 export function CharacterSheetPage() {
@@ -55,6 +128,13 @@ export function CharacterSheetPage() {
           )}
         </Match>
       </Switch>
+      {/* Outside the keyed Match: live sheet updates (e.g. rolling vitals
+          mid-edit) must not remount the editor and wipe typed text. */}
+      <Show when={sheet() != null}>
+        <div class="mt-4">
+          <NarrativeEditor id={id()} narrative={sheet()?.narrative} />
+        </div>
+      </Show>
     </div>
   );
 }

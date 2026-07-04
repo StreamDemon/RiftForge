@@ -1,5 +1,5 @@
 import type { Alignment } from "../schema/alignments.ts";
-import type { Character, CharacterInput } from "../schema/character.ts";
+import type { Character, CharacterInput, Narrative } from "../schema/character.ts";
 import { characterSchema } from "../schema/character.ts";
 import type { Occ } from "../schema/occ.ts";
 import type { Spell } from "../schema/spells.ts";
@@ -37,6 +37,8 @@ export interface CharacterSheet {
   occ: { id: string; name: string; category: string };
   /** Present when the character has picked an alignment. */
   alignment?: Alignment;
+  /** Player-authored identity, passed through untouched (never affects numbers). */
+  narrative?: Narrative;
   level: number;
   attributes: Character["attributes"];
   attributeBonuses: Record<string, number>;
@@ -161,6 +163,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     name: character.name,
     occ: { id: occ.id, name: occ.name, category: occ.category },
     alignment,
+    narrative: character.narrative,
     level,
     attributes: attrs,
     attributeBonuses,

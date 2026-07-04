@@ -107,6 +107,48 @@ describe("characters — a saved Ley Line Walker round-trips", () => {
     expect(stored?.rolled).toEqual(second);
   });
 
+  test("narrative round-trips: create with it, edit it narrowly, sheet carries it", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, {
+      ...vesper,
+      narrative: { epithet: "First of her line." },
+    });
+    let sheet = await t.query(api.characters.sheet, { id });
+    if (sheet === null) throw new Error("sheet should exist for a saved character");
+    expect(sheet.narrative).toEqual({ epithet: "First of her line." });
+
+    await t.mutation(api.characters.updateNarrative, {
+      id,
+      narrative: {
+        epithet: "The ley lines whisper.",
+        traits: ["Magic Zone survivor"],
+        appearance: { age: "19" },
+        backstory: "She walked out of the Magic Zone on her fourteenth birthday.",
+      },
+    });
+    sheet = await t.query(api.characters.sheet, { id });
+    if (sheet === null) throw new Error("sheet should exist for a saved character");
+    expect(sheet.narrative?.traits).toEqual(["Magic Zone survivor"]);
+    expect(sheet.narrative?.epithet).toBe("The ley lines whisper.");
+
+    // Clearing works, and the rest of the character is untouched.
+    await t.mutation(api.characters.updateNarrative, { id, narrative: undefined });
+    const stored = await t.query(api.characters.get, { id });
+    expect(stored?.narrative).toBeUndefined();
+    expect(stored).toMatchObject(vesper);
+  });
+
+  test("updateNarrative enforces rules-layer bounds", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await expect(
+      t.mutation(api.characters.updateNarrative, {
+        id,
+        narrative: { traits: Array.from({ length: 13 }, (_, i) => `trait ${i}`) },
+      }),
+    ).rejects.toThrow();
+  });
+
   test("alignment round-trips and resolves on the sheet", async () => {
     const t = convexTest(schema, modules);
     const id = await t.mutation(api.characters.create, { ...vesper, alignmentId: "anarchist" });

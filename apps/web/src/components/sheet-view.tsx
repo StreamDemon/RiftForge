@@ -1,6 +1,6 @@
-import type { CharacterSheet, SheetSave, StatValue } from "@riftforge/rules";
+import type { Appearance, CharacterSheet, SheetSave, StatValue } from "@riftforge/rules";
 import { For, Show, type JSX } from "solid-js";
-import { DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
+import { Chip, DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
 
 /** "rolled 17" once vitals are pinned, otherwise the possible range. */
 function statValue(stat: StatValue): string {
@@ -18,6 +18,47 @@ function saveTarget(save: SheetSave): string {
 function saveBonus(save: SheetSave): string {
   const sign = save.bonus >= 0 ? "+" : "";
   return `${sign}${save.bonus}${save.percent ? "%" : ""}`;
+}
+
+const APPEARANCE_ROWS = [
+  ["height", "HEIGHT"],
+  ["weight", "WEIGHT"],
+  ["age", "AGE"],
+  ["eyes", "EYES"],
+  ["origin", "ORIGIN"],
+  ["disposition", "DISPOSITION"],
+] as const satisfies readonly (readonly [keyof Appearance, string])[];
+
+/** Schematic silhouette — the portrait frame ships before upload does. */
+function PortraitFrame() {
+  return (
+    <div class="relative flex h-44 w-36 shrink-0 items-center justify-center border border-line bg-inset [clip-path:polygon(14px_0,100%_0,100%_calc(100%-14px),calc(100%-14px)_100%,0_100%,0_14px)]">
+      <div class="absolute inset-0 bg-[repeating-linear-gradient(0deg,rgb(79_216_255/0.05)_0_1px,transparent_1px_4px)]" />
+      <svg
+        width="84"
+        height="108"
+        viewBox="0 0 120 150"
+        fill="none"
+        class="opacity-85 [filter:drop-shadow(0_0_12px_rgb(79_216_255/0.4))]"
+        aria-hidden="true"
+      >
+        <path
+          d="M60 12 C40 12 30 30 30 48 C30 66 40 80 60 80 C80 80 90 66 90 48 C90 30 80 12 60 12 Z"
+          stroke="#4FD8FF"
+          stroke-width="1.5"
+        />
+        <path
+          d="M18 148 C18 112 36 94 60 94 C84 94 102 112 102 148"
+          stroke="#4FD8FF"
+          stroke-width="1.5"
+        />
+        <path d="M30 40 L14 26 M90 40 L106 26" stroke="#FFAE3D" stroke-width="1" opacity="0.7" />
+      </svg>
+      <span class="absolute bottom-1.5 left-2 font-mono text-[9px] tracking-[0.14em] text-dead">
+        NO IMAGE ON FILE
+      </span>
+    </div>
+  );
 }
 
 function StatRow(props: { label: JSX.Element; value: JSX.Element; live?: boolean }) {
@@ -41,18 +82,49 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
   const s = () => props.sheet;
   return (
     <article class="space-y-4">
-      <header>
-        <MonoLabel>
-          LEVEL {s().level} // {s().occ.name.toUpperCase()} // {s().occ.category.toUpperCase()}
-        </MonoLabel>
-        <div class="flex items-start justify-between gap-4">
+      <header class="flex gap-5">
+        <PortraitFrame />
+        <div class="min-w-0 flex-1">
+          <MonoLabel>
+            LEVEL {s().level} // {s().occ.name.toUpperCase()} // {s().occ.category.toUpperCase()}
+          </MonoLabel>
           <h1 class="font-display text-5xl leading-none tracking-[0.02em]">{s().name}</h1>
+          <Show when={s().narrative?.epithet}>
+            {(epithet) => (
+              <p class="mt-1 font-narrative text-[15px] italic text-[#B9C4CA]">
+                &ldquo;{epithet()}&rdquo;
+              </p>
+            )}
+          </Show>
+          <Show when={(s().narrative?.traits?.length ?? 0) > 0}>
+            <div class="mt-2.5 flex flex-wrap gap-1.5">
+              <For each={s().narrative!.traits}>{(trait) => <Chip>{trait}</Chip>}</For>
+            </div>
+          </Show>
+        </div>
+        <div class="flex shrink-0 flex-col items-end gap-3">
           <Show when={s().alignment}>
             {(alignment) => (
               <span class="mt-1 inline-block rotate-2 border-2 border-blood px-3 py-0.5 font-display text-[15px] tracking-[0.12em] text-blood opacity-85">
                 {alignment().name.toUpperCase()}
               </span>
             )}
+          </Show>
+          <Show
+            // An `appearance: {}` written via the API is valid but has nothing
+            // to show — hide the block unless at least one row has a value.
+            when={APPEARANCE_ROWS.some(([field]) => s().narrative?.appearance?.[field])}
+          >
+            <dl class="text-right font-mono text-[11.5px] leading-[1.9] text-muted">
+              <For each={APPEARANCE_ROWS.filter(([field]) => s().narrative?.appearance?.[field])}>
+                {([field, label]) => (
+                  <div>
+                    <dt class="inline">{label} </dt>
+                    <dd class="inline text-fg">{s().narrative!.appearance![field]}</dd>
+                  </div>
+                )}
+              </For>
+            </dl>
           </Show>
         </div>
       </header>
@@ -169,6 +241,20 @@ export function SheetView(props: { sheet: CharacterSheet; vitalsExtra?: JSX.Elem
           </div>
         </Panel>
       </div>
+
+      <Show when={s().narrative?.backstory}>
+        {(backstory) => (
+          <Panel class="p-4">
+            <div class="flex items-baseline justify-between">
+              <SectionTitle>PERSONNEL FILE — NARRATIVE</SectionTitle>
+              <MonoLabel class="text-dead">AUTHOR: PLAYER</MonoLabel>
+            </div>
+            <p class="mt-2 max-w-[68ch] whitespace-pre-wrap font-narrative text-[14.5px] leading-relaxed text-[#C9CFC7]">
+              {backstory()}
+            </p>
+          </Panel>
+        )}
+      </Show>
     </article>
   );
 }
