@@ -4,6 +4,7 @@ import type { CharacterSheet } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
 import { type Accessor, createSignal, Match, Show, Switch } from "solid-js";
 import { SheetView } from "../components/sheet-view.tsx";
+import { Alert, Button } from "../components/ui.tsx";
 import { convex } from "../lib/client.ts";
 import { createMutation, createQuery } from "../lib/convex.ts";
 
@@ -28,30 +29,32 @@ export function CharacterSheetPage() {
   };
 
   return (
-    <Switch fallback={<p>Loading…</p>}>
-      <Match when={query.error()}>
-        {(err) => <p>Couldn't load this character: {err().message}</p>}
-      </Match>
-      <Match when={sheet() === null}>
-        <p>No such character.</p>
-      </Match>
-      <Match when={sheet()}>
-        {(s) => (
-          <SheetView
-            sheet={s()}
-            vitalsExtra={
-              <>
-                <button type="button" class="mt-2 border px-2 py-1" onClick={() => void roll()}>
-                  Roll vitals
-                </button>
-                <Show when={rollError()}>
-                  {(err) => <p>Couldn't roll vitals: {err().message}</p>}
-                </Show>
-              </>
-            }
-          />
-        )}
-      </Match>
-    </Switch>
+    <div class="mx-auto max-w-4xl">
+      <Switch fallback={<p class="font-mono text-[12.5px] text-muted">// loading dossier…</p>}>
+        <Match when={query.error()}>
+          {(err) => <Alert tone="danger">COULDN'T LOAD DOSSIER — {err().message}</Alert>}
+        </Match>
+        <Match when={sheet() === null}>
+          <Alert tone="warn">NO FILE ON RECORD.</Alert>
+        </Match>
+        <Match when={sheet()}>
+          {(s) => (
+            <SheetView
+              sheet={s()}
+              vitalsExtra={
+                <div class="mt-3 space-y-2">
+                  <Button variant="primary" onClick={() => void roll()}>
+                    {"> Roll Vitals"}
+                  </Button>
+                  <Show when={rollError()}>
+                    {(err) => <Alert tone="danger">ROLL FAILED — {err().message}</Alert>}
+                  </Show>
+                </div>
+              }
+            />
+          )}
+        </Match>
+      </Switch>
+    </div>
   );
 }
