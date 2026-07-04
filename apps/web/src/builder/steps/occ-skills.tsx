@@ -29,6 +29,10 @@ export function OccSkillsStep(props: { store: BuilderStore }) {
     const next = [...picks(slot)];
     if (label.trim() === "") {
       next.splice(index, 1);
+    } else if (index >= next.length) {
+      // Append instead of writing past the end: filling input #2 before #1
+      // must not leave a hole that skill assembly would crash on.
+      next.push({ skillId: slot.options[0]!.id, label: label.trim() });
     } else {
       next[index] = { skillId: slot.options[0]!.id, label: label.trim() };
     }

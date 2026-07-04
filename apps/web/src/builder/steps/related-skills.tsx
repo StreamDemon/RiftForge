@@ -108,7 +108,9 @@ export function RelatedSkillsStep(props: { store: BuilderStore }) {
                     type="radio"
                     name="hth"
                     disabled={!upgrade.available}
-                    checked={props.store.draft.hthId === upgrade.hthId}
+                    checked={
+                      upgrade.hthId !== undefined && props.store.draft.hthId === upgrade.hthId
+                    }
                     onChange={() => props.store.setDraft("hthId", upgrade.hthId)}
                   />{" "}
                   {upgrade.to} — costs {upgrade.cost} O.C.C. Related{" "}

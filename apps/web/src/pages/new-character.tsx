@@ -22,6 +22,7 @@ export function NewCharacterPage() {
   const create = createMutation(convex, api.characters.create);
   const [step, setStep] = createSignal(0);
   const [createError, setCreateError] = createSignal<Error>();
+  const [submitting, setSubmitting] = createSignal(false);
 
   const steps = [
     { id: "identity", title: "Name", valid: validity.identity },
@@ -41,13 +42,16 @@ export function NewCharacterPage() {
 
   const submit = async () => {
     const input = store.characterInput();
-    if (!input) return;
+    if (!input || submitting()) return;
     setCreateError(undefined);
+    setSubmitting(true);
     try {
       const id = await create(input);
       navigate(`/characters/${id}`);
     } catch (error) {
       setCreateError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -122,10 +126,10 @@ export function NewCharacterPage() {
           <button
             type="button"
             class="border px-2 py-1"
-            disabled={!canAdvance()}
+            disabled={!canAdvance() || submitting()}
             onClick={() => void submit()}
           >
-            Create character
+            {submitting() ? "Creating…" : "Create character"}
           </button>
         </Show>
       </div>
