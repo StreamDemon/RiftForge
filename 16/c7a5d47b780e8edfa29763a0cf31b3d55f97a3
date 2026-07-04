@@ -1,0 +1,106 @@
+apps/web/src/pages/characters.tsx
+  s_1a82bc70ad4a3f::t_bab474b03f5545 1-43
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_cb532b2397d4ca 5
+  s_1a82bc70ad4a3f::t_63aa769d2c13f8 1-4,6-34,36,48-51,53-76,90-156,158-168
+  s_1a82bc70ad4a3f::t_2ff7316aaca3ae 35,37-47
+  s_1a82bc70ad4a3f::t_22584ff22aa2d5 77-89
+  s_1a82bc70ad4a3f::t_19abf908ed6903 157
+  s_1a82bc70ad4a3f::t_bd6e52f85d623d 52
+apps/web/src/layouts/marketing.tsx
+  s_1a82bc70ad4a3f::t_205fedc248d627 1-6
+packages/backend/package.json
+  s_1a82bc70ad4a3f::t_4b058c1ba1e7d5 12-14
+  s_1a82bc70ad4a3f::t_db33a79dab39d7 7-11,15-16
+apps/web/src/dev/vesper.ts
+  s_1a82bc70ad4a3f::t_eb045ada0c85f4 1-19
+apps/web/vite.config.ts
+  s_1a82bc70ad4a3f::t_3895d3911ab331 18-19
+  s_1a82bc70ad4a3f::t_d1aaa99aa4f04f 1-2,4,9-16,20-22,24
+  s_1a82bc70ad4a3f::t_8afcf2cf27db61 3,5-8,17,23
+apps/web/index.html
+  s_1a82bc70ad4a3f::t_f6599429cccd0e 1-12
+apps/web/src/layouts/app.tsx
+  s_1a82bc70ad4a3f::t_7425399738df86 1-16
+.github/workflows/ci.yml
+  s_1a82bc70ad4a3f::t_6cbc4c04bac3eb 40-43,46-49,52-54
+apps/web/src/lib/convex.ts
+  s_1a82bc70ad4a3f::t_52059d2878b08f 18-21,27,35-40
+  s_1a82bc70ad4a3f::t_4d1c26926ee11b 3
+  s_1a82bc70ad4a3f::t_865a3926a72156 1-2,4-17,22-26,28-29,33-34,41-60
+  s_1a82bc70ad4a3f::t_21e780ec715adf 30-32
+apps/web/src/lib/client.ts
+  s_1a82bc70ad4a3f::t_4efe4536a3dbe9 1-9
+apps/web/src/main.tsx
+  s_1a82bc70ad4a3f::t_2d992cd709f96f 1-8
+apps/web/tests/convex.test.ts
+  s_1a82bc70ad4a3f::t_b823ac7938fc3b 19-25
+  s_1a82bc70ad4a3f::t_a48fd58cbe9cbb 10
+  s_1a82bc70ad4a3f::t_df9dd031c19b75 1-9,11-18,26-70,80,86,90-91,104-122
+  s_1a82bc70ad4a3f::t_7de4819dc79430 71-79,81-85,87-89
+  s_1a82bc70ad4a3f::t_a0e026912a9e42 92-103
+packages/backend/convex/characters.ts
+  s_1a82bc70ad4a3f::t_b779b936edbd86 95-97,113
+  s_1a82bc70ad4a3f::t_83d7a5f7c7889c 98-112,114-117
+apps/web/.env
+  s_1a82bc70ad4a3f::t_ec864d5f373e5c 1-3
+apps/web/src/styles.css
+  s_1a82bc70ad4a3f::t_d6426937bb9811 1
+README.md
+  s_9022c0ece1998d::t_83f1979426a2d3 65
+  s_1a82bc70ad4a3f::t_90f69974358beb 23-27,30-32,36-38
+  s_1a82bc70ad4a3f::t_a94f072bb15de9 47,49-51
+apps/web/src/env.d.ts
+  s_1a82bc70ad4a3f::t_9e15c05f6f5e9f 1-3
+  s_1a82bc70ad4a3f::t_492a2577566da7 4-12
+packages/backend/convex/_generated/dataModel.d.ts
+  s_6006ec54fd1802::t_2f162b3403310c 30-33,48-49
+packages/backend/tests/characters.test.ts
+  s_1a82bc70ad4a3f::t_1c37b73ad12ff7 110-120
+apps/web/package.json
+  s_1a82bc70ad4a3f::t_1d012781e7f690 1-28
+packages/backend/convex/_generated/api.d.ts
+  s_6006ec54fd1802::t_2f162b3403310c 13-17,31-34,44-47
+apps/web/tsconfig.json
+  s_1a82bc70ad4a3f::t_d3b9cb7b37cd37 1-22
+apps/web/src/app.tsx
+  s_1a82bc70ad4a3f::t_f2d70a0227b2a4 1-26
+apps/web/src/pages/landing.tsx
+  s_1a82bc70ad4a3f::t_fefa355b09dc9a 1-14
+.gitignore
+  s_1a82bc70ad4a3f::t_8b1dbdecd7b7cf 35
+pnpm-lock.yaml
+  s_1a82bc70ad4a3f::t_8a50e14417c34c 216,228-265,290,306,314-355,360-378,383-394,571-580,584-586,593-594,600-604,609-610,615-616,621-622,627-628,633-634,639-640,645-646,652-653,659-660,666-667,673-674,680-681,687-688,694-695,701-702,707-708,713-714,719-720,725-726,730-731,735-736,740-741,745-746,750-751,755-756,761-762,767-768,773-774,779-780,785-786,791-792,797-798,804-805,811-812,818-819,825-826,832-833,839-840,846-847,853-854,859-860,865-866,871-872,982-986,990-1083,1100-1111,1166-1167,1172,1223-1225,1229-1231,1235-1237,1242-1244,1249-1251,1256-1258,1263-1265,1269-1271,1290-1316,1348-1359,1371-1381,1390-1393,1415-1428,1436-1445,1520-1522,1530-1533,1538-1540,1546-1549,1554-1555,1567-1568,1571-1572,1584-1586,1622-1635,1643-1650,1661-1667,1710-1727,1782-1789,1848-1850,1867-1930,1933-1948,1951-1973,2076-2087,2090-2094,2102,2106-2108,2111,2114,2117,2120,2123,2126,2129,2132,2135,2138,2141,2144,2147,2150,2153,2156,2159,2162,2165,2168,2171,2174,2177,2180,2183,2186,2189,2192,2195,2198,2201,2204,2207,2210,2213,2216,2219,2222,2225,2228,2231,2234,2237,2295-2298,2301-2368,2391-2411,2537,2539-2540,2551,2553-2554,2565,2568,2571,2574,2577,2580,2583,2586,2599-2626,2644-2649,2656-2664,2696-2697,2711-2719,2723-2726,2776-2779,2786-2789,2792-2793,2796-2797,2800,2804-2825,2829-2850,2852-2859,2861-2883,2885-2909,2956-2963,2972-2986,2993-2996,3025-3044,3046,3057-3060,3063-3070,3102,3104,3115-3118,3121-3128,3188-3191,3257-3258
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "16c7a5d47b780e8edfa29763a0cf31b3d55f97a3",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    },
+    "s_6006ec54fd1802": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ba04ba7-84d3-42e0-80ef-ad5cb58f8ddb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    },
+    "s_9022c0ece1998d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "97e6f1bf-3961-4d37-9b08-fd07e304f90d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
