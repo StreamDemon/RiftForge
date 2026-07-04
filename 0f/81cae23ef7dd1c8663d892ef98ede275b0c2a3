@@ -1,0 +1,36 @@
+apps/web/src/builder/steps/spells.tsx
+  s_1a82bc70ad4a3f::t_b71a237b16323a 60
+apps/web/src/builder/steps/alignment.tsx
+  s_1a82bc70ad4a3f::t_b71a237b16323a 44
+apps/web/src/builder/steps/review.tsx
+  s_1a82bc70ad4a3f::t_cf30940bb731ee 12-15,29
+apps/web/src/builder/steps/related-skills.tsx
+  s_1a82bc70ad4a3f::t_b71a237b16323a 46,113,131
+apps/web/src/builder/steps/psionics.tsx
+  s_1a82bc70ad4a3f::t_b71a237b16323a 37
+apps/web/src/builder/steps/occ.tsx
+  s_1a82bc70ad4a3f::t_b71a237b16323a 30
+apps/web/src/components/ui.tsx
+  s_1a82bc70ad4a3f::t_8e270dcd2bfc37 81-82,86-87
+apps/web/src/components/sheet-view.tsx
+  s_1a82bc70ad4a3f::t_753f316c75181a 88
+  s_1a82bc70ad4a3f::t_fb9ec1e8daf65a 156-160
+apps/web/src/builder/steps/occ-skills.tsx
+  s_1a82bc70ad4a3f::t_b71a237b16323a 105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0f81cae23ef7dd1c8663d892ef98ede275b0c2a3",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
