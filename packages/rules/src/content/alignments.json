@@ -1,0 +1,56 @@
+{
+  "book": "Rifts Ultimate Edition",
+  "page": 289,
+  "note": "Step 6: Picking an Alignment (printed pp.289-292). All players must choose an alignment. Three basic categories: Good, Selfish and Evil. There are NO neutral alignments (p.290: 'No Neutral Alignments' — an absolute, true neutral position is eliminated in the context of this game).",
+  "alignments": [
+    {
+      "id": "principled",
+      "name": "Principled",
+      "category": "good",
+      "page": 290,
+      "summary": "Upright 'boy scout' or 'do-gooder' types who put others before themselves; the knight in shining armor, with the highest regard for the lives and well-being of others, freedom, truth, honor and justice. Always keeps his word, never harms an innocent, works within the law."
+    },
+    {
+      "id": "scrupulous",
+      "name": "Scrupulous",
+      "category": "good",
+      "page": 290,
+      "summary": "Values life and freedom above all else and despises those who would deprive others of them; the cop who plays by his own rules, driven by justice to right a wrong. Will bend, and occasionally break, the law when deemed necessary — but only against the bad guys."
+    },
+    {
+      "id": "unprincipled",
+      "name": "Unprincipled",
+      "category": "selfish",
+      "page": 291,
+      "summary": "This basically good person tends to be selfish, greedy, and holds his personal freedom and welfare above almost everything else. The noble scoundrel: keeps his word of honor, never harms an innocent, but rarely works within the law."
+    },
+    {
+      "id": "anarchist",
+      "name": "Anarchist",
+      "category": "selfish",
+      "page": 291,
+      "summary": "Likes to indulge himself in everything; the insurgent, con-artist, gambler and uncommitted freebooter. Continually teetering between good and evil, rebelling against and bending the law to fit his needs. Mercenaries and thieves often fall into this category."
+    },
+    {
+      "id": "aberrant",
+      "name": "Aberrant",
+      "category": "evil",
+      "page": 291,
+      "summary": "Driven to attain his goals through force, power, and intimidation, yet stands apart with his own personal (and twisted) code of ethics. Always keeps his word of honor and upholds any bargains; expects loyalty from his minions."
+    },
+    {
+      "id": "miscreant",
+      "name": "Miscreant",
+      "category": "evil",
+      "page": 292,
+      "summary": "This self-serving, unscrupulous character is out only for himself. Power, glory, wealth, position, and anything that will make his life more comfortable or pleasurable is his goal; it doesn't matter who gets caught in the middle, as long as he comes out smelling like a rose."
+    },
+    {
+      "id": "diabolic",
+      "name": "Diabolic",
+      "category": "evil",
+      "page": 292,
+      "summary": "The category most megalomaniacs, psychopaths, and violent and despicable characters fall into: the cruel, brutal killer who trusts no one and has no value for any life other than his own. Will lie, cheat, con, abuse and kill anyone less powerful than he is; betrays friends without hesitation."
+    }
+  ]
+}

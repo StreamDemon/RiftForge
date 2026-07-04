@@ -1,7 +1,9 @@
+import type { Alignment } from "../schema/alignments.ts";
 import type { Character, CharacterInput } from "../schema/character.ts";
 import { characterSchema } from "../schema/character.ts";
 import type { Occ } from "../schema/occ.ts";
 import type { Spell } from "../schema/spells.ts";
+import { getAlignment } from "./alignments.ts";
 import { deriveAttributeBonuses } from "./attributes.ts";
 import {
   combatProfile,
@@ -33,6 +35,8 @@ export interface SheetSave {
 export interface CharacterSheet {
   name: string;
   occ: { id: string; name: string; category: string };
+  /** Present when the character has picked an alignment. */
+  alignment?: Alignment;
   level: number;
   attributes: Character["attributes"];
   attributeBonuses: Record<string, number>;
@@ -81,6 +85,12 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
   const character = characterSchema.parse(input);
   const occ = getOcc(character.occId);
   if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
+
+  let alignment: Alignment | undefined;
+  if (character.alignmentId !== undefined) {
+    alignment = getAlignment(character.alignmentId);
+    if (!alignment) throw new Error(`Unknown alignment "${character.alignmentId}".`);
+  }
 
   const attrs = character.attributes;
   const { level } = character;
@@ -150,6 +160,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
   return {
     name: character.name,
     occ: { id: occ.id, name: occ.name, category: occ.category },
+    alignment,
     level,
     attributes: attrs,
     attributeBonuses,

@@ -39,6 +39,10 @@ export type PsychicClass = z.infer<typeof psychicClassSchema>;
 export const characterSchema = z.object({
   name: z.string().min(1),
   occId: z.string().min(1),
+  /** One of the seven canonical alignments (RUE pp.289-292). Optional because
+   * characters stored before the alignment step existed have none; resolved
+   * (and unknown ids rejected) in `deriveSheet`, like occ/skill/spell ids. */
+  alignmentId: z.string().min(1).optional(),
   level: z.number().int().positive(),
   attributes: characterAttributesSchema,
   /** Hand-to-Hand combat type id (e.g. "basic"). */

@@ -11,6 +11,7 @@ import { v } from "convex/values";
 export const characterFields = {
   name: v.string(),
   occId: v.string(),
+  alignmentId: v.optional(v.string()),
   level: v.number(),
   attributes: v.object({
     IQ: v.number(),

@@ -107,6 +107,17 @@ describe("characters — a saved Ley Line Walker round-trips", () => {
     expect(stored?.rolled).toEqual(second);
   });
 
+  test("alignment round-trips and resolves on the sheet", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, { ...vesper, alignmentId: "anarchist" });
+    const sheet = await t.query(api.characters.sheet, { id });
+    if (sheet === null) throw new Error("sheet should exist for a saved character");
+    expect(sheet.alignment).toMatchObject({ id: "anarchist", category: "selfish" });
+    await expect(
+      t.mutation(api.characters.create, { ...vesper, alignmentId: "lawful-good" }),
+    ).rejects.toThrow(/Unknown alignment/);
+  });
+
   test("list returns roster summaries, newest first", async () => {
     const t = convexTest(schema, modules);
     expect(await t.query(api.characters.list, {})).toEqual([]);
