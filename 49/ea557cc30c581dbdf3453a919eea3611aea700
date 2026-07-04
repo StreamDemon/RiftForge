@@ -1,0 +1,27 @@
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_804e7f0f5a587b 49-58
+  s_1a82bc70ad4a3f::t_4d7d3760907576 124,127-129
+vite.config.ts
+  s_1a82bc70ad4a3f::t_7822a1e1bfa76a 4-6
+README.md
+  s_1a82bc70ad4a3f::t_144b29a5ba44a0 47
+apps/web/src/pages/characters.tsx
+  s_1a82bc70ad4a3f::t_3f1baee1a8add2 3,10-12,17-23,32,35-55
+  s_1a82bc70ad4a3f::t_c5770f699f118e 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "49ea557cc30c581dbdf3453a919eea3611aea700",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
