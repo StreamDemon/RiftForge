@@ -32,3 +32,4 @@ dist-ssr
 
 # Source rulebook — copyrighted (Palladium Books); kept local, never committed
 docs/rules/*.pdf
+.gstack/

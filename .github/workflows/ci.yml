@@ -37,10 +37,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Format, lint & typecheck
-        run: pnpm exec vp run rules#check
+        run: |
+          pnpm exec vp run rules#check
+          pnpm exec vp run backend#check
+          pnpm exec vp run web#check
 
       - name: Tests
-        run: pnpm exec vp run rules#test
+        run: |
+          pnpm exec vp run rules#test
+          pnpm exec vp run backend#test
+          pnpm exec vp run web#test
 
       - name: Build
-        run: pnpm exec vp run rules#build
+        run: |
+          pnpm exec vp run rules#build
+          pnpm exec vp run web#build

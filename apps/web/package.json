@@ -1,0 +1,28 @@
+{
+  "name": "@riftforge/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "RiftForge web app: SolidJS character builder and live sheet on Convex.",
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "test": "vp test",
+    "check": "vp check"
+  },
+  "dependencies": {
+    "@riftforge/backend": "workspace:*",
+    "@riftforge/rules": "workspace:*",
+    "@solidjs/router": "^0.15",
+    "convex": "^1",
+    "solid-js": "^1.9"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4",
+    "@types/node": "catalog:",
+    "tailwindcss": "^4",
+    "typescript": "catalog:",
+    "vite-plugin-solid": "^2.11",
+    "vite-plus": "catalog:"
+  }
+}

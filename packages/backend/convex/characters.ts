@@ -92,6 +92,29 @@ export const rollVitals = mutation({
   },
 });
 
+/** Newest characters first; a hard page size keeps the query bounded as the table grows. */
+const LIST_LIMIT = 50;
+
+/**
+ * Roster summary for the character list — identity only, newest first.
+ * Full choices/sheets load per character via `get`/`sheet`.
+ */
+export const list = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("characters"),
+      name: v.string(),
+      occId: v.string(),
+      level: v.number(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const docs = await ctx.db.query("characters").order("desc").take(LIST_LIMIT);
+    return docs.map(({ _id, name, occId, level }) => ({ _id, name, occId, level }));
+  },
+});
+
 /** The stored choices, as saved. */
 export const get = query({
   args: { id: v.id("characters") },
