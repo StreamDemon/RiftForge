@@ -38,7 +38,7 @@ Your character isn't a form. It's a save file with a soul.
 
 ## Color
 
-**Approach:** Restrained warm phosphor chassis with ONE cool exception: ley cyan, reserved for magic. The machine is amber; the magic running through it is cyan — the one thing the hardware was never built to display.
+**Approach:** Restrained warm phosphor chassis; ley cyan is the one *expressive* cool hue, reserved for magic — the thing the hardware was never built to display. Blood red and confirm green are functional status signals (damage, legality), conventional by design and deliberately outside the machine's material story.
 
 ### Chassis (noir)
 - **Background:** `#0B0D0F`
@@ -48,13 +48,13 @@ Your character isn't a form. It's a save file with a soul.
 
 ### Signals (meaning, not decoration)
 - **Phosphor amber `#FFAE3D`** — the machine's voice: primary actions, focus rings, prompts, warnings, locked rolls.
-- **Ley cyan `#4FD8FF`** — magic ONLY: P.P.E., spell strength, live arcane values, ley references, portrait scan linework. The P.P.E. bar carries a **pulsating cyan gradient** (see Motion). *The machine speaks amber; the magic glows cyan.*
+- **Ley cyan `#4FD8FF`** — magic ONLY: P.P.E., spell strength, live arcane values, ley references, portrait scan linework, and the brand mark's *FORGE* (the rift itself is arcane — the brand carries the magic signal by definition). The P.P.E. bar carries a **pulsating cyan gradient** (see Motion). *The machine speaks amber; the magic glows cyan.*
 - **Blood red `#E23B2E`** — damage, dread, failed requirements, alignment badges. (Text-on-dark variant: `#FF6A5E`.)
 - **Confirmed green `#57E389`** — legal builds, passing checks, stable sync.
 
 ### Rules
 - Color is semantic. Nothing is colored for decoration; if it glows, it means something.
-- Cyan is precious: it appears ONLY where magic does. If a cyan element isn't arcane, it's wrong.
+- Cyan is precious: it appears ONLY where magic does (the brand mark included — the rift is magic). If a cyan element isn't arcane, it's wrong.
 - Glows are real: signal values on dark get a matching `text-shadow`/`box-shadow` at 25–60% alpha.
 - Dark mode IS the product. No light theme; print/export styling may come later.
 
