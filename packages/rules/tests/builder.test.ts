@@ -420,4 +420,80 @@ describe("secondarySkillPlan", () => {
     expect(plan.options.map((s) => s.id)).toContain("carpentry");
     expect(plan.notes.join(" ")).toContain("Secondary Skills");
   });
+
+  test("an O.C.C. with secondary skills but no related rules pools the whole catalog", () => {
+    const occ = occSchema.parse({
+      source: { book: "Test Fixture", page: 1 },
+      id: "test-secondary-only",
+      name: "Test Secondary Only",
+      category: "Test",
+      alignment: "Any",
+      attributeRequirements: [],
+      secondarySkills: { count: 3 },
+    });
+    const plan = secondarySkillPlan(occ);
+    expect(plan.count).toBe(3);
+    expect(plan.options.length).toBeGreaterThan(0);
+  });
+});
+
+describe("content-bug fail-fasts and edge counts", () => {
+  const baseOcc = {
+    source: { book: "Test Fixture", page: 1 },
+    id: "test-occ",
+    name: "Test O.C.C.",
+    category: "Test",
+    alignment: "Any",
+    attributeRequirements: [],
+  };
+
+  test("a category choice with no catalog skills throws at plan time", () => {
+    const occ = occSchema.parse({
+      ...baseOcc,
+      occSkills: [{ skill: "Medical", chooseFromCategory: "Medical", choose: 1 }],
+    });
+    expect(() => occSkillPlan(occ)).toThrow(/category "Medical".*no skills/);
+  });
+
+  test("a prefix choice matching nothing throws at plan time", () => {
+    const occ = occSchema.parse({
+      ...baseOcc,
+      occSkills: [{ skill: "W.P.", skillPrefix: "W.P.", choose: 2 }],
+    });
+    expect(() => occSkillPlan(occ)).toThrow(/prefixed "W\.P\."/);
+  });
+
+  test("an upgrade costing more than the related grant errors instead of going negative", () => {
+    const occ = occSchema.parse({
+      ...baseOcc,
+      occSkills: [
+        {
+          skill: "Hand to Hand: None",
+          hthId: "none",
+          upgrades: [{ to: "Basic", cost: { occRelatedSkills: 3 } }],
+        },
+      ],
+      occRelatedSkills: { count: 2, categoryRules: [{ category: "Science", allowed: "any" }] },
+    });
+    const { errors } = assembleSkills(occ, {
+      occChoices: {},
+      related: [],
+      secondary: [],
+      hthId: "basic",
+    });
+    expect(errors).toContainEqual(expect.stringContaining("costs 3"));
+    expect(errors.join("\n")).not.toContain("-1");
+  });
+
+  test("zoology can be taken twice (specialization) with distinct labels", () => {
+    const { errors } = assembleSkills(leyLineWalker, {
+      ...legalSelections,
+      secondary: [
+        ...legalSelections.secondary.slice(0, 4),
+        { skillId: "zoology", label: "Birds" },
+        { skillId: "zoology", label: "Reptiles" },
+      ],
+    });
+    expect(errors).toEqual([]);
+  });
 });

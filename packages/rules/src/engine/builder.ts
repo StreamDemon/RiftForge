@@ -218,21 +218,33 @@ export function occSkillPlan(occ: Occ): OccSkillPlan {
         repeatable: skill.repeatable === true,
       });
     } else if ("chooseFromCategory" in grant) {
+      const options = skillCatalog.skills.filter((s) => s.category === grant.chooseFromCategory);
+      if (options.length === 0) {
+        throw new Error(
+          `O.C.C. "${occ.id}" chooses from category "${grant.chooseFromCategory}", which has no skills in the catalog.`,
+        );
+      }
       choices.push({
         key: `category:${grant.chooseFromCategory}`,
         label: grant.skill,
         choose: grant.choose,
         occBonus: grant.occBonus,
-        options: skillCatalog.skills.filter((s) => s.category === grant.chooseFromCategory),
+        options,
         repeatable: false,
       });
     } else if ("skillPrefix" in grant) {
+      const options = skillCatalog.skills.filter((s) => s.name.startsWith(grant.skillPrefix));
+      if (options.length === 0) {
+        throw new Error(
+          `O.C.C. "${occ.id}" chooses skills prefixed "${grant.skillPrefix}", of which the catalog has none.`,
+        );
+      }
       choices.push({
         key: `prefix:${grant.skillPrefix}`,
         label: grant.skill,
         choose: grant.choose,
         occBonus: grant.occBonus,
-        options: skillCatalog.skills.filter((s) => s.name.startsWith(grant.skillPrefix)),
+        options,
         repeatable: false,
       });
     } else {
@@ -355,7 +367,8 @@ export interface SecondarySkillPlan {
 export function secondarySkillPlan(occ: Occ): SecondarySkillPlan {
   const secondary = occ.secondarySkills;
   if (!secondary) return { count: 0, options: [], notes: [] };
-  const { options } = relatedSkillPlan(occ);
+  // Without related-skill category rules, the whole catalog is the pool.
+  const options = occ.occRelatedSkills ? relatedSkillPlan(occ).options : [...skillCatalog.skills];
   return {
     count: secondary.count,
     options,
@@ -444,7 +457,12 @@ export function assembleSkills(occ: Occ, selections: BuilderSelections): Assembl
   }
 
   // O.C.C. Related picks: count (minus upgrade cost), eligibility, constraints, bonuses.
-  const relatedCount = related.count - upgradeCost;
+  if (upgradeCost > related.count) {
+    errors.push(
+      `The hand-to-hand upgrade costs ${upgradeCost} O.C.C. Related selections but only ${related.count} are granted.`,
+    );
+  }
+  const relatedCount = Math.max(0, related.count - upgradeCost);
   if (selections.related.length !== relatedCount) {
     errors.push(
       `O.C.C. Related skills: pick ${relatedCount}` +

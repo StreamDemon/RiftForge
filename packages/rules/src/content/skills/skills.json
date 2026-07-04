@@ -383,7 +383,8 @@
       "baseSkill": 30,
       "perLevel": 5,
       "note": "May be specialized by taking the skill twice (+20% one-time bonus for the chosen specialty).",
-      "page": 322
+      "page": 322,
+      "repeatable": true
     }
   ]
 }
