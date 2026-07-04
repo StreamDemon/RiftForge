@@ -1,0 +1,23 @@
+DESIGN.md
+  s_1a82bc70ad4a3f::t_aa3df65ffb3412 1-109
+CLAUDE.md
+  s_1a82bc70ad4a3f::t_c3d3ca27ffe186 17-23
+docs/design/ley-terminal-preview.html
+  s_1a82bc70ad4a3f::t_b0882fb67cad75 1-304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "90ef84e8459c98647e977f4e1a6e7664217e15ab",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
