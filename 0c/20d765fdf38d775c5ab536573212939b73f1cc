@@ -1,0 +1,33 @@
+apps/web/src/components/telemetry-rail.tsx
+  s_1a82bc70ad4a3f::t_9f0cadd0acd305 1-33,35-48
+  s_1a82bc70ad4a3f::t_9ca059d960eb92 34
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_488effa2fe6ec2 3-9,14-15,20,92-97,106,109-132,136-139,142,147,155-162
+  s_1a82bc70ad4a3f::t_7e62658f6d5feb 163-165
+  s_1a82bc70ad4a3f::t_5be87e91783d89 166-168,177
+apps/web/src/components/sheet-view.tsx
+  s_1a82bc70ad4a3f::t_ea0493e3cf9f20 1-9,39-47,80-93,95-108,110-167,175,177,180,254-255,257,259,270-290,298-303,307-317,325-330,349,357-359
+  s_1a82bc70ad4a3f::t_c32c10a0cdc64d 360-362
+  s_1a82bc70ad4a3f::t_7b4869b3a2984d 377
+apps/web/src/styles.css
+  s_1a82bc70ad4a3f::t_b2e64fdc047e7c 175-177
+  s_1a82bc70ad4a3f::t_4ed04bcc8ce7e4 125-154
+apps/web/src/lib/telemetry.ts
+  s_1a82bc70ad4a3f::t_4d22893dd9cb02 1-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0c20d765fdf38d775c5ab536573212939b73f1cc",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
