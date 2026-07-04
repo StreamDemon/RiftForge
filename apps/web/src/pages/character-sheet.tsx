@@ -144,13 +144,18 @@ export function CharacterSheetPage() {
   };
 
   const roll = async () => {
+    // If the dossier switches while the mutation is in flight, the result
+    // belongs to the character it was rolled for — drop it silently.
+    const rolledFor = id();
     setRollError(undefined);
     try {
-      const rolled = await rollVitals({ id: id() });
+      const rolled = await rollVitals({ id: rolledFor });
+      if (id() !== rolledFor) return;
       telemetry.log(
         `> ROLL VITALS :: H.P. ${rolled.hitPoints} · S.D.C. ${rolled.sdc}${rolled.ppe !== undefined ? ` · P.P.E. ${rolled.ppe}` : ""} — LOCKED`,
       );
     } catch (error) {
+      if (id() !== rolledFor) return;
       setRollError(error instanceof Error ? error : new Error(String(error)));
       telemetry.log("> ROLL VITALS :: WRITE FAILED", "bad");
     }
