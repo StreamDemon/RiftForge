@@ -1,0 +1,21 @@
+DESIGN.md
+  s_1a82bc70ad4a3f::t_eb3727ff560a8a 57
+  s_1a82bc70ad4a3f::t_757142113f2915 51
+  s_1a82bc70ad4a3f::t_ad94eaf1923484 41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d3d136d403146e7d13c188341c6ee5ac74a37ec0",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
