@@ -11,7 +11,7 @@
   :root {
     --bg: #0B0D0F; --surface: #14181C; --inset: #1B2127; --line: #2C343B;
     --text: #E6ECEF; --muted: #7E8A92; --dead: #40484F;
-    --amber: #FFAE3D; --cyan: #C9821F; --blood: #E23B2E; --ok: #57E389;
+    --amber: #FFAE3D; --cyan: #4FD8FF; --blood: #E23B2E; --ok: #57E389;
     --rust: #A87932;
     --display: "Staatliches", sans-serif;
     --hud: "Chakra Petch", sans-serif;
@@ -42,7 +42,7 @@
   /* hero */
   .hero { padding: 44px 40px; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; overflow: hidden; }
   .hero::after { content: "RIFT-OS v0.9 // RECOVERED HARDWARE // PROPERTY UNKNOWN"; position: absolute; bottom: 10px; right: 16px; font-family: var(--mono); font-size: 10px; color: var(--dead); letter-spacing: 0.12em; }
-  .hero h1 { font-size: 84px; line-height: 0.9; text-shadow: 0 0 24px rgba(201,130,31,0.25); }
+  .hero h1 { font-size: 84px; line-height: 0.9; text-shadow: 0 0 24px rgba(79,216,255,0.25); }
   .hero h1 em { font-style: normal; color: var(--cyan); }
   .hero .thesis { color: var(--muted); max-width: 560px; margin-top: 14px; }
   .glitch { position: relative; display: inline-block; }
@@ -74,12 +74,12 @@
   .alert-ok { border-color: var(--ok); color: var(--ok); background: rgba(87,227,137,0.06); }
   .alert-warn { border-color: var(--amber); color: var(--amber); background: rgba(255,174,61,0.06); }
   .alert-danger { border-color: var(--blood); color: #ff6a5e; background: rgba(226,59,46,0.08); }
-  .alert-info { border-color: var(--cyan); color: var(--cyan); background: rgba(201,130,31,0.06); }
+  .alert-info { border-color: var(--cyan); color: var(--cyan); background: rgba(79,216,255,0.06); }
 
   /* ===== THE MOCKUP: AAA character screen ===== */
   .mockup { border: 1px solid var(--line); background: var(--bg); position: relative; overflow: hidden; }
   .mockup::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
-    background: radial-gradient(900px 500px at 30% 0%, rgba(201,130,31,0.06), transparent 60%), radial-gradient(700px 400px at 90% 100%, rgba(255,174,61,0.05), transparent 60%); }
+    background: radial-gradient(900px 500px at 30% 0%, rgba(79,216,255,0.06), transparent 60%), radial-gradient(700px 400px at 90% 100%, rgba(255,174,61,0.05), transparent 60%); }
   .mock-titlebar { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; background: var(--surface); border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--muted); }
   .mock-titlebar .brand { font-family: var(--display); font-size: 18px; color: var(--text); letter-spacing: 0.06em; }
   .mock-titlebar .brand em { font-style: normal; color: var(--cyan); }
@@ -87,15 +87,15 @@
   /* identity band — the ownership hero */
   .identity { display: grid; grid-template-columns: 210px 1fr 300px; gap: 24px; padding: 26px 26px 20px; border-bottom: 1px solid var(--line); position: relative; }
   .portrait { width: 210px; height: 240px; background: var(--inset); border: 1px solid var(--line); clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px); display: flex; align-items: center; justify-content: center; position: relative; }
-  .portrait svg { opacity: 0.85; filter: drop-shadow(0 0 14px rgba(201,130,31,0.4)); }
-  .portrait .scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(201,130,31,0.05) 0 1px, transparent 1px 4px); }
+  .portrait svg { opacity: 0.85; filter: drop-shadow(0 0 14px rgba(79,216,255,0.4)); }
+  .portrait .scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(79,216,255,0.05) 0 1px, transparent 1px 4px); }
   .portrait .cap { position: absolute; bottom: 6px; left: 10px; font-family: var(--mono); font-size: 9.5px; color: var(--dead); letter-spacing: 0.14em; }
   .id-main .kicker { font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: 0.16em; }
   .id-main h3 { font-family: var(--display); font-size: 64px; line-height: 0.95; letter-spacing: 0.02em; }
-  .id-main .epithet { font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--cyan); margin: 2px 0 12px; }
+  .id-main .epithet { font-family: var(--serif); font-style: italic; font-size: 16px; color: #B9C4CA; margin: 2px 0 12px; }
   .traits { display: flex; flex-wrap: wrap; gap: 8px; }
   .trait { font-family: var(--hud); font-weight: 600; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); background: var(--inset); border: 1px solid var(--line); padding: 4px 10px; clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
-  .trait.arc { color: var(--cyan); border-color: rgba(201,130,31,0.4); }
+  .trait.arc { color: var(--cyan); border-color: rgba(79,216,255,0.4); }
   .trait.warn { color: var(--amber); border-color: rgba(255,174,61,0.4); }
   .physical { font-family: var(--mono); font-size: 12px; color: var(--muted); align-self: end; line-height: 2; }
   .physical b { color: var(--text); font-weight: 500; }
@@ -116,10 +116,15 @@
   .bar .fill { position: absolute; inset: 0; }
   .fill.hp { width: 90%; background: linear-gradient(90deg, #7a2018, var(--blood)); box-shadow: 0 0 10px rgba(226,59,46,0.4); }
   .fill.sdc { width: 66%; background: linear-gradient(90deg, #7a5a17, var(--amber)); box-shadow: 0 0 10px rgba(255,174,61,0.35); }
-  .fill.ppe { width: 40%; background: linear-gradient(90deg, #14606e, var(--cyan)); box-shadow: 0 0 12px rgba(201,130,31,0.5); }
+  .fill.ppe { width: 40%; background: linear-gradient(90deg, #14606e, var(--cyan)); animation: ppe-pulse 2.5s ease-in-out infinite; }
+  @keyframes ppe-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(79,216,255,0.35); opacity: 0.82; }
+    50% { box-shadow: 0 0 20px rgba(79,216,255,0.8); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .fill.ppe { animation: none; box-shadow: 0 0 12px rgba(79,216,255,0.5); } }
   .statline { display: flex; justify-content: space-between; font-size: 13.5px; padding: 3px 0; border-bottom: 1px dotted var(--line); }
   .statline .v { font-family: var(--data); font-size: 12.5px; font-weight: 600; }
-  .statline .v.live { color: var(--cyan); text-shadow: 0 0 10px rgba(201,130,31,0.6); }
+  .statline .v.live { color: var(--cyan); text-shadow: 0 0 10px rgba(79,216,255,0.6); }
 
   .backstory { grid-column: 1 / 3; }
   .backstory p { font-family: var(--serif); font-size: 14.5px; color: #C9CFC7; max-width: 68ch; }
@@ -152,15 +157,15 @@
     <div style="font-family:var(--mono); font-size:12px; color:var(--amber); border:1px solid var(--line); padding:6px 10px; background:var(--bg)">SYS 09.2 // LEY-LINK ACTIVE</div>
   </div>
 
-  <h2>COLOR — NOIR CHASSIS, PHOSPHOR SIGNALS</h2>
-  <p class="sub">Watchmen-dark chassis. Amber = the machine's voice. Deep ley amber = magic &amp; live data. Blood red = damage &amp; dread. Green confirms. Rust for worn metal.</p>
+  <h2>COLOR — NOIR CHASSIS, AMBER MACHINE, CYAN MAGIC</h2>
+  <p class="sub">Watchmen-dark chassis. Amber = the machine's voice. Ley cyan = magic ONLY (P.P.E., arcane, live). Blood red = damage &amp; dread. Green confirms. Rust for worn metal.</p>
   <div class="swatches">
     <div class="swatch"><div class="chip" style="background:#0B0D0F"></div><div class="meta"><b>#0B0D0F</b><span>bg / noir</span></div></div>
     <div class="swatch"><div class="chip" style="background:#14181C"></div><div class="meta"><b>#14181C</b><span>surface</span></div></div>
     <div class="swatch"><div class="chip" style="background:#1B2127"></div><div class="meta"><b>#1B2127</b><span>inset</span></div></div>
     <div class="swatch"><div class="chip" style="background:#2C343B"></div><div class="meta"><b>#2C343B</b><span>hairline</span></div></div>
     <div class="swatch"><div class="chip" style="background:#FFAE3D"></div><div class="meta"><b>#FFAE3D</b><span>phosphor amber</span></div></div>
-    <div class="swatch"><div class="chip" style="background:#C9821F"></div><div class="meta"><b>#C9821F</b><span>ley amber</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#4FD8FF"></div><div class="meta"><b>#4FD8FF</b><span>ley cyan</span></div></div>
     <div class="swatch"><div class="chip" style="background:#E23B2E"></div><div class="meta"><b>#E23B2E</b><span>blood red</span></div></div>
     <div class="swatch"><div class="chip" style="background:#57E389"></div><div class="meta"><b>#57E389</b><span>confirmed</span></div></div>
     <div class="swatch"><div class="chip" style="background:#A87932"></div><div class="meta"><b>#A87932</b><span>rust / worn metal</span></div></div>
@@ -202,8 +207,8 @@
       <div class="portrait">
         <div class="scan"></div>
         <svg width="120" height="150" viewBox="0 0 120 150" fill="none">
-          <path d="M60 12 C40 12 30 30 30 48 C30 66 40 80 60 80 C80 80 90 66 90 48 C90 30 80 12 60 12 Z" stroke="#C9821F" stroke-width="1.5"/>
-          <path d="M18 148 C18 112 36 94 60 94 C84 94 102 112 102 148" stroke="#C9821F" stroke-width="1.5"/>
+          <path d="M60 12 C40 12 30 30 30 48 C30 66 40 80 60 80 C80 80 90 66 90 48 C90 30 80 12 60 12 Z" stroke="#4FD8FF" stroke-width="1.5"/>
+          <path d="M18 148 C18 112 36 94 60 94 C84 94 102 112 102 148" stroke="#4FD8FF" stroke-width="1.5"/>
           <path d="M30 40 L14 26 M90 40 L106 26 M60 6 L60 -6" stroke="#FFAE3D" stroke-width="1" opacity="0.7"/>
         </svg>
         <div class="cap">NO IMAGE ON FILE — UPLOAD</div>
@@ -233,7 +238,7 @@
         <div class="h">// <em>VITALS</em></div>
         <div class="bar"><div class="lab"><span>HIT POINTS</span><span class="v">18 / 20</span></div><div class="track"><div class="fill hp"></div></div></div>
         <div class="bar"><div class="lab"><span>S.D.C.</span><span class="v">16 / 24</span></div><div class="track"><div class="fill sdc"></div></div></div>
-        <div class="bar"><div class="lab"><span>P.P.E. ◈ LIVE</span><span class="v" style="color:var(--cyan)">84 / 214</span></div><div class="track"><div class="fill ppe"></div></div></div>
+        <div class="bar"><div class="lab"><span>P.P.E. ◈ PULSING</span><span class="v" style="color:var(--cyan)">84 / 214</span></div><div class="track"><div class="fill ppe"></div></div></div>
         <div class="statline"><span>Spell Strength</span><span class="v live">12</span></div>
         <div class="statline"><span>Coma / Death</span><span class="v">-14%</span></div>
       </div>

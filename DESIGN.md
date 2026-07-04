@@ -38,7 +38,7 @@ Your character isn't a form. It's a save file with a soul.
 
 ## Color
 
-**Approach:** Restrained phosphor monochrome + two punctuation colors. One warm family reads as one physical machine.
+**Approach:** Restrained warm phosphor chassis with ONE cool exception: ley cyan, reserved for magic. The machine is amber; the magic running through it is cyan — the one thing the hardware was never built to display.
 
 ### Chassis (noir)
 - **Background:** `#0B0D0F`
@@ -48,12 +48,13 @@ Your character isn't a form. It's a save file with a soul.
 
 ### Signals (meaning, not decoration)
 - **Phosphor amber `#FFAE3D`** — the machine's voice: primary actions, focus rings, prompts, warnings, locked rolls.
-- **Ley amber `#C9821F`** (deep amber) — magic & live data: P.P.E., spell strength, streaming values, live indicators, portrait linework. *Bright amber = the machine speaks; deep amber = the magic hums.*
+- **Ley cyan `#4FD8FF`** — magic ONLY: P.P.E., spell strength, live arcane values, ley references, portrait scan linework. The P.P.E. bar carries a **pulsating cyan gradient** (see Motion). *The machine speaks amber; the magic glows cyan.*
 - **Blood red `#E23B2E`** — damage, dread, failed requirements, alignment badges. (Text-on-dark variant: `#FF6A5E`.)
 - **Confirmed green `#57E389`** — legal builds, passing checks, stable sync.
 
 ### Rules
 - Color is semantic. Nothing is colored for decoration; if it glows, it means something.
+- Cyan is precious: it appears ONLY where magic does. If a cyan element isn't arcane, it's wrong.
 - Glows are real: signal values on dark get a matching `text-shadow`/`box-shadow` at 25–60% alpha.
 - Dark mode IS the product. No light theme; print/export styling may come later.
 
@@ -74,11 +75,11 @@ Your character isn't a form. It's a save file with a soul.
 ## Motion
 
 - **Approach:** Intentional. The machine responds; it does not perform.
-- **Signature moves:** dot-matrix strike flash when a live stat updates (brief deep-amber underprint); phosphor cursor blink in the telemetry log; scanline reveal on sheet load; occasional 1-frame glitch offset on Staatliches display type (hover/entrance only).
+- **Signature moves:** dot-matrix strike flash when a live stat updates (brief amber underprint); **the P.P.E. bar breathes** — a slow pulsating cyan gradient (~2.5s ease-in-out loop, subtle glow swell) because the magic is alive even when idle; phosphor cursor blink in the telemetry log; scanline reveal on sheet load; occasional 1-frame glitch offset on Staatliches display type (hover/entrance only).
 - **Bans:** no 3D dice, no particle systems, no parallax fantasy scenes. Rolls are telemetry, not theater.
 - **Easing:** enter `ease-out`, exit `ease-in`, move `ease-in-out`. **Durations:** micro 50–100ms · short 150–250ms · medium 250–400ms · long 400–700ms.
 - **Libraries:** solid-motionone for transitions; Lenis only if smooth scroll earns its keep; three.js reserved for the landing page ley-line scene and future VTT — not the app shell.
-- Respect `prefers-reduced-motion`: glitch and flash effects collapse to opacity fades.
+- Respect `prefers-reduced-motion`: glitch and flash effects collapse to opacity fades; the P.P.E. pulse freezes at mid-glow.
 
 ## Character Ownership (spec for #10+)
 
@@ -111,3 +112,4 @@ Purple gradients · 3-column icon grids · centered hero/paragraph/CTA stacks ·
 | 2026-07-04 | Ownership-first identity band + optional narrative fields | User: "users need to own their characters" — epithet/appearance/traits/backstory/portrait spec'd for #10+. |
 | 2026-07-04 | Ley cyan `#4FD8FF` → deep ley amber `#C9821F` | User call: full phosphor monochrome. Magic vs machine is now brightness, not hue — tighter, more period-correct CRT. |
 | 2026-07-04 | Art-ban scope clarified | Whole-brand rule for RiftForge's own chrome: app fully art-free; landing may use procedural/schematic visuals (ley-line scene); player-provided content (portraits, VTT maps/tokens) always exempt. |
+| 2026-07-04 | Ley cyan `#4FD8FF` restored for magic; P.P.E. bar pulses | User call (reversing the monochrome swap): cyan returns as the ONE cool hue, reserved strictly for arcane/live-magic elements; P.P.E. bar gets a slow pulsating cyan gradient. Also resolves Cubic's finding on the preview's leftover teal endpoint. |
