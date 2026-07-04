@@ -1,0 +1,33 @@
+apps/web/src/pages/character-sheet.tsx
+  s_1a82bc70ad4a3f::t_9487d3585ffb39 57-63,68
+  s_1a82bc70ad4a3f::t_47188d2ee213b5 22-35
+  s_1a82bc70ad4a3f::t_d0312fe8f101b2 5-6
+packages/rules/tests/narrative.test.ts
+  s_1a82bc70ad4a3f::t_6df9f45c0c8f54 56-61
+apps/web/src/components/sheet-view.tsx
+  s_1a82bc70ad4a3f::t_799adf8be80ed0 113-127
+apps/web/src/builder/steps/identity.tsx
+  s_1a82bc70ad4a3f::t_aa624e69884cf5 26-32
+  s_1a82bc70ad4a3f::t_5652c2a8f23a90 45
+apps/web/src/components/narrative-fields.tsx
+  s_1a82bc70ad4a3f::t_72c8032bff8aa3 33,41,46,55,58,68
+  s_1a82bc70ad4a3f::t_18c3d39d6602f7 5-6,8-17
+packages/rules/src/schema/character.ts
+  s_1a82bc70ad4a3f::t_c7f402f4c7580a 53-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5b1007ead822f55e20593061cfa9277c5416be04",
+  "prompts": {},
+  "sessions": {
+    "s_1a82bc70ad4a3f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "77687cb7-707f-45d8-b628-57540dac66fe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
