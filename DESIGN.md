@@ -8,9 +8,9 @@ Your character isn't a form. It's a save file with a soul.
 
 - **What this is:** Character builder + live character sheet for the Rifts TTRPG (Palladium Books) — "D&D Beyond for Rifts." Live data everywhere: dice rolls and derived stats stream in over Convex subscriptions.
 - **Who it's for:** Rifts players — nostalgic 90s TTRPG fans and new players.
-- **Space/industry:** Digital TTRPG tools. Peers: D&D Beyond, Demiplane, Alchemy RPG — all ship dark *cinematic fantasy* (painted art, portals, glow). None own a technical/HUD language. That's our lane.
+- **Space/industry:** Digital TTRPG tools. Peers: D&D Beyond, Demiplane, Alchemy RPG — all ship dark _cinematic fantasy_ (painted art, portals, glow). None own a technical/HUD language. That's our lane.
 - **Project type:** Dark-mode-first web app (SolidJS + Tailwind v4). Surfaces: builder wizard, live sheet, roster; future landing page (`/`) and VTT (`/table/:id`).
-- **The memorable thing:** *A AAA game character screen on a salvaged CRT — gritty tech-magic rendered with heirloom care. Users own their characters.*
+- **The memorable thing:** _A AAA game character screen on a salvaged CRT — gritty tech-magic rendered with heirloom care. Users own their characters._
 
 ## Aesthetic Direction
 
@@ -19,40 +19,43 @@ Your character isn't a form. It's a save file with a soul.
 - **Mood:** Dense, legible, dangerous. The terminal is old, recovered, and running software it was never meant to run.
 - **Hard rule — zero painted fantasy art.** Schematic linework, halftone, and typography carry all flavor. This is the loudest anti-D&D-Beyond signal available. Scope:
   - **App surfaces (wizard, sheet, roster):** fully art-free — no illustration of any kind in RiftForge's own chrome.
-  - **Marketing shell (`/` landing, future):** same ban on painted/illustrated splash art, but *procedural and schematic* visuals are the sanctioned way to be dramatic — the three.js ley-line scene, wireframe/blueprint renderings, CRT effects.
+  - **Marketing shell (`/` landing, future):** same ban on painted/illustrated splash art, but _procedural and schematic_ visuals are the sanctioned way to be dramatic — the three.js ley-line scene, wireframe/blueprint renderings, CRT effects.
   - **Player content is always exempt:** uploaded portraits, and future VTT maps/tokens, are the player's material. The ban is on us decorating with stock fantasy art, never on what players bring. The machine stays austere; the humanity comes from the player.
 - **Reference points:** CP2077 character/inventory screens (angular panels, notched corners), Fallout Pip-Boy (phosphor mono telemetry), Watchmen (noir chassis, blood-red punctuation).
 
 ## Typography
 
-| Role | Font | Why |
-|---|---|---|
-| **Display / headers** | Staatliches | Condensed industrial stencil caps — Coalition-propaganda flavor. Discipline required: headers and badges only, never body. |
-| **HUD chrome / labels / buttons** | Chakra Petch | Squared game-HUD sans; the machine's interface voice. 400/500/600/700. |
-| **The human voice** | IBM Plex Serif | Reserved EXCLUSIVELY for player-authored content: backstory, epithet, lore quotes. Your words look different from the machine's. Italic for epithets. |
-| **Stats / numbers** | Martian Mono | Every attribute, vital, percentage, and modifier. Chunky, wide, mechanical. Numbers are the heroes. 400/600/800. |
-| **Telemetry / terminal log** | IBM Plex Mono | The streaming voice of the websocket: `> ROLL 3d6 :: [5][6][3] = 14 → P.E. 14 LOCKED`. |
+| Role                              | Font           | Why                                                                                                                                                   |
+| --------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Display / headers**             | Staatliches    | Condensed industrial stencil caps — Coalition-propaganda flavor. Discipline required: headers and badges only, never body.                            |
+| **HUD chrome / labels / buttons** | Chakra Petch   | Squared game-HUD sans; the machine's interface voice. 400/500/600/700.                                                                                |
+| **The human voice**               | IBM Plex Serif | Reserved EXCLUSIVELY for player-authored content: backstory, epithet, lore quotes. Your words look different from the machine's. Italic for epithets. |
+| **Stats / numbers**               | Martian Mono   | Every attribute, vital, percentage, and modifier. Chunky, wide, mechanical. Numbers are the heroes. 400/600/800.                                      |
+| **Telemetry / terminal log**      | IBM Plex Mono  | The streaming voice of the websocket: `> ROLL 3d6 :: [5][6][3] = 14 → P.E. 14 LOCKED`.                                                                |
 
 - **Loading:** Google Fonts (all free), self-host later for prod. `family=Staatliches&family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Martian+Mono:wght@400;600;800`
 - **Scale:** 11.5px mono captions · 13px HUD labels · 15px body · 18–20px panel data · 26px section headers (Staatliches) · 44–64px character name · 84px brand. Line-height 1.55 body, 0.9–0.95 display.
 
 ## Color
 
-**Approach:** Restrained warm phosphor chassis; ley cyan is the one *expressive* cool hue, reserved for magic — the thing the hardware was never built to display. Blood red and confirm green are functional status signals (damage, legality), conventional by design and deliberately outside the machine's material story.
+**Approach:** Restrained warm phosphor chassis; ley cyan is the one _expressive_ cool hue, reserved for magic — the thing the hardware was never built to display. Blood red and confirm green are functional status signals (damage, legality), conventional by design and deliberately outside the machine's material story.
 
 ### Chassis (noir)
+
 - **Background:** `#0B0D0F`
 - **Surface (panels):** `#14181C` · **Inset:** `#1B2127` · **Hairline borders:** `#2C343B`
 - **Primary text:** `#E6ECEF` · **Muted:** `#7E8A92` · **Dead/disabled:** `#40484F`
 - **Rust / worn metal trim:** `#A87932`
 
 ### Signals (meaning, not decoration)
+
 - **Phosphor amber `#FFAE3D`** — the machine's voice: primary actions, focus rings, prompts, warnings, locked rolls.
-- **Ley cyan `#4FD8FF`** — magic ONLY: P.P.E., spell strength, live arcane values, ley references, portrait scan linework, and the brand mark's *FORGE* (the rift itself is arcane — the brand carries the magic signal by definition). The P.P.E. bar carries a **pulsating cyan gradient** (see Motion). *The machine speaks amber; the magic glows cyan.*
+- **Ley cyan `#4FD8FF`** — magic ONLY: P.P.E., spell strength, live arcane values, ley references, portrait scan linework, and the brand mark's _FORGE_ (the rift itself is arcane — the brand carries the magic signal by definition). The P.P.E. bar carries a **pulsating cyan gradient** (see Motion). _The machine speaks amber; the magic glows cyan._
 - **Blood red `#E23B2E`** — damage, dread, failed requirements, alignment badges. (Text-on-dark variant: `#FF6A5E`.)
 - **Confirmed green `#57E389`** — legal builds, passing checks, stable sync.
 
 ### Rules
+
 - Color is semantic. Nothing is colored for decoration; if it glows, it means something.
 - Cyan is precious: it appears ONLY where magic does (the brand mark included — the rift is magic). If a cyan element isn't arcane, it's wrong.
 - Glows are real: signal values on dark get a matching `text-shadow`/`box-shadow` at 25–60% alpha.
@@ -105,11 +108,11 @@ Purple gradients · 3-column icon grids · centered hero/paragraph/CTA stacks ·
 
 ## Decisions Log
 
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2026-07-04 | Initial system created by /design-consultation | Research (D&D Beyond, Demiplane, Alchemy) + two independent outside voices (Codex, Claude subagent) converged on terminal/dossier direction; user brief: gritty tech-magic × premium artifact. |
-| 2026-07-04 | Pivot from "paper dossier artifact" (v1) to AAA HUD "Ley Terminal" (v2) | User direction: CP2077 × Fallout × Watchmen; keep terminal + CRT. Paper dossier concept retired (may return as print/export view someday). |
-| 2026-07-04 | Ownership-first identity band + optional narrative fields | User: "users need to own their characters" — epithet/appearance/traits/backstory/portrait spec'd for #10+. |
-| 2026-07-04 | Ley cyan `#4FD8FF` → deep ley amber `#C9821F` | User call: full phosphor monochrome. Magic vs machine is now brightness, not hue — tighter, more period-correct CRT. |
-| 2026-07-04 | Art-ban scope clarified | Whole-brand rule for RiftForge's own chrome: app fully art-free; landing may use procedural/schematic visuals (ley-line scene); player-provided content (portraits, VTT maps/tokens) always exempt. |
-| 2026-07-04 | Ley cyan `#4FD8FF` restored for magic; P.P.E. bar pulses | User call (reversing the monochrome swap): cyan returns as the ONE cool hue, reserved strictly for arcane/live-magic elements; P.P.E. bar gets a slow pulsating cyan gradient. Also resolves Cubic's finding on the preview's leftover teal endpoint. |
+| Date       | Decision                                                                | Rationale                                                                                                                                                                                                                                             |
+| ---------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-04 | Initial system created by /design-consultation                          | Research (D&D Beyond, Demiplane, Alchemy) + two independent outside voices (Codex, Claude subagent) converged on terminal/dossier direction; user brief: gritty tech-magic × premium artifact.                                                        |
+| 2026-07-04 | Pivot from "paper dossier artifact" (v1) to AAA HUD "Ley Terminal" (v2) | User direction: CP2077 × Fallout × Watchmen; keep terminal + CRT. Paper dossier concept retired (may return as print/export view someday).                                                                                                            |
+| 2026-07-04 | Ownership-first identity band + optional narrative fields               | User: "users need to own their characters" — epithet/appearance/traits/backstory/portrait spec'd for #10+.                                                                                                                                            |
+| 2026-07-04 | Ley cyan `#4FD8FF` → deep ley amber `#C9821F`                           | User call: full phosphor monochrome. Magic vs machine is now brightness, not hue — tighter, more period-correct CRT.                                                                                                                                  |
+| 2026-07-04 | Art-ban scope clarified                                                 | Whole-brand rule for RiftForge's own chrome: app fully art-free; landing may use procedural/schematic visuals (ley-line scene); player-provided content (portraits, VTT maps/tokens) always exempt.                                                   |
+| 2026-07-04 | Ley cyan `#4FD8FF` restored for magic; P.P.E. bar pulses                | User call (reversing the monochrome swap): cyan returns as the ONE cool hue, reserved strictly for arcane/live-magic elements; P.P.E. bar gets a slow pulsating cyan gradient. Also resolves Cubic's finding on the preview's leftover teal endpoint. |
