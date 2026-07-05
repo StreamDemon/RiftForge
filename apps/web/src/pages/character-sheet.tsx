@@ -153,8 +153,14 @@ export function CharacterSheetPage() {
   };
 
   const damage = async () => {
-    const amount = Number.parseInt(damageInput(), 10);
-    if (!Number.isInteger(amount) || amount <= 0) return;
+    // Strict parse: `Number` (unlike `parseInt`) makes "3.5" and "3abc"
+    // fail the integer check instead of silently truncating to 3.
+    const raw = damageInput().trim();
+    const amount = Number(raw);
+    if (raw === "" || !Number.isInteger(amount) || amount <= 0) {
+      if (raw !== "") telemetry.log(`> DAMAGE :: REFUSED (not a whole number: "${raw}")`, "bad");
+      return;
+    }
     const damagedFor = id();
     try {
       const next = await applyDamageMutation({ id: damagedFor, amount });

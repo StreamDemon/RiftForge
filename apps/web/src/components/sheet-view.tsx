@@ -82,8 +82,10 @@ function PortraitFrame() {
 }
 
 /** A stat line; clickable (and amber on hover) when the page wires a roll.
- * `disabled` keeps the row a button (so the reason reads on hover/focus)
- * but dead-steel and inert — e.g. a spell the character can't afford. */
+ * `disabled` renders the row dead-steel and inert — e.g. a spell the
+ * character can't afford — via `aria-disabled` (not the native attribute),
+ * so it stays focusable and the `title` reason reaches keyboard and
+ * screen-reader users. */
 function StatRow(props: {
   label: JSX.Element;
   value: JSX.Element;
@@ -112,9 +114,11 @@ function StatRow(props: {
       <button
         type="button"
         title={props.title ?? "Roll"}
-        disabled={props.disabled}
-        class="flex w-full cursor-pointer items-baseline justify-between gap-3 border-b border-dotted border-line py-1 text-left text-[13.5px] last:border-b-0 enabled:hover:bg-amber/5 enabled:hover:text-amber disabled:cursor-not-allowed disabled:text-dead"
-        onClick={() => props.onRoll?.()}
+        aria-disabled={props.disabled || undefined}
+        class="flex w-full items-baseline justify-between gap-3 border-b border-dotted border-line py-1 text-left text-[13.5px] last:border-b-0 aria-disabled:cursor-not-allowed aria-disabled:text-dead [&:not([aria-disabled])]:cursor-pointer [&:not([aria-disabled])]:hover:bg-amber/5 [&:not([aria-disabled])]:hover:text-amber"
+        onClick={() => {
+          if (!props.disabled) props.onRoll?.();
+        }}
       >
         <span>{props.label}</span>
         {value()}
