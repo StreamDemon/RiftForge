@@ -1,0 +1,21 @@
+apps/web/src/pages/character-sheet.tsx
+  s_699d45d62f7a13::t_3504a44a9a5a0a 156-163
+apps/web/src/components/sheet-view.tsx
+  s_699d45d62f7a13::t_55f1612cf537c6 85-88,117-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d1cb502659a05be7ad1893032fa70c5af3b9eaaa",
+  "prompts": {},
+  "sessions": {
+    "s_699d45d62f7a13": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b924ff0-2f4f-4621-80a2-e679f7b6cd6b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
