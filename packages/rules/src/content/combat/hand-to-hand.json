@@ -4,7 +4,7 @@
     "page": 347,
     "table": "Hand to Hand Combat Skills"
   },
-  "note": "Accumulative level-by-level bonuses. `bonuses` values are added to the like-named combat action; `addAttacks` increments attacks per melee. Only 'none' and 'basic' are modeled so far (Expert/Martial Arts/Assassin/Commando to follow).",
+  "note": "Accumulative level-by-level bonuses, printed pp.347-349. `bonuses` values are added to the like-named combat action; `addAttacks` increments attacks per melee. Keys beyond strike/parry/dodge/damage (initiative, entangle, autoDodge, bodyFlipThrow, saveVsHorrorFactor, strikeThrown, strikeGuns) accumulate the same way and await the attack resolver (#16) to be consumed. Special moves without a flat modifier are captured as notes.",
   "types": [
     {
       "id": "none",
@@ -45,6 +45,216 @@
         { "level": 13, "note": "Critical Strike or knockout from behind." },
         { "level": 14, "bonuses": { "damage": 2 } },
         { "level": 15, "addAttacks": 1 }
+      ]
+    },
+    {
+      "id": "expert",
+      "name": "Hand to Hand: Expert",
+      "baseAttacks": 4,
+      "levels": [
+        {
+          "level": 1,
+          "attacks": 4,
+          "bonuses": { "pullPunch": 2, "rollWithImpact": 2 },
+          "note": "Kick attack does 1D8 damage."
+        },
+        { "level": 2, "bonuses": { "parry": 3, "dodge": 3, "pullPunch": 1 } },
+        {
+          "level": 3,
+          "bonuses": { "strike": 2, "disarm": 2 },
+          "note": "Can perform a Karate Punch."
+        },
+        { "level": 4, "addAttacks": 1 },
+        { "level": 5, "note": "Can perform a Karate Kick, does 2D6 damage." },
+        { "level": 6, "note": "Critical Strike on an unmodified roll of 18, 19 or 20." },
+        {
+          "level": 7,
+          "note": "W.P. Paired Weapons and backhand strike (average, does 1D4 damage)."
+        },
+        {
+          "level": 8,
+          "note": "Body flip/throw: 1D6 damage; victim loses initiative and one attack."
+        },
+        { "level": 9, "addAttacks": 1, "bonuses": { "disarm": 1 } },
+        { "level": 10, "bonuses": { "damage": 3 } },
+        { "level": 11, "note": "Knockout/stun on an unmodified roll of 18, 19 or 20." },
+        { "level": 12, "bonuses": { "parry": 2, "dodge": 2 } },
+        { "level": 13, "note": "Critical Strike or knockout from behind (triple damage)." },
+        { "level": 14, "addAttacks": 1 },
+        { "level": 15, "note": "Death blow on a roll of Natural 20." }
+      ]
+    },
+    {
+      "id": "martial-arts",
+      "name": "Hand to Hand: Martial Arts",
+      "baseAttacks": 4,
+      "levels": [
+        {
+          "level": 1,
+          "attacks": 4,
+          "bonuses": { "pullPunch": 3, "rollWithImpact": 3 },
+          "note": "Body flip/throw: 1D6 damage; victim loses initiative and one attack."
+        },
+        {
+          "level": 2,
+          "bonuses": { "parry": 3, "dodge": 3, "strike": 2 },
+          "note": "May perform Karate and any hand strike/punch."
+        },
+        {
+          "level": 3,
+          "bonuses": { "initiative": 1 },
+          "note": "May perform a Karate-style kick (does 2D6 damage) and any foot strike except Leap Kick."
+        },
+        { "level": 4, "addAttacks": 1 },
+        {
+          "level": 5,
+          "bonuses": { "entangle": 2 },
+          "note": "Leap Kick (3D8 damage, but counts as two melee attacks)."
+        },
+        { "level": 6, "note": "Critical Strike on an unmodified roll of 18, 19 or 20." },
+        {
+          "level": 7,
+          "bonuses": { "disarm": 2 },
+          "note": "W.P. Paired Weapons and can perform Holds."
+        },
+        { "level": 8, "note": "Back flip and back flip escape." },
+        { "level": 9, "addAttacks": 1 },
+        { "level": 10, "bonuses": { "disarm": 2 }, "note": "Back flip attack." },
+        { "level": 11, "bonuses": { "damage": 4, "initiative": 1 } },
+        { "level": 12, "bonuses": { "parry": 2, "dodge": 2 } },
+        { "level": 13, "note": "Knockout/stun on an unmodified roll of 18, 19 or 20." },
+        { "level": 14, "addAttacks": 1 },
+        { "level": 15, "note": "Death blow on a roll of a Natural 20." }
+      ]
+    },
+    {
+      "id": "assassin",
+      "name": "Hand to Hand: Assassin",
+      "baseAttacks": 3,
+      "levels": [
+        {
+          "level": 1,
+          "attacks": 3,
+          "bonuses": { "strike": 2 },
+          "note": "W.P. Paired Weapons."
+        },
+        { "level": 2, "addAttacks": 2, "bonuses": { "initiative": 1 } },
+        {
+          "level": 3,
+          "bonuses": { "pullPunch": 3, "rollWithImpact": 2 },
+          "note": "Karate Punch (2D4 damage)."
+        },
+        {
+          "level": 4,
+          "bonuses": { "damage": 4, "initiative": 1 },
+          "note": "Karate Kick (2D6 damage); the damage bonus applies to all physical attacks."
+        },
+        { "level": 5, "addAttacks": 1, "bonuses": { "strikeThrown": 1 } },
+        {
+          "level": 6,
+          "bonuses": { "parry": 3, "dodge": 3, "entangle": 2 },
+          "note": "Backhand strike (martial arts, 1D6 damage)."
+        },
+        {
+          "level": 7,
+          "note": "Knockout/stun on an unmodified roll of 17-20 and leap kick (3D8 damage, but counts as two melee attacks)."
+        },
+        { "level": 8, "addAttacks": 1, "bonuses": { "strikeGuns": 1, "initiative": 1 } },
+        { "level": 9, "bonuses": { "initiative": 1 }, "note": "Can perform back flip." },
+        { "level": 10, "note": "Critical Strike on an unmodified roll of 19 or 20." },
+        {
+          "level": 11,
+          "bonuses": { "strike": 2, "strikeThrown": 1, "strikeGuns": 1 },
+          "note": "Strike bonus is in hand to hand. Can perform back flip attack."
+        },
+        {
+          "level": 12,
+          "bonuses": { "pullPunch": 2 },
+          "note": "Death blow on a roll of a Natural 19 or 20."
+        },
+        { "level": 13, "addAttacks": 1 },
+        { "level": 14, "bonuses": { "damage": 2 }, "note": "Can perform Holds." },
+        {
+          "level": 15,
+          "bonuses": { "strike": 2, "strikeGuns": 1 },
+          "note": "Strike bonus is in hand to hand."
+        }
+      ]
+    },
+    {
+      "id": "commando",
+      "name": "Hand to Hand: Commando",
+      "baseAttacks": 4,
+      "levels": [
+        {
+          "level": 1,
+          "attacks": 4,
+          "bonuses": { "saveVsHorrorFactor": 2 },
+          "note": "W.P. Paired Weapons, body flip/throw and body block/tackle."
+        },
+        {
+          "level": 2,
+          "bonuses": {
+            "initiative": 1,
+            "strike": 1,
+            "parry": 2,
+            "dodge": 2,
+            "rollWithImpact": 3,
+            "pullPunch": 3
+          },
+          "note": "Backward sweep kick (opponents behind only): no damage, pure knockdown (same penalties as body flip); cannot be parried, dodge at -2."
+        },
+        {
+          "level": 3,
+          "bonuses": { "initiative": 1, "disarm": 1 },
+          "note": "Karate punch/strike (does 2D4 damage)."
+        },
+        { "level": 4, "addAttacks": 1, "note": "Karate kick (does 2D6 damage)." },
+        {
+          "level": 5,
+          "bonuses": { "autoDodge": 2 },
+          "note": "The +2 also applies to all foot strikes."
+        },
+        {
+          "level": 6,
+          "bonuses": {
+            "initiative": 2,
+            "strike": 1,
+            "parry": 1,
+            "dodge": 1,
+            "bodyFlipThrow": 1
+          }
+        },
+        {
+          "level": 7,
+          "bonuses": {
+            "damage": 2,
+            "saveVsHorrorFactor": 1,
+            "disarm": 1,
+            "autoDodge": 1,
+            "pullPunch": 2
+          }
+        },
+        {
+          "level": 8,
+          "addAttacks": 1,
+          "bonuses": { "bodyFlipThrow": 2, "rollWithImpact": 1 },
+          "note": "Jump kick."
+        },
+        {
+          "level": 9,
+          "bonuses": { "pullPunch": 2 },
+          "note": "Death blow on a Natural 18-20."
+        },
+        { "level": 10, "bonuses": { "saveVsHorrorFactor": 2, "initiative": 1, "strike": 1 } },
+        { "level": 11, "bonuses": { "disarm": 1, "pullPunch": 1, "bodyFlipThrow": 2 } },
+        {
+          "level": 12,
+          "bonuses": { "damage": 2, "parry": 1, "dodge": 1, "autoDodge": 2 }
+        },
+        { "level": 13, "addAttacks": 1 },
+        { "level": 14, "bonuses": { "initiative": 1 }, "note": "Can perform Holds." },
+        { "level": 15, "note": "Critical Strike on a Natural 17-20." }
       ]
     }
   ]

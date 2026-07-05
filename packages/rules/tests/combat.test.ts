@@ -34,7 +34,7 @@ describe("Hit Points & S.D.C. (RUE p.287)", () => {
   });
 });
 
-describe("Hand to Hand progression (RUE p.347)", () => {
+describe("Hand to Hand progression (RUE pp.347-349)", () => {
   test("Basic attacks per melee: 4, +1 at 4/9/15", () => {
     expect(attacksPerMelee("basic", 1)).toBe(4);
     expect(attacksPerMelee("basic", 3)).toBe(4);
@@ -58,6 +58,92 @@ describe("Hand to Hand progression (RUE p.347)", () => {
       strike: 2,
       disarm: 1,
       damage: 2,
+    });
+  });
+
+  test("Expert attacks per melee: 4, +1 at 4/9/14", () => {
+    expect(attacksPerMelee("expert", 1)).toBe(4);
+    expect(attacksPerMelee("expert", 4)).toBe(5);
+    expect(attacksPerMelee("expert", 9)).toBe(6);
+    expect(attacksPerMelee("expert", 15)).toBe(7);
+  });
+
+  test("Expert accumulative bonuses at level 15", () => {
+    expect(hthBonuses("expert", 15)).toEqual({
+      pullPunch: 3,
+      rollWithImpact: 2,
+      parry: 5,
+      dodge: 5,
+      strike: 2,
+      disarm: 3,
+      damage: 3,
+    });
+  });
+
+  test("Martial Arts attacks per melee: 4, +1 at 4/9/14", () => {
+    expect(attacksPerMelee("martial-arts", 1)).toBe(4);
+    expect(attacksPerMelee("martial-arts", 4)).toBe(5);
+    expect(attacksPerMelee("martial-arts", 9)).toBe(6);
+    expect(attacksPerMelee("martial-arts", 15)).toBe(7);
+  });
+
+  test("Martial Arts accumulative bonuses at level 15", () => {
+    expect(hthBonuses("martial-arts", 15)).toEqual({
+      pullPunch: 3,
+      rollWithImpact: 3,
+      parry: 5,
+      dodge: 5,
+      strike: 2,
+      initiative: 2,
+      entangle: 2,
+      disarm: 4,
+      damage: 4,
+    });
+  });
+
+  test("Assassin attacks per melee: 3, +2 at 2, +1 at 5/8/13", () => {
+    expect(attacksPerMelee("assassin", 1)).toBe(3);
+    expect(attacksPerMelee("assassin", 2)).toBe(5);
+    expect(attacksPerMelee("assassin", 5)).toBe(6);
+    expect(attacksPerMelee("assassin", 8)).toBe(7);
+    expect(attacksPerMelee("assassin", 15)).toBe(8);
+  });
+
+  test("Assassin accumulative bonuses at level 15 (incl. thrown/gun strikes)", () => {
+    expect(hthBonuses("assassin", 15)).toEqual({
+      strike: 6,
+      initiative: 4,
+      pullPunch: 5,
+      rollWithImpact: 2,
+      damage: 6,
+      strikeThrown: 2,
+      strikeGuns: 3,
+      parry: 3,
+      dodge: 3,
+      entangle: 2,
+    });
+  });
+
+  test("Commando attacks per melee: 4, +1 at 4/8/13", () => {
+    expect(attacksPerMelee("commando", 1)).toBe(4);
+    expect(attacksPerMelee("commando", 4)).toBe(5);
+    expect(attacksPerMelee("commando", 8)).toBe(6);
+    expect(attacksPerMelee("commando", 15)).toBe(7);
+  });
+
+  test("Commando accumulative bonuses at level 15 (incl. auto-dodge & Horror Factor)", () => {
+    expect(hthBonuses("commando", 15)).toEqual({
+      saveVsHorrorFactor: 5,
+      initiative: 6,
+      strike: 3,
+      parry: 4,
+      dodge: 4,
+      rollWithImpact: 4,
+      pullPunch: 8,
+      disarm: 3,
+      autoDodge: 5,
+      bodyFlipThrow: 5,
+      damage: 4,
     });
   });
 });
@@ -137,7 +223,20 @@ describe("combatProfile integrates attributes + Hand to Hand", () => {
   });
 
   test("an unknown Hand-to-Hand id throws instead of silently defaulting", () => {
-    expect(() => attacksPerMelee("expert", 1)).toThrow(/Unknown Hand-to-Hand/);
-    expect(() => hthBonuses("expert", 1)).toThrow(/Unknown Hand-to-Hand/);
+    expect(() => attacksPerMelee("ninjutsu", 1)).toThrow(/Unknown Hand-to-Hand/);
+    expect(() => hthBonuses("ninjutsu", 1)).toThrow(/Unknown Hand-to-Hand/);
+  });
+
+  test("P.P. 20 / P.S. 20, Expert H2H at level 3", () => {
+    const p = combatProfile({
+      attributes: { PP: 20, PS: 20 },
+      hthType: "expert",
+      level: 3,
+    });
+    expect(p.attacksPerMelee).toBe(4);
+    expect(p.strike).toBe(5); // P.P. +3, Expert +2 at level 3
+    expect(p.parry).toBe(6); // P.P. +3, Expert +3 at level 2
+    expect(p.dodge).toBe(6);
+    expect(p.damageBonus).toBe(5); // P.S. +5, no Expert damage bonus until level 10
   });
 });

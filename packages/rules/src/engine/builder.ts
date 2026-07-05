@@ -143,7 +143,7 @@ export interface HthUpgrade {
   cost: number;
   /** Alignment category the upgrade demands (e.g. Assassin requires evil). */
   requiresAlignmentCategory?: string;
-  /** False until the target H2H type exists in combat content (#15). */
+  /** False when the target H2H type is not modeled in combat content. */
   available: boolean;
 }
 
