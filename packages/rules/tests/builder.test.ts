@@ -94,14 +94,19 @@ describe("occSkillPlan — the LLW's printed grants", () => {
     ]);
   });
 
-  test("hand to hand: basic, with printed upgrades unavailable until #15", () => {
+  test("hand to hand: basic, with all printed upgrades available (#15)", () => {
     expect(plan.hth?.hthId).toBe("basic");
     expect(
-      plan.hth?.upgrades.map((u) => ({ to: u.to, cost: u.cost, available: u.available })),
+      plan.hth?.upgrades.map((u) => ({
+        to: u.to,
+        hthId: u.hthId,
+        cost: u.cost,
+        available: u.available,
+      })),
     ).toEqual([
-      { to: "Hand to Hand: Expert", cost: 1, available: false },
-      { to: "Martial Arts", cost: 2, available: false },
-      { to: "Assassin", cost: 2, available: false },
+      { to: "Hand to Hand: Expert", hthId: "expert", cost: 1, available: true },
+      { to: "Martial Arts", hthId: "martial-arts", cost: 2, available: true },
+      { to: "Assassin", hthId: "assassin", cost: 2, available: true },
     ]);
   });
 });
@@ -286,18 +291,41 @@ describe("assembleSkills — rule violations", () => {
     expect(errors).toContainEqual(expect.stringContaining("same label"));
   });
 
-  test("unavailable hand-to-hand upgrades are rejected (until #15)", () => {
-    const { errors } = assembleSkills(leyLineWalker, {
+  test("upgrading to Expert spends one related pick (#15)", () => {
+    const result = assembleSkills(leyLineWalker, {
       ...legalSelections,
       hthId: "expert",
+      related: legalSelections.related.slice(0, 6),
     });
-    expect(errors).toContainEqual(expect.stringContaining('"expert" is not available'));
+    expect(result.errors).toEqual([]);
+    expect(result.hthType).toBe("expert");
+  });
+
+  test("upgrading to Martial Arts spends two related picks (#15)", () => {
+    const result = assembleSkills(leyLineWalker, {
+      ...legalSelections,
+      hthId: "martial-arts",
+      related: legalSelections.related.slice(0, 5),
+    });
+    expect(result.errors).toEqual([]);
+    expect(result.hthType).toBe("martial-arts");
+  });
+
+  test("Assassin demands an evil alignment even now that it is modeled", () => {
+    const { errors } = assembleSkills(leyLineWalker, {
+      ...legalSelections,
+      hthId: "assassin",
+      related: legalSelections.related.slice(0, 5),
+      // legalSelections is scrupulous (good)
+    });
+    expect(errors).toContainEqual(expect.stringContaining("requires an evil alignment"));
   });
 });
 
 describe("assembleSkills — hand-to-hand upgrades (synthetic O.C.C.)", () => {
-  // A minimal O.C.C. whose grant is "none" upgradable to Basic — the only
-  // modeled H2H pair today — so the upgrade mechanics are exercisable.
+  // A minimal O.C.C. whose grant is "none" upgradable to Basic, so the upgrade
+  // mechanics are exercisable — plus an unmodeled style to pin the
+  // unavailability path now that all printed RUE types exist (#15).
   const brawler = occSchema.parse({
     source: { book: "Test Fixture", page: 1 },
     id: "test-brawler",
@@ -313,10 +341,26 @@ describe("assembleSkills — hand-to-hand upgrades (synthetic O.C.C.)", () => {
         upgrades: [
           { to: "Basic", cost: { occRelatedSkills: 1 } },
           { to: "Hand to Hand: Expert", cost: { occRelatedSkills: 2 }, requiresAlignment: "evil" },
+          { to: "Ninjutsu", cost: { occRelatedSkills: 1 } },
         ],
       },
     ],
     occRelatedSkills: { count: 2, categoryRules: [{ category: "Science", allowed: "any" }] },
+  });
+
+  test("an upgrade to an unmodeled style stays unavailable", () => {
+    const plan = occSkillPlan(brawler);
+    expect(plan.hth?.upgrades.find((u) => u.to === "Ninjutsu")).toMatchObject({
+      hthId: undefined,
+      available: false,
+    });
+    const { errors } = assembleSkills(brawler, {
+      occChoices: {},
+      related: [{ skillId: "biology" }],
+      secondary: [],
+      hthId: "ninjutsu",
+    });
+    expect(errors).toContainEqual(expect.stringContaining('"ninjutsu" is not available'));
   });
 
   test("an available upgrade spends related picks", () => {
@@ -348,9 +392,9 @@ describe("assembleSkills — hand-to-hand upgrades (synthetic O.C.C.)", () => {
       hthId: "expert",
       alignmentId: "miscreant",
     });
-    // "expert" isn't modeled, so it stays unavailable — but the alignment
-    // check is reachable through a modeled target.
-    expect(evil.errors).toContainEqual(expect.stringContaining("not available"));
+    // Expert costs both related picks; an evil alignment satisfies the gate.
+    expect(evil.errors).toEqual([]);
+    expect(evil.hthType).toBe("expert");
 
     const gated = occSchema.parse({
       ...brawler,
