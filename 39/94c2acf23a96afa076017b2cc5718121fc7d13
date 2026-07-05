@@ -1,0 +1,19 @@
+vite.config.ts
+  s_699d45d62f7a13::t_7201de8abc501e 15-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3994c2acf23a96afa076017b2cc5718121fc7d13",
+  "prompts": {},
+  "sessions": {
+    "s_699d45d62f7a13": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b924ff0-2f4f-4621-80a2-e679f7b6cd6b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
