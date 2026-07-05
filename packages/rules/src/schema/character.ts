@@ -104,6 +104,19 @@ export const characterSchema = z.object({
       ppe: z.number().int().nonnegative().optional(),
     })
     .optional(),
+  /** Live resource state — what's LEFT of each rolled maximum (damage taken,
+   * P.P.E. spent). Absent fields mean "at maximum". A field is only legal when
+   * its maximum is rolled, never above it, and H.P. never below the -(P.E.)
+   * coma/death floor — enforced in `deriveSheet` (the floor needs P.E.), so
+   * illegal states are rejected at every write. H.P. may be negative: 0 down
+   * to the floor is the coma band (RUE p.287). */
+  current: z
+    .object({
+      hitPoints: z.number().int().optional(),
+      sdc: z.number().int().nonnegative().optional(),
+      ppe: z.number().int().nonnegative().optional(),
+    })
+    .optional(),
   /** Optional player-authored identity; passed through to the sheet untouched. */
   narrative: narrativeSchema.optional(),
 });

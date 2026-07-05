@@ -21,6 +21,9 @@ import { getSpell, occSpellStrength } from "./spells.ts";
 /** A dice-derived stat: its range, plus the concrete roll if one was recorded. */
 export interface StatValue extends StatRange {
   rolled?: number;
+  /** What's left of the rolled maximum (damage taken, P.P.E. spent). Present
+   * exactly when `rolled` is; equals `rolled` until something depletes it. */
+  current?: number;
 }
 
 /** A saving throw: the d20 target (fixed or a range) and the character's total bonus. */
@@ -73,8 +76,8 @@ function occSaveBonus(occ: Occ, target: string, level: number): number {
   return total;
 }
 
-function withRolled(range: StatRange, rolled?: number): StatValue {
-  return rolled === undefined ? { ...range } : { ...range, rolled };
+function withRolled(range: StatRange, rolled?: number, current?: number): StatValue {
+  return rolled === undefined ? { ...range } : { ...range, rolled, current: current ?? rolled };
 }
 
 /**
@@ -105,6 +108,31 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
   });
 
   const isCaster = occ.spellKnowledge !== undefined || occ.ppe !== undefined;
+
+  // Live `current` values are only meaningful against a rolled maximum, and a
+  // write that exceeds it (or sinks H.P. below the coma/death floor) is a bug
+  // upstream — reject rather than clamp, so illegal states never reach storage
+  // (the backend validates every write through this function).
+  const floor = comaDeathFloor(attrs.PE);
+  const currentMinimums = [
+    ["hitPoints", floor],
+    ["sdc", 0],
+    ["ppe", 0],
+  ] as const;
+  for (const [field, min] of currentMinimums) {
+    const cur = character.current?.[field];
+    if (cur === undefined) continue;
+    const max = character.rolled?.[field];
+    if (max === undefined) {
+      throw new Error(`current.${field} requires rolled.${field} — no maximum to measure against.`);
+    }
+    if (cur > max) {
+      throw new Error(`current.${field} (${cur}) exceeds the rolled maximum (${max}).`);
+    }
+    if (cur < min) {
+      throw new Error(`current.${field} (${cur}) is below the legal minimum (${min}).`);
+    }
+  }
 
   const saves: Record<string, SheetSave> = {
     magic: {
@@ -175,11 +203,17 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
       damageBonus: combat.damageBonus,
     },
     vitals: {
-      hitPoints: withRolled(hitPointsRange(attrs.PE, level), character.rolled?.hitPoints),
-      sdc: withRolled(physicalSdcRange(), character.rolled?.sdc),
-      comaDeathFloor: comaDeathFloor(attrs.PE),
+      hitPoints: withRolled(
+        hitPointsRange(attrs.PE, level),
+        character.rolled?.hitPoints,
+        character.current?.hitPoints,
+      ),
+      sdc: withRolled(physicalSdcRange(), character.rolled?.sdc, character.current?.sdc),
+      comaDeathFloor: floor,
     },
-    ppe: occ.ppe ? withRolled(ppeRange(occ, attrs.PE, level), character.rolled?.ppe) : undefined,
+    ppe: occ.ppe
+      ? withRolled(ppeRange(occ, attrs.PE, level), character.rolled?.ppe, character.current?.ppe)
+      : undefined,
     spellStrength: isCaster ? occSpellStrength(occ, level) : undefined,
     saves,
     skills,

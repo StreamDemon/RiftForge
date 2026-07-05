@@ -46,6 +46,14 @@ export const characterFields = {
       ppe: v.optional(v.number()),
     }),
   ),
+  /** Live resource state (damage taken, P.P.E. spent); absent = at maximum. */
+  current: v.optional(
+    v.object({
+      hitPoints: v.optional(v.number()),
+      sdc: v.optional(v.number()),
+      ppe: v.optional(v.number()),
+    }),
+  ),
   narrative: v.optional(
     v.object({
       epithet: v.optional(v.string()),

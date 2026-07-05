@@ -9,10 +9,14 @@ import type {
 import { createEffect, createSignal, For, on, onCleanup, Show, type JSX } from "solid-js";
 import { Chip, DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
 
-/** "rolled 17" once vitals are pinned, otherwise the possible range. */
+function statRange(stat: StatValue): string {
+  return `${stat.min}–${stat.max} (avg ${stat.average})`;
+}
+
+/** `current / max` once vitals are pinned (DESIGN.md), otherwise the possible range. */
 function statValue(stat: StatValue): string {
-  const range = `${stat.min}–${stat.max} (avg ${stat.average})`;
-  return stat.rolled === undefined ? range : `${stat.rolled} (range ${range})`;
+  if (stat.rolled === undefined) return statRange(stat);
+  return `${stat.current ?? stat.rolled} / ${stat.rolled}`;
 }
 
 function saveTarget(save: SheetSave): string {
@@ -77,12 +81,18 @@ function PortraitFrame() {
   );
 }
 
-/** A stat line; clickable (and amber on hover) when the page wires a roll. */
+/** A stat line; clickable (and amber on hover) when the page wires a roll.
+ * `disabled` renders the row dead-steel and inert — e.g. a spell the
+ * character can't afford — via `aria-disabled` (not the native attribute),
+ * so it stays focusable and the `title` reason reaches keyboard and
+ * screen-reader users. */
 function StatRow(props: {
   label: JSX.Element;
   value: JSX.Element;
   live?: boolean;
   onRoll?: () => void;
+  disabled?: boolean;
+  title?: string;
 }) {
   const value = () => (
     <span
@@ -103,9 +113,12 @@ function StatRow(props: {
     >
       <button
         type="button"
-        title="Roll"
-        class="flex w-full cursor-pointer items-baseline justify-between gap-3 border-b border-dotted border-line py-1 text-left text-[13.5px] last:border-b-0 hover:bg-amber/5 hover:text-amber"
-        onClick={() => props.onRoll?.()}
+        title={props.title ?? "Roll"}
+        aria-disabled={props.disabled || undefined}
+        class="flex w-full items-baseline justify-between gap-3 border-b border-dotted border-line py-1 text-left text-[13.5px] last:border-b-0 aria-disabled:cursor-not-allowed aria-disabled:text-dead [&:not([aria-disabled])]:cursor-pointer [&:not([aria-disabled])]:hover:bg-amber/5 [&:not([aria-disabled])]:hover:text-amber"
+        onClick={() => {
+          if (!props.disabled) props.onRoll?.();
+        }}
       >
         <span>{props.label}</span>
         {value()}
@@ -121,18 +134,20 @@ const barFill = {
 } as const;
 
 /**
- * A vital as a resource bar: fill = rolled value against the range maximum,
- * empty until rolled. The value flashes like a dot-matrix strike when a new
- * roll lands (fine-grained update — the sheet is NOT remounted).
+ * A vital as a resource bar: fill = what's LEFT of the rolled maximum
+ * (`current / rolled`), full right after a roll, empty until one lands. The
+ * value flashes like a dot-matrix strike whenever the live value changes —
+ * a roll, damage, a cast, a restore (fine-grained update — the sheet is NOT
+ * remounted).
  */
 function VitalBar(props: { label: string; stat: StatValue; tone: keyof typeof barFill }) {
   const [flash, setFlash] = createSignal(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
   createEffect(
     on(
-      () => props.stat.rolled,
-      (rolled, previous) => {
-        if (rolled === undefined || rolled === previous) return;
+      () => props.stat.current,
+      (current, previous) => {
+        if (current === undefined || current === previous) return;
         setFlash(false);
         requestAnimationFrame(() => setFlash(true));
         clearTimeout(timer);
@@ -143,16 +158,20 @@ function VitalBar(props: { label: string; stat: StatValue; tone: keyof typeof ba
   );
   onCleanup(() => clearTimeout(timer));
 
-  const pct = () =>
-    props.stat.rolled === undefined || props.stat.max <= 0
-      ? 0
-      : Math.min(100, Math.round((props.stat.rolled / props.stat.max) * 100));
+  // H.P. can sit in the negative coma band — the bar just reads empty.
+  const pct = () => {
+    const { rolled, current } = props.stat;
+    if (rolled === undefined || rolled <= 0) return 0;
+    const ratio = (current ?? rolled) / rolled;
+    return Math.min(100, Math.max(0, Math.round(ratio * 100)));
+  };
 
   return (
     <div class="py-1">
       <div class="flex items-baseline justify-between font-mono text-[11px] text-muted">
         <span>{props.label}</span>
         <span
+          title={`rolled range ${statRange(props.stat)}`}
           classList={{ "strike-flash": flash() }}
           class={`font-data text-[12.5px] font-semibold ${props.tone === "ley" ? "text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.6)]" : "text-fg"}`}
         >
@@ -362,21 +381,42 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
           </div>
           <div class="mt-2">
             <For each={s().spells.known}>
-              {(spell) => (
-                <StatRow
-                  label={
-                    <>
-                      {spell.name} <span class="text-muted">LVL {spell.level}</span>
-                    </>
-                  }
-                  value={
-                    <span class="text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.5)]">
-                      {spell.ppe} PPE
-                    </span>
-                  }
-                  onRoll={props.actions && (() => props.actions!.castSpell(spell))}
-                />
-              )}
+              {(spell) => {
+                // Casting spends live P.P.E. — a spell the character can't
+                // pay for (or can't measure, pre-roll) goes dead-steel.
+                const ppeLeft = () => s().ppe?.current;
+                const blocked = () =>
+                  props.actions === undefined
+                    ? undefined
+                    : ppeLeft() === undefined
+                      ? "Roll vitals to cast"
+                      : spell.ppe > ppeLeft()!
+                        ? "Insufficient P.P.E."
+                        : undefined;
+                return (
+                  <StatRow
+                    label={
+                      <>
+                        {spell.name} <span class="text-muted">LVL {spell.level}</span>
+                      </>
+                    }
+                    value={
+                      <span
+                        class={
+                          blocked()
+                            ? "text-dead"
+                            : "text-ley [text-shadow:0_0_10px_rgb(79_216_255/0.5)]"
+                        }
+                      >
+                        {spell.ppe} PPE
+                      </span>
+                    }
+                    onRoll={props.actions && (() => props.actions!.castSpell(spell))}
+                    disabled={blocked() !== undefined}
+                    title={blocked() ?? "Cast"}
+                  />
+                );
+              }}
             </For>
           </div>
         </Panel>

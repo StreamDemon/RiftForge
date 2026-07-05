@@ -189,3 +189,136 @@ describe("characters — a saved Ley Line Walker round-trips", () => {
     expect(await t.query(api.characters.sheet, { id })).toBeNull();
   });
 });
+
+describe("living vitals — current vs. max (#38)", () => {
+  /** A saved Vesper with vitals pinned to known values (P.E. 14 -> floor -14). */
+  async function savedVesper(t: ReturnType<typeof convexTest>) {
+    const id = await t.mutation(api.characters.create, vesper);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { rolled: { hitPoints: 18, sdc: 20, ppe: 84 } });
+    });
+    return id;
+  }
+
+  test("castSpell spends the spell's printed cost, floor at the server", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+
+    // Energy Bolt costs 5 P.P.E. (content, RUE) — the client never names a price.
+    const first = await t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt" });
+    expect(first).toEqual({ spent: 5, ppe: { current: 79, max: 84 } });
+
+    // Spends accumulate; the sheet streams the live value next to the max.
+    await t.mutation(api.characters.castSpell, { id, spellId: "armor-of-ithan" });
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.ppe).toMatchObject({ rolled: 84, current: 69 });
+  });
+
+  test("castSpell rejects casts the character can't make", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+
+    // A spell the character hasn't learned (even though the catalog has it).
+    await expect(t.mutation(api.characters.castSpell, { id, spellId: "see-aura" })).rejects.toThrow(
+      /does not know/,
+    );
+
+    // Not enough P.P.E. left — and a failed cast must not spend anything.
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { current: { ppe: 3 } });
+    });
+    await expect(
+      t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt" }),
+    ).rejects.toThrow(/Insufficient P\.P\.E\./);
+    expect((await t.query(api.characters.get, { id }))?.current).toEqual({ ppe: 3 });
+  });
+
+  test("castSpell before vitals are rolled is refused", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await expect(
+      t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt" }),
+    ).rejects.toThrow(/Roll vitals/);
+  });
+
+  test("applyDamage depletes S.D.C. before H.P., down to the coma floor", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+
+    expect(await t.mutation(api.characters.applyDamage, { id, amount: 7 })).toEqual({
+      sdc: 13,
+      hitPoints: 18,
+    });
+    expect(await t.mutation(api.characters.applyDamage, { id, amount: 20 })).toEqual({
+      sdc: 0,
+      hitPoints: 11,
+    });
+    // Overkill clamps at -(P.E.), the coma/death floor.
+    expect(await t.mutation(api.characters.applyDamage, { id, amount: 999 })).toEqual({
+      sdc: 0,
+      hitPoints: -14,
+    });
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.vitals.hitPoints).toMatchObject({ rolled: 18, current: -14 });
+    expect(sheet?.vitals.sdc).toMatchObject({ rolled: 20, current: 0 });
+
+    await expect(t.mutation(api.characters.applyDamage, { id, amount: -5 })).rejects.toThrow(
+      /non-negative/,
+    );
+  });
+
+  test("heal recovers points, clamped at the rolled maximums", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.applyDamage, { id, amount: 25 }); // sdc 0, hp 13
+
+    await t.mutation(api.characters.heal, { id, sdc: 6, hitPoints: 2 });
+    let stored = await t.query(api.characters.get, { id });
+    expect(stored?.current).toMatchObject({ sdc: 6, hitPoints: 15 });
+
+    // Over-healing stops at the maximum, and untouched pools stay untouched.
+    await t.mutation(api.characters.heal, { id, sdc: 999 });
+    stored = await t.query(api.characters.get, { id });
+    expect(stored?.current).toMatchObject({ sdc: 20, hitPoints: 15 });
+
+    await expect(t.mutation(api.characters.heal, { id, ppe: -1 })).rejects.toThrow(/non-negative/);
+  });
+
+  test("restoreVitals resets every pool to full", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.applyDamage, { id, amount: 25 });
+    await t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt" });
+
+    await t.mutation(api.characters.restoreVitals, { id });
+    const stored = await t.query(api.characters.get, { id });
+    expect(stored?.current).toBeUndefined();
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.ppe).toMatchObject({ rolled: 84, current: 84 });
+  });
+
+  test("rollVitals clears the live state along with the old maximums", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt" });
+    await t.mutation(api.characters.rollVitals, { id });
+    const stored = await t.query(api.characters.get, { id });
+    expect(stored?.current).toBeUndefined();
+  });
+
+  test("illegal `current` states are rejected at every write", async () => {
+    const t = convexTest(schema, modules);
+    // Above the maximum on create.
+    await expect(
+      t.mutation(api.characters.create, {
+        ...vesper,
+        rolled: { ppe: 84 },
+        current: { ppe: 90 },
+      }),
+    ).rejects.toThrow(/exceeds the rolled maximum/);
+    // Without a rolled maximum on create.
+    await expect(
+      t.mutation(api.characters.create, { ...vesper, current: { ppe: 10 } }),
+    ).rejects.toThrow(/requires rolled/);
+  });
+});

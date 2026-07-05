@@ -73,9 +73,45 @@ describe("deriveSheet — a level-1 Ley Line Walker", () => {
 });
 
 describe("deriveSheet — edge cases", () => {
-  test("a recorded H.P. roll shows as `rolled`", () => {
+  test("a recorded H.P. roll shows as `rolled`, with `current` defaulting to it", () => {
     const sheet = deriveSheet({ ...leyLineWalker, rolled: { hitPoints: 18 } });
     expect(sheet.vitals.hitPoints.rolled).toBe(18);
+    expect(sheet.vitals.hitPoints.current).toBe(18);
+    // Unrolled stats carry neither.
+    expect(sheet.vitals.sdc.rolled).toBeUndefined();
+    expect(sheet.vitals.sdc.current).toBeUndefined();
+  });
+
+  test("live `current` values ride the sheet next to their maximums", () => {
+    const sheet = deriveSheet({
+      ...leyLineWalker,
+      rolled: { hitPoints: 18, sdc: 20, ppe: 84 },
+      current: { hitPoints: -3, sdc: 0, ppe: 79 },
+    });
+    expect(sheet.vitals.hitPoints).toMatchObject({ rolled: 18, current: -3 }); // coma band
+    expect(sheet.vitals.sdc).toMatchObject({ rolled: 20, current: 0 });
+    expect(sheet.ppe).toMatchObject({ rolled: 84, current: 79 });
+  });
+
+  test("illegal `current` states are rejected, not clamped", () => {
+    const rolled = { hitPoints: 18, sdc: 20, ppe: 84 };
+    // No maximum to measure against.
+    expect(() => deriveSheet({ ...leyLineWalker, current: { ppe: 10 } })).toThrow(
+      /current\.ppe requires rolled\.ppe/,
+    );
+    // Above the rolled maximum.
+    expect(() => deriveSheet({ ...leyLineWalker, rolled, current: { ppe: 85 } })).toThrow(
+      /exceeds the rolled maximum/,
+    );
+    // H.P. below the -(P.E.) coma/death floor (P.E. 14 -> -14).
+    expect(() => deriveSheet({ ...leyLineWalker, rolled, current: { hitPoints: -15 } })).toThrow(
+      /below the legal minimum/,
+    );
+    // At the floor exactly is still legal (coma, not gone).
+    expect(
+      deriveSheet({ ...leyLineWalker, rolled, current: { hitPoints: -14 } }).vitals.hitPoints
+        .current,
+    ).toBe(-14);
   });
 
   test("an unknown O.C.C. throws", () => {
