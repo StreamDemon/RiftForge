@@ -1,0 +1,53 @@
+packages/backend/convex/characters.ts
+  s_699d45d62f7a13::t_63e528759f5f04 2,4,7,14-15
+  s_699d45d62f7a13::t_75918db43531aa 144-246
+  s_699d45d62f7a13::t_f95d8fb8dbc27e 128,137-139
+  s_699d45d62f7a13::t_de2be0fb7ce9ac 47-70
+packages/rules/src/engine/character.ts
+  s_699d45d62f7a13::t_e34cdffc1e4987 206-212,214-216
+  s_699d45d62f7a13::t_658afd3d08ba63 79-80
+  s_699d45d62f7a13::t_0f86fb651f4fb7 112-136
+  s_699d45d62f7a13::t_031ead7ca00bae 24-26
+packages/rules/tests/character.test.ts
+  s_699d45d62f7a13::t_a9f4589abbad26 76,79-114
+packages/rules/tests/combat.test.ts
+  s_699d45d62f7a13::t_d9a18046c93c21 3
+  s_699d45d62f7a13::t_fe0faabf710e85 38-72
+apps/web/src/components/sheet-view.tsx
+  s_699d45d62f7a13::t_d818b8a4ed6ea7 12-16,18-19
+  s_699d45d62f7a13::t_2cc552212eaeab 380-415
+  s_699d45d62f7a13::t_b3e702c4419e87 84-86,92-93,114-116
+  s_699d45d62f7a13::t_b3f06dd5a22cf6 133-137,144-146,157-163,170
+apps/web/src/pages/character-sheet.tsx
+  s_699d45d62f7a13::t_9cdb9d9807465d 122,128-177
+  s_699d45d62f7a13::t_d7af01266adaff 9,17
+  s_699d45d62f7a13::t_73125ef7148e66 107-109,112
+  s_699d45d62f7a13::t_df97d3ad69d5b6 252-267
+  s_699d45d62f7a13::t_aa2d4fecfc8d25 178-180
+  s_699d45d62f7a13::t_00b73ab8f630c2 268-270
+  s_699d45d62f7a13::t_442059b11b5833 181,199
+packages/backend/convex/schema.ts
+  s_699d45d62f7a13::t_63aea8cde63b37 49-56
+packages/rules/src/schema/character.ts
+  s_699d45d62f7a13::t_b747a4272fec3d 107-119
+packages/rules/src/engine/combat.ts
+  s_699d45d62f7a13::t_e8afd20319fa95 76-97
+packages/backend/tests/characters.test.ts
+  s_699d45d62f7a13::t_f32c998ec04fee 192-324
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0de9c002ad1cfdb169cc71783f4124700c13c6cd",
+  "prompts": {},
+  "sessions": {
+    "s_699d45d62f7a13": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8b924ff0-2f4f-4621-80a2-e679f7b6cd6b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
