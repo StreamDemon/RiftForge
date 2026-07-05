@@ -6,6 +6,7 @@ import {
   rollSkillCheck,
   type CharacterSheet,
   type Narrative,
+  type Spell,
 } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
 import { createEffect, createSignal, Match, on, Show, Switch, type Accessor } from "solid-js";
@@ -13,7 +14,7 @@ import { createStore, reconcile } from "solid-js/store";
 import { NarrativeFields } from "../components/narrative-fields.tsx";
 import { SheetView, type SheetActions } from "../components/sheet-view.tsx";
 import { TelemetryRail } from "../components/telemetry-rail.tsx";
-import { Alert, Button, MonoLabel, Panel } from "../components/ui.tsx";
+import { Alert, Button, MonoLabel, Panel, TextInput } from "../components/ui.tsx";
 import { convex } from "../lib/client.ts";
 import { createMutation, createQuery } from "../lib/convex.ts";
 import { fromNarrative, toNarrative } from "../lib/narrative.ts";
@@ -103,8 +104,12 @@ export function CharacterSheetPage() {
   // so re-pin the rules-layer type here.
   const sheet = query.data as Accessor<CharacterSheet | null | undefined>;
   const rollVitals = createMutation(convex, api.characters.rollVitals);
+  const castSpellMutation = createMutation(convex, api.characters.castSpell);
+  const applyDamageMutation = createMutation(convex, api.characters.applyDamage);
+  const restoreVitals = createMutation(convex, api.characters.restoreVitals);
   const telemetry = createTelemetry(["// ley-link established", "// awaiting command…"]);
   const [rollError, setRollError] = createSignal<Error>();
+  const [damageInput, setDamageInput] = createSignal("");
 
   // A new dossier starts with a fresh log: rolls belong to the character
   // they were rolled for, not whoever the page shows next.
@@ -114,10 +119,65 @@ export function CharacterSheetPage() {
       () => {
         telemetry.reset();
         setRollError(undefined);
+        setDamageInput("");
       },
       { defer: true },
     ),
   );
+
+  /** Convex mutation errors carry an "Uncaught Error: …" preamble — strip to the message. */
+  const reason = (error: unknown): string => {
+    const text = error instanceof Error ? error.message : String(error);
+    return text
+      .replace(/^.*Uncaught Error:\s*/s, "")
+      .split("\n")[0]!
+      .trim();
+  };
+
+  // Casting SPENDS — the server derives the cost and refuses what the
+  // character can't afford. Like all persisting actions, a result that comes
+  // back after the dossier switched characters is dropped.
+  const cast = async (spell: Spell) => {
+    const castFor = id();
+    try {
+      const result = await castSpellMutation({ id: castFor, spellId: spell.id });
+      if (id() !== castFor) return;
+      telemetry.log(
+        `> CAST :: ${spell.name.toUpperCase()} — ${result.spent} P.P.E. [${result.ppe.current}/${result.ppe.max}]`,
+        "magic",
+      );
+    } catch (error) {
+      if (id() !== castFor) return;
+      telemetry.log(`> CAST :: ${spell.name.toUpperCase()} — REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  const damage = async () => {
+    const amount = Number.parseInt(damageInput(), 10);
+    if (!Number.isInteger(amount) || amount <= 0) return;
+    const damagedFor = id();
+    try {
+      const next = await applyDamageMutation({ id: damagedFor, amount });
+      if (id() !== damagedFor) return;
+      setDamageInput("");
+      telemetry.log(`> DAMAGE :: ${amount} — S.D.C. ${next.sdc} · H.P. ${next.hitPoints}`, "bad");
+    } catch (error) {
+      if (id() !== damagedFor) return;
+      telemetry.log(`> DAMAGE :: REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  const restore = async () => {
+    const restoredFor = id();
+    try {
+      await restoreVitals({ id: restoredFor });
+      if (id() !== restoredFor) return;
+      telemetry.log("> RESTORE :: ALL POOLS FULL", "good");
+    } catch (error) {
+      if (id() !== restoredFor) return;
+      telemetry.log(`> RESTORE :: REFUSED (${reason(error)})`, "bad");
+    }
+  };
 
   const actions: SheetActions = {
     rollSave: (name, save) => {
@@ -136,7 +196,7 @@ export function CharacterSheetPage() {
       );
     },
     castSpell: (spell) => {
-      telemetry.log(`> CAST :: ${spell.name.toUpperCase()} — ${spell.ppe} P.P.E.`, "magic");
+      void cast(spell);
     },
     rollCombat: (kind, bonus) => {
       telemetry.log(`> ${kind.toUpperCase()} :: ${d20Line(rollD20(bonus))}`);
@@ -189,6 +249,25 @@ export function CharacterSheetPage() {
                   <Show when={rollError()}>
                     {(err) => <Alert tone="danger">ROLL FAILED — {err().message}</Alert>}
                   </Show>
+                  <div class="flex gap-2">
+                    <TextInput
+                      aria-label="Damage amount"
+                      inputmode="numeric"
+                      placeholder="DMG"
+                      class="w-16 min-w-0 px-2 py-1.5 text-center"
+                      value={damageInput()}
+                      onInput={(e) => setDamageInput(e.currentTarget.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void damage();
+                      }}
+                    />
+                    <Button class="flex-1 px-2 text-left" onClick={() => void damage()}>
+                      {"> Damage"}
+                    </Button>
+                  </div>
+                  <Button class="w-full text-left" onClick={() => void restore()}>
+                    {"> Full Restore"}
+                  </Button>
                 </div>
               }
             />

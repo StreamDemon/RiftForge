@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
 import {
+  applyDamage,
   attacksPerMelee,
   combatProfile,
   comaDeathFloor,
@@ -31,6 +32,41 @@ describe("Hit Points & S.D.C. (RUE p.287)", () => {
 
   test("coma/death floor is -(P.E.)", () => {
     expect(comaDeathFloor(12)).toBe(-12);
+  });
+});
+
+describe("applyDamage — S.D.C. before H.P. (RUE p.347), coma floor (p.287)", () => {
+  const floor = comaDeathFloor(14);
+
+  test("S.D.C. absorbs damage while it lasts", () => {
+    expect(applyDamage({ sdc: 20, hitPoints: 18 }, 7, floor)).toEqual({
+      sdc: 13,
+      hitPoints: 18,
+    });
+  });
+
+  test("overflow past S.D.C. comes off Hit Points", () => {
+    expect(applyDamage({ sdc: 5, hitPoints: 18 }, 12, floor)).toEqual({
+      sdc: 0,
+      hitPoints: 11,
+    });
+  });
+
+  test("H.P. can go negative (coma band) but stops at the floor", () => {
+    expect(applyDamage({ sdc: 0, hitPoints: 4 }, 10, floor)).toEqual({
+      sdc: 0,
+      hitPoints: -6,
+    });
+    expect(applyDamage({ sdc: 0, hitPoints: 4 }, 999, floor)).toEqual({
+      sdc: 0,
+      hitPoints: -14,
+    });
+  });
+
+  test("zero damage is a no-op; negative or fractional damage throws", () => {
+    expect(applyDamage({ sdc: 5, hitPoints: 18 }, 0, floor)).toEqual({ sdc: 5, hitPoints: 18 });
+    expect(() => applyDamage({ sdc: 5, hitPoints: 18 }, -3, floor)).toThrow(/non-negative/);
+    expect(() => applyDamage({ sdc: 5, hitPoints: 18 }, 2.5, floor)).toThrow(/non-negative/);
   });
 });
 

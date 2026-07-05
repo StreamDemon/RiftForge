@@ -1,14 +1,18 @@
 import {
+  applyDamage as damagePools,
   characterSchema,
+  comaDeathFloor,
   deriveSheet,
   getOcc,
+  getSpell,
   rollHitPoints,
   rollPhysicalSdc,
   rollPpe,
   type Character,
 } from "@riftforge/rules";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { characterFields } from "./schema";
 
 /** A stored character document: the fields plus Convex's system columns. */
@@ -38,6 +42,30 @@ function validateCharacter(input: unknown): Character {
   const character = characterSchema.parse(input);
   deriveSheet(character);
   return character;
+}
+
+/** Load a stored character or throw; returns the parsed choices sans system columns. */
+async function loadCharacter(ctx: MutationCtx, id: Id<"characters">): Promise<Character> {
+  const doc = await ctx.db.get(id);
+  if (doc === null) throw new Error(`Character ${id} not found.`);
+  const { _id, _creationTime, ...stored } = doc;
+  return characterSchema.parse(stored);
+}
+
+/**
+ * Write a new live-vitals state. Round-trips through the rules layer first
+ * (like every write), so a `current` that exceeds its maximum or sinks below
+ * the coma/death floor can never be stored — mutations compute legal values,
+ * this is the backstop.
+ */
+async function patchCurrent(
+  ctx: MutationCtx,
+  id: Id<"characters">,
+  character: Character,
+  current: Character["current"],
+): Promise<void> {
+  validateCharacter({ ...character, current });
+  await ctx.db.patch(id, { current });
 }
 
 export const create = mutation({
@@ -97,10 +125,7 @@ export const rollVitals = mutation({
     ppe: v.optional(v.number()),
   }),
   handler: async (ctx, { id }) => {
-    const doc = await ctx.db.get(id);
-    if (doc === null) throw new Error(`Character ${id} not found.`);
-    const { _id, _creationTime, ...stored } = doc;
-    const character = characterSchema.parse(stored);
+    const character = await loadCharacter(ctx, id);
     const occ = getOcc(character.occId);
     if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
     const pe = character.attributes.PE;
@@ -109,8 +134,113 @@ export const rollVitals = mutation({
       sdc: rollPhysicalSdc(),
       ...(occ.ppe ? { ppe: rollPpe(occ, pe, character.level) } : {}),
     };
-    await ctx.db.patch(id, { rolled });
+    // New maximums invalidate the old live state — a reroll is a fresh start,
+    // so clear `current` (absent = at maximum) rather than carry stale spend.
+    await ctx.db.patch(id, { rolled, current: undefined });
     return rolled;
+  },
+});
+
+/**
+ * Cast a known spell: decrement live P.P.E. by its printed cost. The cost is
+ * derived server-side from the spell id — the client never names a price.
+ * Rejects casts the character can't afford (the sheet greys those out, but
+ * the server is the authority) and casts before vitals are rolled (no
+ * maximum to spend from).
+ */
+export const castSpell = mutation({
+  args: { id: v.id("characters"), spellId: v.string() },
+  returns: v.object({
+    spent: v.number(),
+    ppe: v.object({ current: v.number(), max: v.number() }),
+  }),
+  handler: async (ctx, { id, spellId }) => {
+    const character = await loadCharacter(ctx, id);
+    if (!character.spellIds.includes(spellId)) {
+      throw new Error(`Character does not know the spell "${spellId}".`);
+    }
+    const spell = getSpell(spellId);
+    if (!spell) throw new Error(`Unknown spell "${spellId}".`);
+    const max = character.rolled?.ppe;
+    if (max === undefined) throw new Error("Roll vitals before casting — no P.P.E. to spend.");
+    const available = character.current?.ppe ?? max;
+    if (spell.ppe > available) {
+      throw new Error(
+        `Insufficient P.P.E.: ${spell.name} costs ${spell.ppe}, ${available} remaining.`,
+      );
+    }
+    const remaining = available - spell.ppe;
+    await patchCurrent(ctx, id, character, { ...character.current, ppe: remaining });
+    return { spent: spell.ppe, ppe: { current: remaining, max } };
+  },
+});
+
+/**
+ * Deal damage to the live pools: S.D.C. absorbs first, the overflow comes off
+ * Hit Points, which stop at the -(P.E.) coma/death floor (rules-layer
+ * `applyDamage`, RUE pp.287/347).
+ */
+export const applyDamage = mutation({
+  args: { id: v.id("characters"), amount: v.number() },
+  returns: v.object({ sdc: v.number(), hitPoints: v.number() }),
+  handler: async (ctx, { id, amount }) => {
+    const character = await loadCharacter(ctx, id);
+    const rolled = character.rolled;
+    if (rolled?.hitPoints === undefined || rolled.sdc === undefined) {
+      throw new Error("Roll vitals before applying damage — no pools to deplete.");
+    }
+    const pool = {
+      sdc: character.current?.sdc ?? rolled.sdc,
+      hitPoints: character.current?.hitPoints ?? rolled.hitPoints,
+    };
+    const next = damagePools(pool, amount, comaDeathFloor(character.attributes.PE));
+    await patchCurrent(ctx, id, character, { ...character.current, ...next });
+    return next;
+  },
+});
+
+/**
+ * Recover points into one or more pools, clamped at the rolled maximums.
+ * Amounts are how much to ADD (a first-aid roll, a rest tick) — full recovery
+ * is `restoreVitals`. Recovery *rates* (P.P.E. per hour of rest, ley-line
+ * draw) are rules-layer follow-up work on #38.
+ */
+export const heal = mutation({
+  args: {
+    id: v.id("characters"),
+    hitPoints: v.optional(v.number()),
+    sdc: v.optional(v.number()),
+    ppe: v.optional(v.number()),
+  },
+  returns: v.null(),
+  handler: async (ctx, { id, ...amounts }) => {
+    const character = await loadCharacter(ctx, id);
+    const current = { ...character.current };
+    for (const field of ["hitPoints", "sdc", "ppe"] as const) {
+      const amount = amounts[field];
+      if (amount === undefined) continue;
+      if (!Number.isInteger(amount) || amount < 0) {
+        throw new Error(`heal.${field} must be a non-negative integer, got ${amount}.`);
+      }
+      const max = character.rolled?.[field];
+      if (max === undefined) {
+        throw new Error(`Cannot heal ${field} — it has not been rolled.`);
+      }
+      current[field] = Math.min(max, (current[field] ?? max) + amount);
+    }
+    await patchCurrent(ctx, id, character, current);
+    return null;
+  },
+});
+
+/** Reset every pool to its rolled maximum (absent `current` means "full"). */
+export const restoreVitals = mutation({
+  args: { id: v.id("characters") },
+  returns: v.null(),
+  handler: async (ctx, { id }) => {
+    await loadCharacter(ctx, id); // existence check
+    await ctx.db.patch(id, { current: undefined });
+    return null;
   },
 });
 
