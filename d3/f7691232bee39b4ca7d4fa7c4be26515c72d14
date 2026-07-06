@@ -1,0 +1,53 @@
+packages/rules/src/engine/spells.ts
+  s_dde58116fbb58f::t_8eae0a8f5eacd9 4
+  s_dde58116fbb58f::t_120dd97e7cb7f9 46-65
+packages/rules/src/schema/recovery.ts
+  s_dde58116fbb58f::t_87461c26c610e5 1-44
+packages/rules/tests/recovery.test.ts
+  s_dde58116fbb58f::t_daf4e20b663554 148-153
+  s_dde58116fbb58f::t_5956b7aeebb1dc 1-147,154-156
+packages/backend/tests/characters.test.ts
+  s_dde58116fbb58f::t_93868f82f13877 309-418
+packages/rules/src/schema/spells.ts
+  s_dde58116fbb58f::t_451fa3c304d048 53-55
+  s_dde58116fbb58f::t_3416df32f49562 2-24
+apps/web/src/pages/character-sheet.tsx
+  s_dde58116fbb58f::t_5c4b02b096cc95 102-127
+  s_dde58116fbb58f::t_967d9d22d39a65 421
+  s_dde58116fbb58f::t_158edf9d490cd3 12-21
+  s_dde58116fbb58f::t_b24e343e20d627 145-147,151-157,168-171
+  s_dde58116fbb58f::t_5ad67335b5e2c5 194-202,204,213-278
+  s_dde58116fbb58f::t_8a079d9a35d26c 402-420,422-451
+  s_dde58116fbb58f::t_21a914f7a01d2d 279
+packages/backend/convex/characters.ts
+  s_dde58116fbb58f::t_2edeb6d0efeebd 8-9,13-14
+  s_dde58116fbb58f::t_7bdadb0647e5f5 149-179,186-190,193-197,201-204,206,213-219,229-251
+  s_dde58116fbb58f::t_9611be66760eb3 148,281-282,294,300-401
+  s_dde58116fbb58f::t_56732c9f339ca6 402
+packages/rules/src/index.ts
+  s_dde58116fbb58f::t_c0f0a67427acb9 14
+  s_dde58116fbb58f::t_af79e85a8a2b49 5
+packages/rules/src/engine/recovery.ts
+  s_dde58116fbb58f::t_91bfd042625616 79-83
+  s_dde58116fbb58f::t_e6178027db8e0b 1-78,84-85
+packages/backend/tests/healing-cast.test.ts
+  s_dde58116fbb58f::t_d6a5b3963159c2 1-175
+packages/rules/src/content/combat/recovery.json
+  s_dde58116fbb58f::t_13b594ddade64d 1-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d3f7691232bee39b4ca7d4fa7c4be26515c72d14",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
