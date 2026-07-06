@@ -1,0 +1,34 @@
+packages/rules/src/engine/spells.ts
+  s_dde58116fbb58f::t_f9db9a3e3fe2b3 46-47,51,54-56,61-64,66-70,73-80
+packages/rules/tests/recovery.test.ts
+  s_dde58116fbb58f::t_201808091eade4 156-186
+packages/backend/tests/healing-cast.test.ts
+  s_dde58116fbb58f::t_5d7a236d913979 2,6-8,32,36,41-42,50,53-56,68,71,75,82,85-86,92,97-98,100,103-104,116,122-174,180-202,212
+  s_dde58116fbb58f::t_38a6dc77af6a7c 22-29,175-179
+packages/backend/convex/characters.ts
+  s_dde58116fbb58f::t_1037c9d79107b4 212-214,221
+  s_dde58116fbb58f::t_40ece2980fdca6 259-261,265-277,286,289-293,298,302
+  s_dde58116fbb58f::t_38a6dc77af6a7c 278-281
+  s_dde58116fbb58f::t_74bc8fe31efb52 231,245-246
+  s_dde58116fbb58f::t_2194fc0bcb6c36 247
+apps/web/src/pages/character-sheet.tsx
+  s_dde58116fbb58f::t_e10a5b0c5c412c 201-208,210-214
+packages/rules/tests/spells.test.ts
+  s_dde58116fbb58f::t_7c4dc6594421be 31-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "acb65d747f48dd044494983061e9dbe9540c5248",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
