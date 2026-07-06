@@ -151,12 +151,13 @@ export function CharacterSheetPage() {
   const [restHours, setRestHours] = createSignal("");
   const [atNexus, setAtNexus] = createSignal(false);
   const [professional, setProfessional] = createSignal(false);
-  // Which treatment day the NEXT click is — the professional ramp (2 H.P./day
-  // for two days, then 4) depends on it. Session-local: the GM adjudicates
-  // elapsed time, the page just counts clicks for this sitting. `treating`
-  // serializes the clicks: two in-flight calls would both read the same day
-  // number and apply it twice.
-  const [treatedDays, setTreatedDays] = createSignal(0);
+  // The treatment-course position lives on the DOCUMENT (`current.
+  // treatmentDays`) — it survives reloads and clears with a full restore or
+  // vitals reroll. `dayInput` is the GM override: "" follows the stored
+  // course (next day = stored + 1); a typed value declares which course day
+  // this is (e.g. a new injury course). `treating` serializes clicks: two
+  // in-flight calls would apply the same day twice.
+  const [dayInput, setDayInput] = createSignal("");
   const [treating, setTreating] = createSignal(false);
   // Monotonic token naming the request that holds the `treating` gate. Newer
   // requests and route changes bump it, so a stale settle can never release a
@@ -175,7 +176,7 @@ export function CharacterSheetPage() {
         setRestHours("");
         setAtNexus(false);
         setProfessional(false);
-        setTreatedDays(0);
+        setDayInput("");
         treatToken++;
         setTreating(false);
       },
@@ -265,22 +266,28 @@ export function CharacterSheetPage() {
 
   const treatDay = async () => {
     if (treating()) return;
+    // Strict parse, like damage/hours: only a whole positive day number counts
+    // as a GM override; an untouched input follows the stored course.
+    const raw = dayInput().trim();
+    const override = raw === "" ? undefined : Number(raw);
+    if (override !== undefined && (!Number.isInteger(override) || override <= 0)) {
+      telemetry.log(`> TREATMENT :: REFUSED (not a whole day number: "${raw}")`, "bad");
+      return;
+    }
     setTreating(true);
     const token = ++treatToken;
     const treatedFor = id();
     const pro = professional();
-    const day = treatedDays() + 1;
     try {
       const result = await treatMutation({
         id: treatedFor,
-        days: 1,
         professional: pro,
-        daysAlreadyTreated: day - 1,
+        ...(override !== undefined ? { day: override } : {}),
       });
       if (id() !== treatedFor) return;
-      setTreatedDays(day);
+      setDayInput(""); // back to following the stored course
       telemetry.log(
-        `> TREATMENT :: DAY ${day}${pro ? " (PRO)" : ""} — H.P. +${result.gained.hitPoints} · S.D.C. +${result.gained.sdc}`,
+        `> TREATMENT :: DAY ${result.day}${pro ? " (PRO)" : ""} — H.P. +${result.gained.hitPoints} · S.D.C. +${result.gained.sdc}`,
         "good",
       );
     } catch (error) {
@@ -454,8 +461,22 @@ export function CharacterSheetPage() {
                       </div>
                     </Show>
                     <div class="flex gap-2">
+                      <TextInput
+                        aria-label="Treatment day"
+                        inputmode="numeric"
+                        class="w-14 min-w-0 px-2 py-1.5 text-center"
+                        value={
+                          dayInput() !== ""
+                            ? dayInput()
+                            : String((sheet()?.vitals.treatmentDays ?? 0) + 1)
+                        }
+                        onInput={(e) => setDayInput(e.currentTarget.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") void treatDay();
+                        }}
+                      />
                       <Button class="flex-1 px-2 text-left" onClick={() => void treatDay()}>
-                        {`> Treatment Day ${treatedDays() + 1}`}
+                        {"> Treatment Day"}
                       </Button>
                       <ToggleChip
                         pressed={professional()}

@@ -362,40 +362,68 @@ describe("living vitals — current vs. max (#38)", () => {
     ).rejects.toThrow(/non-negative integer/);
   });
 
-  test("treat recovers H.P./S.D.C. at the printed daily rates (#41)", async () => {
+  test("treat recovers at the printed daily rates and persists the course day (#41)", async () => {
     const t = convexTest(schema, modules);
     const id = await savedVesper(t);
-    await t.mutation(api.characters.applyDamage, { id, amount: 25 }); // sdc 0, hp 13
+    await t.mutation(api.characters.applyDamage, { id, amount: 30 }); // sdc 0, hp 8
 
-    // One day of non-professional care: 2 H.P., 4 S.D.C.
-    expect(await t.mutation(api.characters.treat, { id, days: 1, professional: false })).toEqual({
+    // Day 1, non-professional: 2 H.P., 4 S.D.C. — and the course day is stored.
+    expect(await t.mutation(api.characters.treat, { id, professional: false })).toEqual({
+      day: 1,
       gained: { hitPoints: 2, sdc: 4 },
-      hitPoints: { current: 15, max: 18 },
+      hitPoints: { current: 10, max: 18 },
       sdc: { current: 4, max: 20 },
     });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBe(1);
 
-    // Two more days, professional, already 2 days into the course: the ramp
-    // pays 4 H.P./day, S.D.C. 6/day — clamped at the rolled maximums.
-    expect(
-      await t.mutation(api.characters.treat, {
-        id,
-        days: 2,
-        professional: true,
-        daysAlreadyTreated: 2,
-      }),
-    ).toEqual({
-      gained: { hitPoints: 3, sdc: 12 },
-      hitPoints: { current: 18, max: 18 },
-      sdc: { current: 16, max: 20 },
-    });
+    // The stored counter drives the professional ramp: day 2 still pays 2 H.P...
+    const day2 = await t.mutation(api.characters.treat, { id, professional: true });
+    expect(day2.day).toBe(2);
+    expect(day2.gained).toEqual({ hitPoints: 2, sdc: 6 });
+    // ...and day 3 ramps to 4 H.P. — surviving "reloads" because it's the doc,
+    // not the page, that remembers.
+    const day3 = await t.mutation(api.characters.treat, { id, professional: true });
+    expect(day3.day).toBe(3);
+    expect(day3.gained).toEqual({ hitPoints: 4, sdc: 6 });
+
+    // The sheet exposes the course position for the UI.
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.vitals.treatmentDays).toBe(3);
+  });
+
+  test("treat accepts an explicit GM day override and restores reset the course", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.applyDamage, { id, amount: 30 }); // sdc 0, hp 8
+    await t.mutation(api.characters.treat, { id, professional: true }); // day 1
+    await t.mutation(api.characters.treat, { id, professional: true }); // day 2
+
+    // GM declares a new injury course: back to the ramp's first day.
+    const override = await t.mutation(api.characters.treat, { id, professional: true, day: 1 });
+    expect(override.day).toBe(1);
+    expect(override.gained.hitPoints).toBe(2); // ramp start, not the day-3 rate
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBe(1);
+
+    await expect(
+      t.mutation(api.characters.treat, { id, professional: true, day: 0 }),
+    ).rejects.toThrow(/positive whole number/);
+    await expect(
+      t.mutation(api.characters.treat, { id, professional: true, day: 2.5 }),
+    ).rejects.toThrow(/positive whole number/);
+
+    // Full restore clears the course with the pools (fresh pools, fresh course).
+    await t.mutation(api.characters.restoreVitals, { id });
+    expect((await t.query(api.characters.get, { id }))?.current).toBeUndefined();
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.vitals.treatmentDays).toBe(0);
   });
 
   test("treat before vitals are rolled is refused", async () => {
     const t = convexTest(schema, modules);
     const id = await t.mutation(api.characters.create, vesper);
-    await expect(
-      t.mutation(api.characters.treat, { id, days: 1, professional: false }),
-    ).rejects.toThrow(/Roll vitals/);
+    await expect(t.mutation(api.characters.treat, { id, professional: false })).rejects.toThrow(
+      /Roll vitals/,
+    );
   });
 
   test("castSpell refuses to aim a non-healing spell at another character (#41)", async () => {

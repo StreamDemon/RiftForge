@@ -364,35 +364,45 @@ export const leyLineDraw = mutation({
 });
 
 /**
- * A stretch of treatment days for battle injuries (RUE p.354): H.P. and
- * S.D.C. recover at the printed daily rates. Professional care ramps
- * (2 H.P./day for the first two days of the course, then 4), so the client
- * says how deep into the course the character already is — days are
- * GM-adjudicated input, like all elapsed time.
+ * One day of battle-injury treatment (RUE p.354): H.P. and S.D.C. recover at
+ * the printed daily rates. Professional care ramps (2 H.P./day for the first
+ * two days of the course, then 4), so the course position is PERSISTED —
+ * `current.treatmentDays` counts the days already applied, and each call
+ * advances it. A full restore or vitals reroll clears it with the rest of
+ * `current` (fresh pools, fresh course).
+ *
+ * `day` is the GM override: which course day this is (1-based). Omitted, it's
+ * the stored counter + 1. When a new course starts within one set of pools is
+ * GM adjudication — the override is how they say so.
  */
 export const treat = mutation({
   args: {
     id: v.id("characters"),
-    days: v.number(),
     professional: v.boolean(),
-    daysAlreadyTreated: v.optional(v.number()),
+    day: v.optional(v.number()),
   },
   returns: v.object({
+    day: v.number(),
     gained: v.object({ hitPoints: v.number(), sdc: v.number() }),
     hitPoints: v.object({ current: v.number(), max: v.number() }),
     sdc: v.object({ current: v.number(), max: v.number() }),
   }),
-  handler: async (ctx, { id, days, professional, daysAlreadyTreated }) => {
+  handler: async (ctx, { id, professional, day }) => {
     const character = await loadCharacter(ctx, id);
     const rolled = character.rolled;
     if (rolled?.hitPoints === undefined || rolled.sdc === undefined) {
       throw new Error("Roll vitals before treatment — no pools to recover.");
     }
-    // `treatmentRecovery` rejects day counts that aren't whole and non-negative.
-    const amounts = treatmentRecovery(days, professional, daysAlreadyTreated ?? 0);
+    const courseDay = day ?? (character.current?.treatmentDays ?? 0) + 1;
+    if (!Number.isInteger(courseDay) || courseDay < 1) {
+      throw new Error(`Treatment day must be a positive whole number, got ${courseDay}.`);
+    }
+    // `treatmentRecovery` re-checks the counts; rates come from the content.
+    const amounts = treatmentRecovery(1, professional, courseDay - 1);
     const { current, gained } = healPools(character, amounts);
-    await patchCurrent(ctx, id, character, current);
+    await patchCurrent(ctx, id, character, { ...current, treatmentDays: courseDay });
     return {
+      day: courseDay,
       gained: { hitPoints: gained.hitPoints, sdc: gained.sdc },
       hitPoints: { current: current.hitPoints ?? rolled.hitPoints, max: rolled.hitPoints },
       sdc: { current: current.sdc ?? rolled.sdc, max: rolled.sdc },
