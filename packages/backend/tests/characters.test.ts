@@ -306,6 +306,168 @@ describe("living vitals — current vs. max (#38)", () => {
     expect(stored?.current).toBeUndefined();
   });
 
+  test("rest recovers P.P.E. at the O.C.C.'s printed hourly rate (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { current: { ppe: 20 } });
+    });
+
+    // Ley Line Walker rests at 7/hour (not the book default 5).
+    expect(await t.mutation(api.characters.rest, { id, hours: 4, mode: "rest" })).toEqual({
+      gained: 28,
+      ppe: { current: 48, max: 84 },
+    });
+    // ...and meditates at 15/hour, clamped at the permanent base.
+    expect(await t.mutation(api.characters.rest, { id, hours: 3, mode: "meditation" })).toEqual({
+      gained: 36,
+      ppe: { current: 84, max: 84 },
+    });
+
+    await expect(t.mutation(api.characters.rest, { id, hours: -1, mode: "rest" })).rejects.toThrow(
+      /non-negative integer/,
+    );
+    await expect(t.mutation(api.characters.rest, { id, hours: 1.5, mode: "rest" })).rejects.toThrow(
+      /non-negative integer/,
+    );
+  });
+
+  test("rest before vitals are rolled is refused", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await expect(t.mutation(api.characters.rest, { id, hours: 1, mode: "rest" })).rejects.toThrow(
+      /Roll vitals/,
+    );
+  });
+
+  test("leyLineDraw pulls the doubled Walker rate per melee (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { current: { ppe: 10 } });
+    });
+
+    // One melee on the line: LLW draws 20 (double the practitioner's 10).
+    expect(await t.mutation(api.characters.leyLineDraw, { id, melees: 1, atNexus: false })).toEqual(
+      { gained: 20, ppe: { current: 30, max: 84 } },
+    );
+    // At a nexus the Walker pulls 40 — and the draw clamps at the base.
+    expect(await t.mutation(api.characters.leyLineDraw, { id, melees: 2, atNexus: true })).toEqual({
+      gained: 54,
+      ppe: { current: 84, max: 84 },
+    });
+
+    await expect(
+      t.mutation(api.characters.leyLineDraw, { id, melees: 0.5, atNexus: false }),
+    ).rejects.toThrow(/non-negative integer/);
+  });
+
+  test("treat recovers at the printed daily rates and persists the course day (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.applyDamage, { id, amount: 30 }); // sdc 0, hp 8
+
+    // Day 1, non-professional: 2 H.P., 4 S.D.C. — and the course day is stored.
+    expect(await t.mutation(api.characters.treat, { id, professional: false })).toEqual({
+      day: 1,
+      gained: { hitPoints: 2, sdc: 4 },
+      hitPoints: { current: 10, max: 18 },
+      sdc: { current: 4, max: 20 },
+    });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBe(1);
+
+    // The stored counter drives the professional ramp: day 2 still pays 2 H.P...
+    const day2 = await t.mutation(api.characters.treat, { id, professional: true });
+    expect(day2.day).toBe(2);
+    expect(day2.gained).toEqual({ hitPoints: 2, sdc: 6 });
+    // ...and day 3 ramps to 4 H.P. — surviving "reloads" because it's the doc,
+    // not the page, that remembers.
+    const day3 = await t.mutation(api.characters.treat, { id, professional: true });
+    expect(day3.day).toBe(3);
+    expect(day3.gained).toEqual({ hitPoints: 4, sdc: 6 });
+
+    // The sheet exposes the course position for the UI.
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.vitals.treatmentDays).toBe(3);
+  });
+
+  test("treat accepts an explicit GM day override and restores reset the course", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.applyDamage, { id, amount: 30 }); // sdc 0, hp 8
+    await t.mutation(api.characters.treat, { id, professional: true }); // day 1
+    await t.mutation(api.characters.treat, { id, professional: true }); // day 2
+
+    // GM declares a new injury course: back to the ramp's first day.
+    const override = await t.mutation(api.characters.treat, { id, professional: true, day: 1 });
+    expect(override.day).toBe(1);
+    expect(override.gained.hitPoints).toBe(2); // ramp start, not the day-3 rate
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBe(1);
+
+    await expect(
+      t.mutation(api.characters.treat, { id, professional: true, day: 0 }),
+    ).rejects.toThrow(/positive whole number/);
+    await expect(
+      t.mutation(api.characters.treat, { id, professional: true, day: 2.5 }),
+    ).rejects.toThrow(/positive whole number/);
+
+    // Full restore clears the course with the pools (fresh pools, fresh course).
+    await t.mutation(api.characters.restoreVitals, { id });
+    expect((await t.query(api.characters.get, { id }))?.current).toBeUndefined();
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.vitals.treatmentDays).toBe(0);
+  });
+
+  test("healing to full ends the treatment course automatically", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+
+    // A treat that completes the mend clears the counter in the same write.
+    await t.mutation(api.characters.applyDamage, { id, amount: 3 }); // sdc 17, hp 18
+    const final = await t.mutation(api.characters.treat, { id, professional: false });
+    expect(final.day).toBe(1); // the day still happened (telemetry reports it)
+    expect(final.sdc).toEqual({ current: 20, max: 20 });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBeUndefined();
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.vitals.treatmentDays).toBe(0);
+
+    // A partial heal leaves the course running...
+    await t.mutation(api.characters.applyDamage, { id, amount: 30 }); // sdc 0, hp 8
+    await t.mutation(api.characters.treat, { id, professional: true }); // day 1
+    await t.mutation(api.characters.heal, { id, sdc: 5 });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBe(1);
+
+    // ...and ANY route to full ends it — here a plain heal, not a treat.
+    await t.mutation(api.characters.heal, { id, hitPoints: 999, sdc: 999 });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBeUndefined();
+  });
+
+  test("treat before vitals are rolled is refused", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await expect(t.mutation(api.characters.treat, { id, professional: false })).rejects.toThrow(
+      /Roll vitals/,
+    );
+  });
+
+  test("castSpell refuses to aim a non-healing spell at another character (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    const other = await t.mutation(api.characters.create, { ...vesper, name: "Kestrel" });
+
+    await expect(
+      t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt", targetId: other }),
+    ).rejects.toThrow(/no healing effect/);
+
+    // An explicit self-target on a non-healing spell is just a normal cast.
+    const result = await t.mutation(api.characters.castSpell, {
+      id,
+      spellId: "energy-bolt",
+      targetId: id,
+    });
+    expect(result).toEqual({ spent: 5, ppe: { current: 79, max: 84 } });
+  });
+
   test("illegal `current` states are rejected at every write", async () => {
     const t = convexTest(schema, modules);
     // Above the maximum on create.

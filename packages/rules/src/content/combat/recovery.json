@@ -1,0 +1,34 @@
+{
+  "ppe": {
+    "source": {
+      "book": "Rifts Ultimate Edition",
+      "page": 186,
+      "table": "Recovery of P.P.E."
+    },
+    "perHourRest": 5,
+    "perHourMeditation": 10,
+    "leyLineDraw": {
+      "perMeleeOnLine": 10,
+      "perMeleeAtNexus": 20,
+      "notes": "Most practitioners of magic can draw an additional 10 P.P.E. per melee round while standing on a ley line, 20 at a nexus point. O.C.C.s may override (the Ley Line Walker draws double: 20/40 via supplementalOnLeyLinePerMelee/supplementalAtNexusPerMelee). Special-time multipliers (dawn, equinox, solstice, eclipses) are GM territory and out of scope."
+    },
+    "notes": "P.P.E. recovers at roughly 5 points per hour of rest or sleep; meditation restores 10 per hour and an hour of meditation counts as an hour of restorative sleep. Never above the permanent base. O.C.C.s may override the rates (recoveryPerHourRest/recoveryPerHourMeditation)."
+  },
+  "treatment": {
+    "source": {
+      "book": "Rifts Ultimate Edition",
+      "page": 354,
+      "table": "Battle Injuries & Recovery"
+    },
+    "nonProfessional": {
+      "hitPointsPerDay": 2,
+      "sdcPerDay": 4
+    },
+    "professional": {
+      "hitPointsPerDayFirstTwoDays": 2,
+      "hitPointsPerDayAfter": 4,
+      "sdcPerDay": 6
+    },
+    "notes": "Recovery from battle injuries, per day of treatment. Non-professional: 2 H.P. and 4 S.D.C. per day. Professional (hospital/medical care): 2 H.P. per day for the first two days, then 4 per day; S.D.C. at 6 per day. Optional Blood Loss and coma resuscitation rules are out of scope."
+  }
+}

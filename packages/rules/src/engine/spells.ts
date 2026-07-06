@@ -1,6 +1,7 @@
 import type { Occ } from "../schema/occ.ts";
 import { spellBookSchema, type Spell } from "../schema/spells.ts";
 import spellsRaw from "../content/spells/spells.json" with { type: "json" };
+import { rollDice, type Rng } from "./dice.ts";
 
 /** The spell book (RUE Magic Spells), validated at load. */
 export const spellBook = spellBookSchema.parse(spellsRaw);
@@ -40,6 +41,26 @@ export function spellsByLevel(level: number): Spell[] {
 /** Whether a caster with `availablePpe` can afford to cast `spell`. */
 export function canCast(spell: Spell, availablePpe: number): boolean {
   return availablePpe >= spell.ppe;
+}
+
+/** Concrete points a healing cast restores (per-pool dice, rolled). */
+export interface HealingRoll {
+  hitPoints?: number;
+  sdc?: number;
+}
+
+/**
+ * Roll a spell's structured healing dice; `undefined` when the spell doesn't
+ * heal. Raw amounts — clamping at the target's rolled maximums happens where
+ * live pools are written (the backend's heal path).
+ */
+export function rollSpellHealing(spell: Spell, rng: Rng = Math.random): HealingRoll | undefined {
+  const h = spell.healing;
+  if (!h) return undefined;
+  return {
+    ...(h.hitPoints !== undefined ? { hitPoints: rollDice(h.hitPoints, rng) } : {}),
+    ...(h.sdc !== undefined ? { sdc: rollDice(h.sdc, rng) } : {}),
+  };
 }
 
 /**

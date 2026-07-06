@@ -115,6 +115,12 @@ export const characterSchema = z.object({
       hitPoints: z.number().int().optional(),
       sdc: z.number().int().nonnegative().optional(),
       ppe: z.number().int().nonnegative().optional(),
+      /** Days of battle-injury treatment already applied this course (drives
+       * the professional 2-then-4 ramp, RUE p.354). Lives in `current` on
+       * purpose: a full restore or vitals reroll clears it — fresh pools,
+       * fresh course. When a NEW course starts within one set of pools is
+       * GM adjudication (the treat mutation's explicit `day` override). */
+      treatmentDays: z.number().int().nonnegative().optional(),
     })
     .optional(),
   /** Optional player-authored identity; passed through to the sheet untouched. */

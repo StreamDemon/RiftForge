@@ -52,7 +52,13 @@ export interface CharacterSheet {
     dodge: number;
     damageBonus: number;
   };
-  vitals: { hitPoints: StatValue; sdc: StatValue; comaDeathFloor: number };
+  vitals: {
+    hitPoints: StatValue;
+    sdc: StatValue;
+    comaDeathFloor: number;
+    /** Days of battle-injury treatment already applied this course. */
+    treatmentDays: number;
+  };
   /** Present for spell-casting O.C.C.s. */
   ppe?: StatValue;
   spellStrength?: number;
@@ -210,6 +216,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
       ),
       sdc: withRolled(physicalSdcRange(), character.rolled?.sdc, character.current?.sdc),
       comaDeathFloor: floor,
+      treatmentDays: character.current?.treatmentDays ?? 0,
     },
     ppe: occ.ppe
       ? withRolled(ppeRange(occ, attrs.PE, level), character.rolled?.ppe, character.current?.ppe)
