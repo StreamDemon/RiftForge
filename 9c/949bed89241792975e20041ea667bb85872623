@@ -1,0 +1,26 @@
+packages/backend/tests/characters.test.ts
+  s_dde58116fbb58f::t_85324399084f94 421-444
+packages/backend/convex/characters.ts
+  s_dde58116fbb58f::t_4727a35c3de2fa 426
+  s_dde58116fbb58f::t_cfe5033ec2f22c 177-184,188-198
+  s_dde58116fbb58f::t_02980262055f2b 424-425,427
+  s_dde58116fbb58f::t_a31b8e20fb13b9 199-200
+packages/backend/tests/healing-cast.test.ts
+  s_dde58116fbb58f::t_d152b4c7dcfd79 112-115,127-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9c949bed89241792975e20041ea667bb85872623",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
