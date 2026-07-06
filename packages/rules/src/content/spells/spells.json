@@ -1607,6 +1607,218 @@
       "savingThrow": "none",
       "description": "Heals the wounds of Mega-Damage creatures (dragons, supernatural beings): restores 4D6 M.D. Not applicable to S.D.C./Hit Point creatures.",
       "page": 221
+    },
+    {
+      "id": "anti-magic-cloud",
+      "name": "Anti-Magic Cloud",
+      "level": 11,
+      "ppe": 140,
+      "range": "100 ft (30.5 m) radius per level of the spell caster",
+      "duration": "20 melees per level of the spell caster",
+      "savingThrow": "special",
+      "savingThrowNote": "Only a Natural 18, 19 or 20 saves, and even then magic is at half strength",
+      "description": "A dark cloud over the area negates ALL magic — spells, devices, charms; only its creator is unaffected.",
+      "page": 221
+    },
+    {
+      "id": "create-mummy",
+      "name": "Create Mummy (Ritual)",
+      "level": 11,
+      "ppe": 160,
+      "range": "Touch",
+      "duration": "Exists until destroyed",
+      "savingThrow": "none",
+      "description": "A Necromantic ritual that turns a corpse into an obedient, nearly indestructible undead guardian (fire is its weakness).",
+      "page": 221
+    },
+    {
+      "id": "firequake",
+      "name": "Firequake",
+      "level": 11,
+      "ppe": 160,
+      "ppeNote": "Available to Earth Warlocks as an 8th level spell at half the P.P.E. (80)",
+      "range": "Up to 500 ft (152 m) away; 100 ft (30.5 m) radius",
+      "duration": "One melee round per level of experience",
+      "damage": "Varies; jets of flame do 5D6 M.D. on a failed dodge",
+      "savingThrow": "dodge",
+      "description": "The ground rumbles, cracks, and spews sulfur and gouts of fire; movement drops to 10% and flame jets erupt underfoot.",
+      "page": 222
+    },
+    {
+      "id": "re-open-gateway",
+      "name": "Re-Open Gateway (Rift)",
+      "level": 11,
+      "ppe": 180,
+      "range": "10 ft (3 m)",
+      "duration": "One melee round per level of experience (at most)",
+      "savingThrow": "none",
+      "description": "Re-opens an existing dimensional portal (stone pyramids, nexus gates) to the LAST world it accessed.",
+      "page": 222
+    },
+    {
+      "id": "remove-curse",
+      "name": "Remove Curse",
+      "level": 11,
+      "ppe": 140,
+      "range": "Touch or 10 ft (3 m)",
+      "duration": "Instant removal",
+      "savingThrow": "none",
+      "description": "Removes any type of curse: roll a d20 save vs magic with +5 as a spell or +10 as a ritual; success ends the curse.",
+      "page": 222
+    },
+    {
+      "id": "rift-teleportation",
+      "name": "Rift Teleportation",
+      "level": 11,
+      "ppe": 200,
+      "ppeNote": "200 P.P.E. (half for Shifters and Temporal Raiders/Wizards)",
+      "range": "Up to 100 miles (160 km) per level of the spell caster",
+      "duration": "Roughly 1D4+4 seconds/half a melee round",
+      "savingThrow": "standard",
+      "savingThrowNote": "+3 to save if an unwilling participant; a save means that character is left behind",
+      "description": "Teleports up to 20 people per level from one ley line nexus to another known nexus within range.",
+      "page": 222
+    },
+    {
+      "id": "amulet",
+      "name": "Amulet",
+      "level": 12,
+      "ppe": 290,
+      "ppeNote": "290-500 by amulet type: Charm 290, vs Sickness 290, vs Insanity 320, vs the Supernatural 300, See the Invisible 500, Sense Spirits 310, Turn the Undead 400",
+      "range": "Holder/wearer of the amulet",
+      "duration": "Exists as long as the medallion is not destroyed",
+      "savingThrow": "none",
+      "description": "Instills a fire-purified metal or stone medallion with a lasting protective charm (choose one effect at creation).",
+      "page": 223
+    },
+    {
+      "id": "calm-storms",
+      "name": "Calm Storms",
+      "level": 12,
+      "ppe": 200,
+      "range": "Immediate area around the mage, one mile (1.6 km) per level of experience",
+      "duration": "One hour per level of experience",
+      "savingThrow": "none",
+      "description": "Calms natural and magical tempests: downpour to light rain by spell; a tornado dispersed in an instant by ritual.",
+      "page": 223
+    },
+    {
+      "id": "create-zombie",
+      "name": "Create Zombie (Ritual)",
+      "level": 12,
+      "ppe": 250,
+      "range": "Touch",
+      "duration": "Exists until destroyed",
+      "savingThrow": "none",
+      "description": "A Necromantic graveyard ritual (full moon, blood pentagram) that raises an obedient zombie slave; only energy attacks truly harm it.",
+      "page": 223
+    },
+    {
+      "id": "ensorcel",
+      "name": "Ensorcel",
+      "level": 12,
+      "ppe": 400,
+      "range": "Touch",
+      "duration": "20 minutes per level of the spell caster (double if 800 P.P.E. are expended)",
+      "savingThrow": "standard",
+      "savingThrowNote": "-3 to save",
+      "description": "Enslaves the victim to the caster's magic: impervious to others' mind control and illusion, but helpless before the ensorceller.",
+      "page": 223
+    },
+    {
+      "id": "summon-and-control-entity",
+      "name": "Summon and Control Entity (Ritual)",
+      "level": 12,
+      "ppe": 250,
+      "range": "Not applicable",
+      "duration": "24 hours per level of experience",
+      "savingThrow": "none",
+      "description": "Plucks an Entity out of its native dimension to serve without question — return it before control lapses.",
+      "page": 224
+    },
+    {
+      "id": "protection-circle-superior",
+      "name": "Protection Circle: Superior",
+      "level": 13,
+      "ppe": 300,
+      "ppeNote": "Three hundred to create; twenty P.P.E. to reactivate",
+      "range": "Radius of the circle",
+      "duration": "24 hours; can be reactivated immediately at a cost of 20 P.P.E.",
+      "savingThrow": "none",
+      "description": "Keeps ALL supernatural creatures 20 ft from its edge; occupants get +5 vs magic/psionics, +8 vs Horror Factor, +10 P.P.E./I.S.P.",
+      "page": 224
+    },
+    {
+      "id": "sanctum",
+      "name": "Sanctum",
+      "level": 13,
+      "ppe": 390,
+      "range": "30x30 ft (9.1 x 9.1 m) room; can be created up to 200 miles (320 km) away",
+      "duration": "The lifetime of the mage or until canceled",
+      "savingThrow": "none",
+      "description": "Turns a room into a safe haven free of mystic influence: no Calling, Locate, scrying, or entry by the undead.",
+      "page": 224
+    },
+    {
+      "id": "close-rift",
+      "name": "Close Rift",
+      "level": 14,
+      "ppe": 200,
+      "ppeNote": "Two hundred plus 2 P.P.E. permanently drained from the caster's base (Shifters, Temporal Raiders/Wizards, Stone Masters, and gods are exempt)",
+      "range": "100 ft (30.5 m)",
+      "duration": "Instant results",
+      "savingThrow": "standard",
+      "savingThrowNote": "The gateway gets an automatic save vs magic; a Close Rift Ritual improves the odds (16)",
+      "description": "Closes a Rift by sheer force of will at the permanent cost of 2 P.P.E.; cannot close permanently-open Rifts.",
+      "page": 224
+    },
+    {
+      "id": "restoration",
+      "name": "Restoration",
+      "level": 14,
+      "ppe": 750,
+      "range": "Touch or 3 ft (0.9 m) away",
+      "duration": "Instant/permanent",
+      "savingThrow": "none",
+      "healing": {
+        "full": true,
+        "target": "touch"
+      },
+      "description": "Instantly and completely heals all wounds — full S.D.C. and Hit Points, mended bones, even severed limbs restored (within 48 hours).",
+      "page": 224
+    },
+    {
+      "id": "resurrection",
+      "name": "Resurrection",
+      "level": 14,
+      "ppe": 650,
+      "range": "Touch or six feet (1.8 m) away",
+      "duration": "Instant and permanent",
+      "savingThrow": "none",
+      "description": "Restores life to the recently deceased (dead under two months): 45% success, three attempts per corpse.",
+      "page": 224
+    },
+    {
+      "id": "dimensional-portal",
+      "name": "Dimensional Portal (Rift)",
+      "level": 15,
+      "ppe": 1000,
+      "range": "A few feet (one meter) away",
+      "duration": "30 seconds (2 melee rounds) per level of the spell caster, or one minute (4 melees) per level as a ritual",
+      "savingThrow": "none",
+      "description": "Opens a two-way door to another dimension, specific or random — and some 'thing' unwanted often slips through.",
+      "page": 225
+    },
+    {
+      "id": "teleport-superior",
+      "name": "Teleport: Superior",
+      "level": 15,
+      "ppe": 600,
+      "range": "Self or others; distance of 300 miles (480 km) per level of experience",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "description": "Instantly transport the mage and up to 1000 lbs per level to a known destination: 99% familiar, 58% described, 20% by name only.",
+      "page": 225
     }
   ]
 }

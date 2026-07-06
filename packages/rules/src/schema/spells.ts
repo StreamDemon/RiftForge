@@ -22,12 +22,18 @@ export const spellHealingSchema = z
     exclusive: z.boolean().optional(),
     /** The spell cannot be cast on the caster (e.g. Light Healing). */
     othersOnly: z.boolean().optional(),
+    /** Complete restoration: both pools return to their maximums, no dice
+     * (Restoration, RUE p.224). Mutually exclusive with dice pools. */
+    full: z.boolean().optional(),
   })
-  .refine((h) => h.hitPoints !== undefined || h.sdc !== undefined, {
-    message: "A healing effect must restore hitPoints, sdc, or both.",
+  .refine((h) => h.full === true || h.hitPoints !== undefined || h.sdc !== undefined, {
+    message: "A healing effect must restore hitPoints, sdc, or be a full restoration.",
   })
   .refine((h) => h.exclusive !== true || (h.hitPoints !== undefined && h.sdc !== undefined), {
     message: "An exclusive healing effect needs both pools to choose between.",
+  })
+  .refine((h) => h.full !== true || (h.hitPoints === undefined && h.sdc === undefined), {
+    message: "A full restoration cannot also declare dice pools.",
   });
 export type SpellHealing = z.infer<typeof spellHealingSchema>;
 
