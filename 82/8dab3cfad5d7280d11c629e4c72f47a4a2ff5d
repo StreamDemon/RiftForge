@@ -1,0 +1,21 @@
+packages/rules/src/content/spells/spells.json
+  s_dde58116fbb58f::t_783c91d72cbf44 646-856
+  s_dde58116fbb58f::t_9b80e0e4b5a15b 857-994
+  s_dde58116fbb58f::t_de84ee9c18cfb8 995-1162
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "828dab3cfad5d7280d11c629e4c72f47a4a2ff5d",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
