@@ -1,0 +1,21 @@
+packages/rules/src/schema/spells.ts
+  s_dde58116fbb58f::t_297a34bdda69c8 25-27,29-30,34-36
+packages/rules/src/content/spells/spells.json
+  s_dde58116fbb58f::t_f2ebf4ce4d6e77 1610-1821
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "feee67705b330a7e8ff001f0d738ecdb03476a16",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
