@@ -209,12 +209,16 @@ function fullyMended(
  * seeded randomness) and land them on the TARGET — `targetId` defaults to the
  * caster — through the clamped heal path. Spend and heal are one transaction:
  * a cast that can't land (unknown target, unrolled pools) spends nothing.
+ * `healPool` picks the pool for exclusive either/or spells (Light Healing);
+ * `othersOnly` spells refuse the caster as the target; `full` restorations
+ * (Restoration) top both pools up to their maximums.
  */
 export const castSpell = mutation({
   args: {
     id: v.id("characters"),
     spellId: v.string(),
     targetId: v.optional(v.id("characters")),
+    healPool: v.optional(v.union(v.literal("hitPoints"), v.literal("sdc"))),
   },
   returns: v.object({
     spent: v.number(),
@@ -224,7 +228,7 @@ export const castSpell = mutation({
       v.object({ hitPoints: v.optional(v.number()), sdc: v.optional(v.number()) }),
     ),
   }),
-  handler: async (ctx, { id, spellId, targetId }) => {
+  handler: async (ctx, { id, spellId, targetId, healPool }) => {
     const character = await loadCharacter(ctx, id);
     if (!character.spellIds.includes(spellId)) {
       throw new Error(`Character does not know the spell "${spellId}".`);
@@ -238,6 +242,9 @@ export const castSpell = mutation({
     if (spell.healing?.target === "self" && aimedAtOther) {
       throw new Error(`${spell.name} only heals the caster.`);
     }
+    if (spell.healing?.othersOnly && !aimedAtOther) {
+      throw new Error(`${spell.name} cannot be used on oneself.`);
+    }
     const max = character.rolled?.ppe;
     if (max === undefined) throw new Error("Roll vitals before casting — no P.P.E. to spend.");
     const available = character.current?.ppe ?? max;
@@ -249,27 +256,50 @@ export const castSpell = mutation({
     const remaining = available - spell.ppe;
     const spentCurrent = { ...character.current, ppe: remaining };
 
-    const amounts = spell.healing ? rollSpellHealing(spell) : undefined;
-    if (amounts === undefined) {
+    // Throws for exclusive spells when no pool is chosen — before any write.
+    const roll = spell.healing ? rollSpellHealing(spell, Math.random, healPool) : undefined;
+    if (roll === undefined) {
       await patchCurrent(ctx, id, character, spentCurrent);
       return { spent: spell.ppe, ppe: { current: remaining, max } };
     }
-    const report = (gained: { hitPoints: number; sdc: number }) => ({
+    // A full restoration becomes the exact top-up to the target's maximums
+    // (computed, not clamped: H.P. can sit below zero in the coma band).
+    const resolve = (c: Character): { hitPoints?: number; sdc?: number } => {
+      if (!roll.full) return roll;
+      const r = c.rolled;
+      if (r?.hitPoints === undefined || r.sdc === undefined) {
+        throw new Error("Cannot fully restore — vitals have not been rolled.");
+      }
+      return {
+        hitPoints: Math.max(0, r.hitPoints - (c.current?.hitPoints ?? r.hitPoints)),
+        sdc: Math.max(0, r.sdc - (c.current?.sdc ?? r.sdc)),
+      };
+    };
+    const report = (
+      amounts: { hitPoints?: number; sdc?: number },
+      gained: { hitPoints: number; sdc: number },
+    ) => ({
       ...(amounts.hitPoints !== undefined ? { hitPoints: gained.hitPoints } : {}),
       ...(amounts.sdc !== undefined ? { sdc: gained.sdc } : {}),
     });
     if (!aimedAtOther) {
+      const amounts = resolve(character);
       const { current, gained } = healPools({ ...character, current: spentCurrent }, amounts);
       await patchCurrent(ctx, id, character, current);
-      return { spent: spell.ppe, ppe: { current: remaining, max }, healed: report(gained) };
+      return {
+        spent: spell.ppe,
+        ppe: { current: remaining, max },
+        healed: report(amounts, gained),
+      };
     }
     // Cross-document: spend on the caster, heal the target — one transaction,
     // the first table-shaped interaction (VTT groundwork).
     const target = await loadCharacter(ctx, targetId);
+    const amounts = resolve(target);
     const { current: targetCurrent, gained } = healPools(target, amounts);
     await patchCurrent(ctx, id, character, spentCurrent);
     await patchCurrent(ctx, targetId, target, targetCurrent);
-    return { spent: spell.ppe, ppe: { current: remaining, max }, healed: report(gained) };
+    return { spent: spell.ppe, ppe: { current: remaining, max }, healed: report(amounts, gained) };
   },
 });
 

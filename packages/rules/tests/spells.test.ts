@@ -27,11 +27,32 @@ describe("spell book (RUE Magic Spells, levels 1-4)", () => {
     expect(getSpell("nope")).toBeUndefined();
   });
 
-  test("spells are grouped by level", () => {
-    expect(spellsByLevel(1)).toHaveLength(10);
-    expect(spellsByLevel(2)).toHaveLength(5);
-    expect(spellsByLevel(3)).toHaveLength(9);
-    expect(spellsByLevel(4)).toHaveLength(5);
+  test("spells are grouped by level (full RUE per-level counts)", () => {
+    const counts = [10, 13, 17, 16, 18, 12, 14, 18, 8, 12, 6, 5, 2, 3, 2]; // L1..L15
+    counts.forEach((count, i) => expect(spellsByLevel(i + 1)).toHaveLength(count));
+    expect(spellBook.spells).toHaveLength(156);
+  });
+
+  test("the healing spells carry structured effects (#13)", () => {
+    expect(getSpell("heal-wounds")?.healing).toEqual({
+      hitPoints: "1D6",
+      sdc: "3D6",
+      target: "touch",
+    });
+    expect(getSpell("heal-self")?.healing?.target).toBe("self");
+    expect(getSpell("light-healing")?.healing).toMatchObject({
+      exclusive: true,
+      othersOnly: true,
+    });
+    expect(getSpell("greater-healing")?.healing).toMatchObject({
+      hitPoints: "6D6",
+      sdc: "2D4*10",
+      othersOnly: true,
+    });
+    expect(getSpell("restoration")?.healing).toEqual({ full: true, target: "touch" });
+    // Cure Minor Disorders/Cure Illness are condition relief, not pool healing.
+    expect(getSpell("cure-minor-disorders")?.healing).toBeUndefined();
+    expect(getSpell("cure-illness")?.healing).toBeUndefined();
   });
 
   test("castability depends on available P.P.E.", () => {

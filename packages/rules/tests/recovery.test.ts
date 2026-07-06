@@ -153,4 +153,35 @@ describe("spell healing — schema and rolls", () => {
     });
     expect(rollSpellHealing(bolt)).toBeUndefined();
   });
+
+  test("exclusive healing rolls only the chosen pool, and demands a choice", () => {
+    const either = spellSchema.parse({
+      ...healWounds,
+      id: "test-either",
+      name: "Test Either",
+      healing: { hitPoints: "1D4", sdc: "1D6", target: "touch", exclusive: true },
+    });
+    expect(() => rollSpellHealing(either, () => 0)).toThrow(/choose hitPoints or sdc/);
+    expect(rollSpellHealing(either, () => 0, "hitPoints")).toEqual({ hitPoints: 1 });
+    expect(rollSpellHealing(either, () => 0, "sdc")).toEqual({ sdc: 1 });
+  });
+
+  test("full restorations roll no dice", () => {
+    const resto = spellSchema.parse({
+      ...healWounds,
+      id: "test-resto",
+      name: "Test Resto",
+      healing: { full: true, target: "touch" },
+    });
+    expect(rollSpellHealing(resto)).toEqual({ full: true });
+    // The schema refuses contradictory shapes.
+    expect(() =>
+      spellSchema.parse({
+        ...healWounds,
+        id: "test-bad",
+        name: "Test Bad",
+        healing: { full: true, hitPoints: "1D6", target: "touch" },
+      }),
+    ).toThrow();
+  });
 });
