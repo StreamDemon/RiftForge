@@ -43,20 +43,41 @@ export function canCast(spell: Spell, availablePpe: number): boolean {
   return availablePpe >= spell.ppe;
 }
 
-/** Concrete points a healing cast restores (per-pool dice, rolled). */
+/** Concrete points a healing cast restores (per-pool dice, rolled) — or a
+ * complete restoration when `full` is set (no dice; both pools to maximum). */
 export interface HealingRoll {
   hitPoints?: number;
   sdc?: number;
+  full?: boolean;
 }
+
+/** The pool an exclusive healing spell restores this cast (caster's choice). */
+export type HealingPool = "hitPoints" | "sdc";
 
 /**
  * Roll a spell's structured healing dice; `undefined` when the spell doesn't
  * heal. Raw amounts — clamping at the target's rolled maximums happens where
  * live pools are written (the backend's heal path).
+ *
+ * Exclusive spells (Light Healing's "1D6 S.D.C. *or* 1D4 Hit Points") roll
+ * only the chosen `pool` and throw when none is named. Full restorations
+ * (Restoration) roll nothing and return `{ full: true }`.
  */
-export function rollSpellHealing(spell: Spell, rng: Rng = Math.random): HealingRoll | undefined {
+export function rollSpellHealing(
+  spell: Spell,
+  rng: Rng = Math.random,
+  pool?: HealingPool,
+): HealingRoll | undefined {
   const h = spell.healing;
   if (!h) return undefined;
+  if (h.full) return { full: true };
+  if (h.exclusive) {
+    if (pool === undefined) {
+      throw new Error(`${spell.name} restores one pool per cast — choose hitPoints or sdc.`);
+    }
+    // The schema guarantees exclusive spells declare both pools.
+    return { [pool]: rollDice(h[pool]!, rng) };
+  }
   return {
     ...(h.hitPoints !== undefined ? { hitPoints: rollDice(h.hitPoints, rng) } : {}),
     ...(h.sdc !== undefined ? { sdc: rollDice(h.sdc, rng) } : {}),

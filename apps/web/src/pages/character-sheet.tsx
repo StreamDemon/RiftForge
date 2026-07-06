@@ -198,8 +198,20 @@ export function CharacterSheetPage() {
   // back after the dossier switched characters is dropped.
   const cast = async (spell: Spell) => {
     const castFor = id();
+    // Exclusive either/or heals (Light Healing) need a pool choice; until a
+    // target picker exists, prefer the wounded pool: H.P. if down, else S.D.C.
+    let healPool: "hitPoints" | "sdc" | undefined;
+    if (spell.healing?.exclusive) {
+      const hp = sheet()?.vitals.hitPoints;
+      healPool =
+        hp?.rolled !== undefined && (hp.current ?? hp.rolled) < hp.rolled ? "hitPoints" : "sdc";
+    }
     try {
-      const result = await castSpellMutation({ id: castFor, spellId: spell.id });
+      const result = await castSpellMutation({
+        id: castFor,
+        spellId: spell.id,
+        ...(healPool !== undefined ? { healPool } : {}),
+      });
       if (id() !== castFor) return;
       // Healing spells report what actually landed (post-clamp), per pool.
       const healed = result.healed
