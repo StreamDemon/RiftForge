@@ -1,0 +1,21 @@
+CLAUDE.md
+  s_dde58116fbb58f::t_fe3f5674a1966a 24-78
+docs/rules/TRANSCRIPTION.md
+  s_dde58116fbb58f::t_61027b7985dd2f 1-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8b80af144971942630e0d326a4430c30bbf92062",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
