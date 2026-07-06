@@ -172,6 +172,7 @@ export function CharacterSheetPage() {
         setAtNexus(false);
         setProfessional(false);
         setTreatedDays(0);
+        setTreating(false);
       },
       { defer: true },
     ),
@@ -280,7 +281,10 @@ export function CharacterSheetPage() {
       if (id() !== treatedFor) return;
       telemetry.log(`> TREATMENT :: REFUSED (${reason(error)})`, "bad");
     } finally {
-      setTreating(false);
+      // Only release the gate for the dossier that took it: the route-change
+      // effect already unblocked the next character, and a stale settle must
+      // not unlock a treat the NEW dossier has in flight.
+      if (id() === treatedFor) setTreating(false);
     }
   };
 
