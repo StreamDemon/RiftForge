@@ -5,9 +5,13 @@ import {
   deriveSheet,
   getOcc,
   getSpell,
+  leyLineDraw as leyLineDrawAmount,
+  restRecovery,
   rollHitPoints,
   rollPhysicalSdc,
   rollPpe,
+  rollSpellHealing,
+  treatmentRecovery,
   type Character,
 } from "@riftforge/rules";
 import { v } from "convex/values";
@@ -142,25 +146,77 @@ export const rollVitals = mutation({
 });
 
 /**
+ * Add server-derived amounts into the live pools, clamped at the rolled
+ * maximums — the ONE heal path every recovery lands through (`heal`, `rest`,
+ * `treat`, `leyLineDraw`, healing casts). Returns the next `current` plus
+ * what each pool actually gained after clamping (what telemetry reports).
+ */
+function healPools(
+  character: Character,
+  amounts: { hitPoints?: number; sdc?: number; ppe?: number },
+): {
+  current: NonNullable<Character["current"]>;
+  gained: { hitPoints: number; sdc: number; ppe: number };
+} {
+  const current = { ...character.current };
+  const gained = { hitPoints: 0, sdc: 0, ppe: 0 };
+  for (const field of ["hitPoints", "sdc", "ppe"] as const) {
+    const amount = amounts[field];
+    if (amount === undefined) continue;
+    if (!Number.isInteger(amount) || amount < 0) {
+      throw new Error(`heal.${field} must be a non-negative integer, got ${amount}.`);
+    }
+    const max = character.rolled?.[field];
+    if (max === undefined) {
+      throw new Error(`Cannot heal ${field} — it has not been rolled.`);
+    }
+    const before = current[field] ?? max;
+    current[field] = Math.min(max, before + amount);
+    gained[field] = current[field] - before;
+  }
+  return { current, gained };
+}
+
+/**
  * Cast a known spell: decrement live P.P.E. by its printed cost. The cost is
  * derived server-side from the spell id — the client never names a price.
  * Rejects casts the character can't afford (the sheet greys those out, but
  * the server is the authority) and casts before vitals are rolled (no
  * maximum to spend from).
+ *
+ * Healing spells also roll their structured dice server-side (mutations get
+ * seeded randomness) and land them on the TARGET — `targetId` defaults to the
+ * caster — through the clamped heal path. Spend and heal are one transaction:
+ * a cast that can't land (unknown target, unrolled pools) spends nothing.
  */
 export const castSpell = mutation({
-  args: { id: v.id("characters"), spellId: v.string() },
+  args: {
+    id: v.id("characters"),
+    spellId: v.string(),
+    targetId: v.optional(v.id("characters")),
+  },
   returns: v.object({
     spent: v.number(),
     ppe: v.object({ current: v.number(), max: v.number() }),
+    /** Post-clamp points the target actually recovered, per declared pool. */
+    healed: v.optional(
+      v.object({ hitPoints: v.optional(v.number()), sdc: v.optional(v.number()) }),
+    ),
   }),
-  handler: async (ctx, { id, spellId }) => {
+  handler: async (ctx, { id, spellId, targetId }) => {
     const character = await loadCharacter(ctx, id);
     if (!character.spellIds.includes(spellId)) {
       throw new Error(`Character does not know the spell "${spellId}".`);
     }
     const spell = getSpell(spellId);
     if (!spell) throw new Error(`Unknown spell "${spellId}".`);
+    const aimedAtOther = targetId !== undefined && targetId !== id;
+    if (spell.healing === undefined && aimedAtOther) {
+      throw new Error(`${spell.name} has no healing effect to aim at another character.`);
+    }
+    if (spell.healing?.target === "self" && aimedAtOther) {
+      throw new Error(`${spell.name} only heals the caster.`);
+    }
     const max = character.rolled?.ppe;
     if (max === undefined) throw new Error("Roll vitals before casting — no P.P.E. to spend.");
     const available = character.current?.ppe ?? max;
@@ -170,8 +226,29 @@ export const castSpell = mutation({
       );
     }
     const remaining = available - spell.ppe;
-    await patchCurrent(ctx, id, character, { ...character.current, ppe: remaining });
-    return { spent: spell.ppe, ppe: { current: remaining, max } };
+    const spentCurrent = { ...character.current, ppe: remaining };
+
+    const amounts = spell.healing ? rollSpellHealing(spell) : undefined;
+    if (amounts === undefined) {
+      await patchCurrent(ctx, id, character, spentCurrent);
+      return { spent: spell.ppe, ppe: { current: remaining, max } };
+    }
+    const report = (gained: { hitPoints: number; sdc: number }) => ({
+      ...(amounts.hitPoints !== undefined ? { hitPoints: gained.hitPoints } : {}),
+      ...(amounts.sdc !== undefined ? { sdc: gained.sdc } : {}),
+    });
+    if (!aimedAtOther) {
+      const { current, gained } = healPools({ ...character, current: spentCurrent }, amounts);
+      await patchCurrent(ctx, id, character, current);
+      return { spent: spell.ppe, ppe: { current: remaining, max }, healed: report(gained) };
+    }
+    // Cross-document: spend on the caster, heal the target — one transaction,
+    // the first table-shaped interaction (VTT groundwork).
+    const target = await loadCharacter(ctx, targetId);
+    const { current: targetCurrent, gained } = healPools(target, amounts);
+    await patchCurrent(ctx, id, character, spentCurrent);
+    await patchCurrent(ctx, targetId, target, targetCurrent);
+    return { spent: spell.ppe, ppe: { current: remaining, max }, healed: report(gained) };
   },
 });
 
@@ -201,9 +278,8 @@ export const applyDamage = mutation({
 
 /**
  * Recover points into one or more pools, clamped at the rolled maximums.
- * Amounts are how much to ADD (a first-aid roll, a rest tick) — full recovery
- * is `restoreVitals`. Recovery *rates* (P.P.E. per hour of rest, ley-line
- * draw) are rules-layer follow-up work on #38.
+ * Amounts are how much to ADD (a first-aid roll, a GM adjustment) — full
+ * recovery is `restoreVitals`; book *rates* are `rest`/`treat`/`leyLineDraw`.
  */
 export const heal = mutation({
   args: {
@@ -215,21 +291,112 @@ export const heal = mutation({
   returns: v.null(),
   handler: async (ctx, { id, ...amounts }) => {
     const character = await loadCharacter(ctx, id);
-    const current = { ...character.current };
-    for (const field of ["hitPoints", "sdc", "ppe"] as const) {
-      const amount = amounts[field];
-      if (amount === undefined) continue;
-      if (!Number.isInteger(amount) || amount < 0) {
-        throw new Error(`heal.${field} must be a non-negative integer, got ${amount}.`);
-      }
-      const max = character.rolled?.[field];
-      if (max === undefined) {
-        throw new Error(`Cannot heal ${field} — it has not been rolled.`);
-      }
-      current[field] = Math.min(max, (current[field] ?? max) + amount);
-    }
+    const { current } = healPools(character, amounts);
     await patchCurrent(ctx, id, character, current);
     return null;
+  },
+});
+
+/**
+ * Rest or meditate for a number of hours, recovering P.P.E. at the printed
+ * rate (RUE p.186), honoring the O.C.C.'s own rates (the Ley Line Walker
+ * rests at 7/15 instead of the default 5/10). The client names TIME — hours
+ * are GM-adjudicated input, never a wall clock — and the server derives the
+ * points and lands them through the clamped heal path, never above the
+ * permanent base.
+ */
+export const rest = mutation({
+  args: {
+    id: v.id("characters"),
+    hours: v.number(),
+    mode: v.union(v.literal("rest"), v.literal("meditation")),
+  },
+  returns: v.object({
+    gained: v.number(),
+    ppe: v.object({ current: v.number(), max: v.number() }),
+  }),
+  handler: async (ctx, { id, hours, mode }) => {
+    const character = await loadCharacter(ctx, id);
+    const occ = getOcc(character.occId);
+    if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
+    const max = character.rolled?.ppe;
+    if (max === undefined) throw new Error("Roll vitals before resting — no P.P.E. to recover.");
+    // `restRecovery` rejects hours that aren't a whole, non-negative count.
+    const { current, gained } = healPools(character, {
+      ppe: restRecovery(hours, mode, occ),
+    });
+    await patchCurrent(ctx, id, character, current);
+    return { gained: gained.ppe, ppe: { current: current.ppe ?? max, max } };
+  },
+});
+
+/**
+ * Draw P.P.E. from a ley line (or nexus) the character is standing at:
+ * the printed supplemental rate per melee round, honoring the O.C.C.
+ * override — the Ley Line Walker draws double (RUE p.186).
+ */
+export const leyLineDraw = mutation({
+  args: {
+    id: v.id("characters"),
+    melees: v.number(),
+    atNexus: v.boolean(),
+  },
+  returns: v.object({
+    gained: v.number(),
+    ppe: v.object({ current: v.number(), max: v.number() }),
+  }),
+  handler: async (ctx, { id, melees, atNexus }) => {
+    const character = await loadCharacter(ctx, id);
+    const occ = getOcc(character.occId);
+    if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
+    if (occ.ppe === undefined) {
+      throw new Error(`${occ.name} is not a practitioner of magic — no ley line draw.`);
+    }
+    const max = character.rolled?.ppe;
+    if (max === undefined) throw new Error("Roll vitals before drawing — no P.P.E. to recover.");
+    // `leyLineDrawAmount` rejects melees that aren't a whole, non-negative count.
+    const { current, gained } = healPools(character, {
+      ppe: leyLineDrawAmount(melees, atNexus, occ),
+    });
+    await patchCurrent(ctx, id, character, current);
+    return { gained: gained.ppe, ppe: { current: current.ppe ?? max, max } };
+  },
+});
+
+/**
+ * A stretch of treatment days for battle injuries (RUE p.354): H.P. and
+ * S.D.C. recover at the printed daily rates. Professional care ramps
+ * (2 H.P./day for the first two days of the course, then 4), so the client
+ * says how deep into the course the character already is — days are
+ * GM-adjudicated input, like all elapsed time.
+ */
+export const treat = mutation({
+  args: {
+    id: v.id("characters"),
+    days: v.number(),
+    professional: v.boolean(),
+    daysAlreadyTreated: v.optional(v.number()),
+  },
+  returns: v.object({
+    gained: v.object({ hitPoints: v.number(), sdc: v.number() }),
+    hitPoints: v.object({ current: v.number(), max: v.number() }),
+    sdc: v.object({ current: v.number(), max: v.number() }),
+  }),
+  handler: async (ctx, { id, days, professional, daysAlreadyTreated }) => {
+    const character = await loadCharacter(ctx, id);
+    const rolled = character.rolled;
+    if (rolled?.hitPoints === undefined || rolled.sdc === undefined) {
+      throw new Error("Roll vitals before treatment — no pools to recover.");
+    }
+    // `treatmentRecovery` rejects day counts that aren't whole and non-negative.
+    const amounts = treatmentRecovery(days, professional, daysAlreadyTreated ?? 0);
+    const { current, gained } = healPools(character, amounts);
+    await patchCurrent(ctx, id, character, current);
+    return {
+      gained: { hitPoints: gained.hitPoints, sdc: gained.sdc },
+      hitPoints: { current: current.hitPoints ?? rolled.hitPoints, max: rolled.hitPoints },
+      sdc: { current: current.sdc ?? rolled.sdc, max: rolled.sdc },
+    };
   },
 });
 

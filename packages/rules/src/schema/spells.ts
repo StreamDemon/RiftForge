@@ -1,4 +1,27 @@
 import { z } from "zod";
+import { diceFormulaSchema } from "./dice.ts";
+
+/** Who a healing spell can restore, per its printed "Range" line. */
+export const healingTargetKindSchema = z.enum(["self", "touch", "ranged"]);
+export type HealingTargetKind = z.infer<typeof healingTargetKindSchema>;
+
+/**
+ * Structured healing effect. The printed `damage` stays a display string, but
+ * healing must be *applied* by the engine (rolled server-side, landed through
+ * the clamped heal path), so its dice are structured and load-validated.
+ */
+export const spellHealingSchema = z
+  .object({
+    /** Hit Points restored (dice formula, e.g. "2D6"). */
+    hitPoints: diceFormulaSchema.optional(),
+    /** S.D.C. restored (dice formula). */
+    sdc: diceFormulaSchema.optional(),
+    target: healingTargetKindSchema,
+  })
+  .refine((h) => h.hitPoints !== undefined || h.sdc !== undefined, {
+    message: "A healing effect must restore hitPoints, sdc, or both.",
+  });
+export type SpellHealing = z.infer<typeof spellHealingSchema>;
 
 /** How a target resists a spell, per the spell's "Saving Throw" line. */
 export const savingThrowKindSchema = z.enum([
@@ -27,6 +50,9 @@ export const spellSchema = z.object({
   savingThrowNote: z.string().optional(),
   /** Damage expression as printed, if the spell deals damage. */
   damage: z.string().optional(),
+  /** Structured healing effect, if the spell restores H.P./S.D.C.
+   * (None in the level 1-4 catalog; arrives with the level 5-15 spells.) */
+  healing: spellHealingSchema.optional(),
   description: z.string().optional(),
   page: z.number().int().positive(),
 });

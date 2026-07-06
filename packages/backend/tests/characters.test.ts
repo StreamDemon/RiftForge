@@ -306,6 +306,116 @@ describe("living vitals — current vs. max (#38)", () => {
     expect(stored?.current).toBeUndefined();
   });
 
+  test("rest recovers P.P.E. at the O.C.C.'s printed hourly rate (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { current: { ppe: 20 } });
+    });
+
+    // Ley Line Walker rests at 7/hour (not the book default 5).
+    expect(await t.mutation(api.characters.rest, { id, hours: 4, mode: "rest" })).toEqual({
+      gained: 28,
+      ppe: { current: 48, max: 84 },
+    });
+    // ...and meditates at 15/hour, clamped at the permanent base.
+    expect(await t.mutation(api.characters.rest, { id, hours: 3, mode: "meditation" })).toEqual({
+      gained: 36,
+      ppe: { current: 84, max: 84 },
+    });
+
+    await expect(t.mutation(api.characters.rest, { id, hours: -1, mode: "rest" })).rejects.toThrow(
+      /non-negative integer/,
+    );
+    await expect(t.mutation(api.characters.rest, { id, hours: 1.5, mode: "rest" })).rejects.toThrow(
+      /non-negative integer/,
+    );
+  });
+
+  test("rest before vitals are rolled is refused", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await expect(t.mutation(api.characters.rest, { id, hours: 1, mode: "rest" })).rejects.toThrow(
+      /Roll vitals/,
+    );
+  });
+
+  test("leyLineDraw pulls the doubled Walker rate per melee (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { current: { ppe: 10 } });
+    });
+
+    // One melee on the line: LLW draws 20 (double the practitioner's 10).
+    expect(await t.mutation(api.characters.leyLineDraw, { id, melees: 1, atNexus: false })).toEqual(
+      { gained: 20, ppe: { current: 30, max: 84 } },
+    );
+    // At a nexus the Walker pulls 40 — and the draw clamps at the base.
+    expect(await t.mutation(api.characters.leyLineDraw, { id, melees: 2, atNexus: true })).toEqual({
+      gained: 54,
+      ppe: { current: 84, max: 84 },
+    });
+
+    await expect(
+      t.mutation(api.characters.leyLineDraw, { id, melees: 0.5, atNexus: false }),
+    ).rejects.toThrow(/non-negative integer/);
+  });
+
+  test("treat recovers H.P./S.D.C. at the printed daily rates (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.applyDamage, { id, amount: 25 }); // sdc 0, hp 13
+
+    // One day of non-professional care: 2 H.P., 4 S.D.C.
+    expect(await t.mutation(api.characters.treat, { id, days: 1, professional: false })).toEqual({
+      gained: { hitPoints: 2, sdc: 4 },
+      hitPoints: { current: 15, max: 18 },
+      sdc: { current: 4, max: 20 },
+    });
+
+    // Two more days, professional, already 2 days into the course: the ramp
+    // pays 4 H.P./day, S.D.C. 6/day — clamped at the rolled maximums.
+    expect(
+      await t.mutation(api.characters.treat, {
+        id,
+        days: 2,
+        professional: true,
+        daysAlreadyTreated: 2,
+      }),
+    ).toEqual({
+      gained: { hitPoints: 3, sdc: 12 },
+      hitPoints: { current: 18, max: 18 },
+      sdc: { current: 16, max: 20 },
+    });
+  });
+
+  test("treat before vitals are rolled is refused", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    await expect(
+      t.mutation(api.characters.treat, { id, days: 1, professional: false }),
+    ).rejects.toThrow(/Roll vitals/);
+  });
+
+  test("castSpell refuses to aim a non-healing spell at another character (#41)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    const other = await t.mutation(api.characters.create, { ...vesper, name: "Kestrel" });
+
+    await expect(
+      t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt", targetId: other }),
+    ).rejects.toThrow(/no healing effect/);
+
+    // An explicit self-target on a non-healing spell is just a normal cast.
+    const result = await t.mutation(api.characters.castSpell, {
+      id,
+      spellId: "energy-bolt",
+      targetId: id,
+    });
+    expect(result).toEqual({ spent: 5, ppe: { current: 79, max: 84 } });
+  });
+
   test("illegal `current` states are rejected at every write", async () => {
     const t = convexTest(schema, modules);
     // Above the maximum on create.

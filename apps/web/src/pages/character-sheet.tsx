@@ -9,7 +9,16 @@ import {
   type Spell,
 } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
-import { createEffect, createSignal, Match, on, Show, Switch, type Accessor } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  Match,
+  on,
+  Show,
+  Switch,
+  type Accessor,
+  type JSX,
+} from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { NarrativeFields } from "../components/narrative-fields.tsx";
 import { SheetView, type SheetActions } from "../components/sheet-view.tsx";
@@ -90,6 +99,32 @@ function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | u
   );
 }
 
+/** A pressed/unpressed mode chip (nexus, professional care). Cyan tone is
+ * for arcane context only, per the color rules. */
+function ToggleChip(props: {
+  pressed: boolean;
+  onToggle: () => void;
+  tone?: "ley" | "amber";
+  children: JSX.Element;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={props.pressed}
+      class={`notch-6 cursor-pointer border bg-inset px-2 font-hud text-[11.5px] font-semibold tracking-[0.08em] uppercase ${
+        props.pressed
+          ? props.tone === "ley"
+            ? "border-ley/60 text-ley [text-shadow:0_0_8px_rgb(79_216_255/0.5)]"
+            : "border-amber/60 text-amber"
+          : "border-line text-dead hover:border-muted"
+      }`}
+      onClick={() => props.onToggle()}
+    >
+      {props.children}
+    </button>
+  );
+}
+
 /**
  * The dossier: the live sheet plus the field-telemetry rail. Gameplay rolls
  * (saves, skills, strikes, casts) run CLIENT-SIDE through the isomorphic
@@ -107,9 +142,19 @@ export function CharacterSheetPage() {
   const castSpellMutation = createMutation(convex, api.characters.castSpell);
   const applyDamageMutation = createMutation(convex, api.characters.applyDamage);
   const restoreVitals = createMutation(convex, api.characters.restoreVitals);
+  const restMutation = createMutation(convex, api.characters.rest);
+  const leyLineDrawMutation = createMutation(convex, api.characters.leyLineDraw);
+  const treatMutation = createMutation(convex, api.characters.treat);
   const telemetry = createTelemetry(["// ley-link established", "// awaiting command…"]);
   const [rollError, setRollError] = createSignal<Error>();
   const [damageInput, setDamageInput] = createSignal("");
+  const [restHours, setRestHours] = createSignal("");
+  const [atNexus, setAtNexus] = createSignal(false);
+  const [professional, setProfessional] = createSignal(false);
+  // Which treatment day the NEXT click is — the professional ramp (2 H.P./day
+  // for two days, then 4) depends on it. Session-local: the GM adjudicates
+  // elapsed time, the page just counts clicks for this sitting.
+  const [treatedDays, setTreatedDays] = createSignal(0);
 
   // A new dossier starts with a fresh log: rolls belong to the character
   // they were rolled for, not whoever the page shows next.
@@ -120,6 +165,10 @@ export function CharacterSheetPage() {
         telemetry.reset();
         setRollError(undefined);
         setDamageInput("");
+        setRestHours("");
+        setAtNexus(false);
+        setProfessional(false);
+        setTreatedDays(0);
       },
       { defer: true },
     ),
@@ -142,13 +191,89 @@ export function CharacterSheetPage() {
     try {
       const result = await castSpellMutation({ id: castFor, spellId: spell.id });
       if (id() !== castFor) return;
+      // Healing spells report what actually landed (post-clamp), per pool.
+      const healed = result.healed
+        ? ` → ${[
+            result.healed.hitPoints !== undefined ? `H.P. +${result.healed.hitPoints}` : undefined,
+            result.healed.sdc !== undefined ? `S.D.C. +${result.healed.sdc}` : undefined,
+          ]
+            .filter(Boolean)
+            .join(" · ")}`
+        : "";
       telemetry.log(
-        `> CAST :: ${spell.name.toUpperCase()} — ${result.spent} P.P.E. [${result.ppe.current}/${result.ppe.max}]`,
+        `> CAST :: ${spell.name.toUpperCase()} — ${result.spent} P.P.E. [${result.ppe.current}/${result.ppe.max}]${healed}`,
         "magic",
       );
     } catch (error) {
       if (id() !== castFor) return;
       telemetry.log(`> CAST :: ${spell.name.toUpperCase()} — REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  // Recovery names TIME (hours, melees, days) — the server owns the rates and
+  // clamps at the rolled maximums; the log reports what actually landed.
+  const rest = async (mode: "rest" | "meditation") => {
+    const verb = mode === "meditation" ? "MEDITATE" : "REST";
+    // Strict parse, like damage: "3.5" and "3abc" are refused, not truncated.
+    const raw = restHours().trim();
+    const hours = Number(raw);
+    if (raw === "" || !Number.isInteger(hours) || hours <= 0) {
+      if (raw !== "") {
+        telemetry.log(`> ${verb} :: REFUSED (not a whole number of hours: "${raw}")`, "bad");
+      }
+      return;
+    }
+    const restedFor = id();
+    try {
+      const result = await restMutation({ id: restedFor, hours, mode });
+      if (id() !== restedFor) return;
+      setRestHours("");
+      telemetry.log(
+        `> ${verb} :: ${hours} HR — P.P.E. +${result.gained} [${result.ppe.current}/${result.ppe.max}]`,
+        "magic",
+      );
+    } catch (error) {
+      if (id() !== restedFor) return;
+      telemetry.log(`> ${verb} :: REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  const leyDraw = async () => {
+    const drewFor = id();
+    const nexus = atNexus();
+    try {
+      const result = await leyLineDrawMutation({ id: drewFor, melees: 1, atNexus: nexus });
+      if (id() !== drewFor) return;
+      telemetry.log(
+        `> LEY DRAW${nexus ? " (NEXUS)" : ""} :: +${result.gained} P.P.E. [${result.ppe.current}/${result.ppe.max}]`,
+        "magic",
+      );
+    } catch (error) {
+      if (id() !== drewFor) return;
+      telemetry.log(`> LEY DRAW :: REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  const treatDay = async () => {
+    const treatedFor = id();
+    const pro = professional();
+    const day = treatedDays() + 1;
+    try {
+      const result = await treatMutation({
+        id: treatedFor,
+        days: 1,
+        professional: pro,
+        daysAlreadyTreated: day - 1,
+      });
+      if (id() !== treatedFor) return;
+      setTreatedDays(day);
+      telemetry.log(
+        `> TREATMENT :: DAY ${day}${pro ? " (PRO)" : ""} — H.P. +${result.gained.hitPoints} · S.D.C. +${result.gained.sdc}`,
+        "good",
+      );
+    } catch (error) {
+      if (id() !== treatedFor) return;
+      telemetry.log(`> TREATMENT :: REFUSED (${reason(error)})`, "bad");
     }
   };
 
@@ -274,6 +399,56 @@ export function CharacterSheetPage() {
                   <Button class="w-full text-left" onClick={() => void restore()}>
                     {"> Full Restore"}
                   </Button>
+                  <div class="space-y-2 border-t border-line pt-2">
+                    <MonoLabel class="block text-dead">RECOVERY</MonoLabel>
+                    <Show when={sheet()?.ppe}>
+                      <div class="flex gap-2">
+                        <TextInput
+                          aria-label="Hours of rest"
+                          inputmode="numeric"
+                          placeholder="HRS"
+                          class="w-14 min-w-0 px-2 py-1.5 text-center"
+                          value={restHours()}
+                          onInput={(e) => setRestHours(e.currentTarget.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") void rest("rest");
+                          }}
+                        />
+                        <Button class="flex-1 px-2 text-left" onClick={() => void rest("rest")}>
+                          {"> Rest"}
+                        </Button>
+                        <Button
+                          class="shrink-0 px-2 text-left whitespace-nowrap"
+                          onClick={() => void rest("meditation")}
+                        >
+                          {"> Meditate"}
+                        </Button>
+                      </div>
+                      <div class="flex gap-2">
+                        <Button class="flex-1 px-2 text-left" onClick={() => void leyDraw()}>
+                          {"> Ley Draw"}
+                        </Button>
+                        <ToggleChip
+                          pressed={atNexus()}
+                          onToggle={() => setAtNexus((v) => !v)}
+                          tone="ley"
+                        >
+                          Nexus
+                        </ToggleChip>
+                      </div>
+                    </Show>
+                    <div class="flex gap-2">
+                      <Button class="flex-1 px-2 text-left" onClick={() => void treatDay()}>
+                        {`> Treatment Day ${treatedDays() + 1}`}
+                      </Button>
+                      <ToggleChip
+                        pressed={professional()}
+                        onToggle={() => setProfessional((v) => !v)}
+                      >
+                        Pro
+                      </ToggleChip>
+                    </div>
+                  </div>
                 </div>
               }
             />
