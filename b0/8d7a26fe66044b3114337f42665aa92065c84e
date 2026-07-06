@@ -1,0 +1,35 @@
+packages/backend/convex/characters.ts
+  s_dde58116fbb58f::t_1ebf3aaf367ab4 367-376,382,385,390,396-401,403,405
+apps/web/src/pages/character-sheet.tsx
+  s_dde58116fbb58f::t_0ad7adc5815109 269-276,285,288,290
+  s_dde58116fbb58f::t_7050494fd95491 464-477,479
+  s_dde58116fbb58f::t_f732213ec816ae 179
+  s_dde58116fbb58f::t_b342a634bb40c6 154-160
+packages/backend/tests/characters.test.ts
+  s_dde58116fbb58f::t_d4daeca9d41c37 365,370-372,377-392,394-396,398-418,424-426
+  s_dde58116fbb58f::t_d889d460ec08a3 368,374
+  s_dde58116fbb58f::t_db12421a47b491 397
+packages/rules/src/schema/character.ts
+  s_dde58116fbb58f::t_90d813c5b4fde9 118-123
+packages/rules/src/engine/character.ts
+  s_dde58116fbb58f::t_ef8a2563593731 55-61
+  s_dde58116fbb58f::t_f6cc74e3bc62a8 219
+packages/backend/convex/schema.ts
+  s_dde58116fbb58f::t_4523b24d6cd77b 49-50,56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b08d7a26fe66044b3114337f42665aa92065c84e",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
