@@ -17,9 +17,17 @@ export const spellHealingSchema = z
     /** S.D.C. restored (dice formula). */
     sdc: diceFormulaSchema.optional(),
     target: healingTargetKindSchema,
+    /** The spell restores ONE of the declared pools per cast, caster's
+     * choice — e.g. Light Healing's "1D6 S.D.C. or 1D4 Hit Points". */
+    exclusive: z.boolean().optional(),
+    /** The spell cannot be cast on the caster (e.g. Light Healing). */
+    othersOnly: z.boolean().optional(),
   })
   .refine((h) => h.hitPoints !== undefined || h.sdc !== undefined, {
     message: "A healing effect must restore hitPoints, sdc, or both.",
+  })
+  .refine((h) => h.exclusive !== true || (h.hitPoints !== undefined && h.sdc !== undefined), {
+    message: "An exclusive healing effect needs both pools to choose between.",
   });
 export type SpellHealing = z.infer<typeof spellHealingSchema>;
 
@@ -39,8 +47,12 @@ export const spellSchema = z.object({
   name: z.string().min(1),
   /** Spell level (1-15). */
   level: z.number().int().min(1).max(15),
-  /** P.P.E. cost to cast. */
+  /** P.P.E. cost to cast. For variable-cost spells this is the printed
+   * MINIMUM (see `ppeNote` for the full rule). */
   ppe: z.number().int().nonnegative(),
+  /** Printed cost rule when the P.P.E. cost is variable or conditional
+   * (e.g. "Two P.P.E. per five pounds", "Ten for oneself or fifty for another"). */
+  ppeNote: z.string().optional(),
   /** Range as printed (e.g. "150 feet", "Self", "Touch"). */
   range: z.string().min(1),
   /** Duration as printed (e.g. "Instant", "12 melees per level"). */

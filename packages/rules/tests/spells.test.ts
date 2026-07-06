@@ -27,11 +27,11 @@ describe("spell book (RUE Magic Spells, levels 1-4)", () => {
     expect(getSpell("nope")).toBeUndefined();
   });
 
-  test("spells are grouped by level", () => {
+  test("spells are grouped by level (full RUE per-level counts)", () => {
     expect(spellsByLevel(1)).toHaveLength(10);
-    expect(spellsByLevel(2)).toHaveLength(5);
-    expect(spellsByLevel(3)).toHaveLength(9);
-    expect(spellsByLevel(4)).toHaveLength(5);
+    expect(spellsByLevel(2)).toHaveLength(13);
+    expect(spellsByLevel(3)).toHaveLength(17);
+    expect(spellsByLevel(4)).toHaveLength(16);
   });
 
   test("castability depends on available P.P.E.", () => {

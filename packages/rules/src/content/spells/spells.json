@@ -114,7 +114,6 @@
       "description": "A booming thunderclap. Caster gets +5 initiative, +1 strike/parry/dodge; creates Horror Factor 8.",
       "page": 199
     },
-
     {
       "id": "befuddle",
       "name": "Befuddle",
@@ -136,6 +135,84 @@
       "savingThrow": "none",
       "description": "Blend into surroundings: 90% undetectable if still, less while moving; ineffective if moving fast.",
       "page": 199
+    },
+    {
+      "id": "cleanse",
+      "name": "Cleanse",
+      "level": 2,
+      "ppe": 6,
+      "range": "Self, one person up to 10 ft (3 m) away, or two people by touch",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "description": "Magically removes dirt, grime, and stains from a living being and the clothes they wear.",
+      "page": 200
+    },
+    {
+      "id": "climb",
+      "name": "Climb",
+      "level": 2,
+      "ppe": 3,
+      "range": "Self, or others up to 40 ft (12.2 m) away",
+      "duration": "5 minutes (20 melees) per level",
+      "savingThrow": "none",
+      "description": "Climb with inhuman skill: 98% on climbable surfaces, 60% on smooth ones, rappel at 90%.",
+      "page": 200
+    },
+    {
+      "id": "cloak-of-darkness",
+      "name": "Cloak of Darkness",
+      "level": 2,
+      "ppe": 6,
+      "range": "Self plus a 5 ft (1.5 m) radius around the character",
+      "duration": "4 minutes per level",
+      "savingThrow": "none",
+      "description": "A field of darkness follows the caster; attackers beyond it are -3 to strike.",
+      "page": 200
+    },
+    {
+      "id": "concealment",
+      "name": "Concealment",
+      "level": 2,
+      "ppe": 6,
+      "range": "Small objects up to 40 ft (12.2 m) away",
+      "duration": "5 minutes (20 melees) per level",
+      "savingThrow": "standard",
+      "description": "Hides one small non-living object (under 14 inches and 14 lbs) from all who fail to save.",
+      "page": 200
+    },
+    {
+      "id": "detect-concealment",
+      "name": "Detect Concealment",
+      "level": 2,
+      "ppe": 6,
+      "range": "Area affect: 30 ft (9.1 m)",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "description": "Instantly negates Concealment spells and reveals mystically concealed objects.",
+      "page": 200
+    },
+    {
+      "id": "extinguish-fire",
+      "name": "Extinguish Fire",
+      "level": 2,
+      "ppe": 4,
+      "range": "20 ft (6.1 m) radius, cast up to 80 ft (24.4 m) away +10 ft (3 m) per level",
+      "duration": "1 minute (4 melee rounds) per level",
+      "savingThrow": "none",
+      "description": "Instantly puts out fires; extinguishes up to 40 ft (12.2 m) per melee round.",
+      "page": 200
+    },
+    {
+      "id": "fear",
+      "name": "Fear",
+      "level": 2,
+      "ppe": 5,
+      "range": "20 ft (6.1 m) diameter, up to 100 ft (30.5 m) away",
+      "duration": "1 minute (4 melee rounds) per level",
+      "savingThrow": "horrorFactor",
+      "savingThrowNote": "Save vs Horror Factor 16",
+      "description": "Washes an area in terror: failed saves are momentarily stunned, lose initiative and one melee attack.",
+      "page": 200
     },
     {
       "id": "heavy-breathing",
@@ -161,6 +238,19 @@
       "page": 201
     },
     {
+      "id": "manipulate-objects",
+      "name": "Manipulate Objects",
+      "level": 2,
+      "ppe": 2,
+      "ppeNote": "Two P.P.E. per five pounds (2.3 kg) of combined object weight",
+      "range": "50 ft (15.2 m) +10 ft (3 m) per level; line of sight",
+      "duration": "2 minutes (8 melee rounds) per level",
+      "savingThrow": "none",
+      "savingThrowNote": "No save for inanimate objects; living beings are immune",
+      "description": "Telekinetically hold and carry small objects: two per level, 10 lbs (4.5 kg) each, magic P.S. 8 +1 per level.",
+      "page": 201
+    },
+    {
       "id": "turn-dead",
       "name": "Turn Dead",
       "level": 2,
@@ -171,7 +261,6 @@
       "description": "Turns/repels 1D6 animated dead per level for 24 hours. Not vampires/zombies/possessed corpses.",
       "page": 201
     },
-
     {
       "id": "armor-of-ithan",
       "name": "Armor of Ithan",
@@ -274,7 +363,102 @@
       "description": "Temporarily impervious to poisons, venom, toxins, pollution, and poison gas.",
       "page": 202
     },
-
+    {
+      "id": "invisibility-simple",
+      "name": "Invisibility: Simple",
+      "level": 3,
+      "ppe": 6,
+      "range": "Self only (includes clothes and articles on one's person)",
+      "duration": "3 minutes (12 melees) per level",
+      "savingThrow": "none",
+      "description": "The caster turns completely invisible (retains mass and sound); -9 to be hit, -3 once cut.",
+      "page": 203
+    },
+    {
+      "id": "life-source",
+      "name": "Life Source",
+      "level": 3,
+      "ppe": 2,
+      "ppeNote": "2 P.P.E. plus sacrificed life force: two S.D.C. or one Hit Point per P.P.E. point gained",
+      "range": "Self",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "description": "Convert the caster's own S.D.C./Hit Points into P.P.E. for casting; painful and potentially lethal.",
+      "page": 203
+    },
+    {
+      "id": "light-healing",
+      "name": "Light Healing",
+      "level": 3,
+      "ppe": 6,
+      "range": "Touch",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "healing": {
+        "hitPoints": "1D4",
+        "sdc": "1D6",
+        "target": "touch",
+        "exclusive": true,
+        "othersOnly": true
+      },
+      "description": "Channels healing energy by touch: restores 1D6 S.D.C. or 1D4 Hit Points (not both). Cannot be used on oneself.",
+      "page": 203
+    },
+    {
+      "id": "magic-shield",
+      "name": "Magic Shield",
+      "level": 3,
+      "ppe": 6,
+      "range": "Self or other",
+      "duration": "2 minutes per level",
+      "savingThrow": "none",
+      "description": "A pale energy shield with 60 M.D.C.: +1 to parry melee attacks, -8 to parry blasts and projectiles.",
+      "page": 203
+    },
+    {
+      "id": "mystic-fulcrum",
+      "name": "Mystic Fulcrum",
+      "level": 3,
+      "ppe": 5,
+      "range": "Self or two others by touch",
+      "duration": "5 minutes per level",
+      "savingThrow": "none",
+      "description": "The enchanted can lift 50% more weight and carry 10% more, moving loads they'd otherwise need leverage for.",
+      "page": 203
+    },
+    {
+      "id": "negate-poison-toxin",
+      "name": "Negate Poison/Toxin",
+      "level": 3,
+      "ppe": 5,
+      "range": "Self or by touch",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "description": "Turns a poisonous substance inert or negates poison in the bloodstream; prior damage is not reversed.",
+      "page": 203
+    },
+    {
+      "id": "paralysis-lesser",
+      "name": "Paralysis: Lesser",
+      "level": 3,
+      "ppe": 5,
+      "range": "60 ft (18.3 m)",
+      "duration": "1 minute (4 melees) per level",
+      "savingThrow": "standard",
+      "description": "Paralyzes one of the victim's limbs per casting; no effect inside vehicles, robots, or M.D.C. armor.",
+      "page": 203
+    },
+    {
+      "id": "resist-fire",
+      "name": "Resist Fire",
+      "level": 3,
+      "ppe": 6,
+      "range": "Self or one or two others, up to 60 ft (18.3 m)",
+      "duration": "20 melees per level",
+      "savingThrow": "none",
+      "description": "Heat has no ill effect; normal, magical, and Mega-Damage fire all do half damage.",
+      "page": 204
+    },
     {
       "id": "blind",
       "name": "Blind",
@@ -331,6 +515,134 @@
       "damage": "2D6 M.D.",
       "description": "A crackling bolt of blue energy; +2 to strike. Each blast counts as one melee attack.",
       "page": 204
+    },
+    {
+      "id": "energy-field",
+      "name": "Energy Field",
+      "level": 4,
+      "ppe": 10,
+      "range": "Self or others up to 60 ft (18.3 m) away",
+      "duration": "1 minute (4 melees) per level, or until destroyed",
+      "savingThrow": "none",
+      "description": "A shimmering protective bubble (8 ft area) with 60 M.D.C.; doubled on a ley line, tripled at a nexus.",
+      "page": 205
+    },
+    {
+      "id": "fire-bolt",
+      "name": "Fire Bolt",
+      "level": 4,
+      "ppe": 7,
+      "range": "100 ft (30.5 m) plus 5 ft (1.5 m) per level",
+      "duration": "Instant",
+      "damage": "4D6 M.D. or 1D6x10 S.D.C. (caster's choice)",
+      "savingThrow": "dodge",
+      "description": "A directed bolt of magic fire, +4 to strike.",
+      "page": 205
+    },
+    {
+      "id": "fist-of-fury",
+      "name": "Fist of Fury",
+      "level": 4,
+      "ppe": 10,
+      "ppeNote": "Ten to cast on oneself or fifty to cast upon another",
+      "range": "Self or one person by touch",
+      "duration": "1 melee round per level",
+      "damage": "Varies with P.S.: punches as Supernatural P.S., 1D6 M.D. minimum",
+      "savingThrow": "none",
+      "description": "The dominant hand glows with fierce light and punches with Mega-Damage supernatural strength.",
+      "page": 205
+    },
+    {
+      "id": "fools-gold",
+      "name": "Fool's Gold",
+      "level": 4,
+      "ppe": 10,
+      "range": "5 ft (1.5 m)",
+      "duration": "20 melees per level of the spell caster",
+      "savingThrow": "standard",
+      "description": "Makes any object appear to be made of gold; those who save recognize worthless fool's gold.",
+      "page": 205
+    },
+    {
+      "id": "ley-line-transmission",
+      "name": "Ley Line Transmission",
+      "level": 4,
+      "ppe": 30,
+      "range": "Limited by the length of the ley line",
+      "duration": "Instant",
+      "savingThrow": "none",
+      "savingThrowNote": "A psionic Mind Block will block and destroy the message",
+      "description": "Sends a verbal/audio message along a ley line to recipients on it (one per level); one-way unless the receiver also knows the spell.",
+      "page": 205
+    },
+    {
+      "id": "magic-net",
+      "name": "Magic Net",
+      "level": 4,
+      "ppe": 7,
+      "range": "60 ft (18.3 m)",
+      "duration": "2 melees (30 seconds) per level of the spell caster",
+      "savingThrow": "dodge",
+      "savingThrowNote": "Dodge of 16 or higher",
+      "description": "A net of magic fibers snares 1-6 human-sized victims, who are helpless until it is cut by M.D. weapons, magic, or dispelled.",
+      "page": 205
+    },
+    {
+      "id": "multiple-image",
+      "name": "Multiple Image",
+      "level": 4,
+      "ppe": 7,
+      "range": "Self",
+      "duration": "1 minute (4 melees) per level",
+      "savingThrow": "standard",
+      "savingThrowNote": "-4 to save; viewers who save may see through the illusion",
+      "description": "Three identical images mimic the mage's every move: +2 initiative, +2 dodge, +1 strike; only iron dispels an image.",
+      "page": 206
+    },
+    {
+      "id": "repel-animals",
+      "name": "Repel Animals",
+      "level": 4,
+      "ppe": 7,
+      "range": "30 ft (9.1 m)",
+      "duration": "Immediate",
+      "savingThrow": "standard",
+      "savingThrowNote": "Standard save for animals",
+      "description": "Even hostile predators stop, turn, and leave without harming the mage; affects six animals at once.",
+      "page": 206
+    },
+    {
+      "id": "shadow-meld",
+      "name": "Shadow Meld",
+      "level": 4,
+      "ppe": 10,
+      "range": "Self",
+      "duration": "2 minutes (8 melees) per level",
+      "savingThrow": "none",
+      "description": "Step into any 5 ft shadow and become totally invisible, even to See the Invisible; intense light dispels it.",
+      "page": 206
+    },
+    {
+      "id": "swim-as-a-fish-lesser",
+      "name": "Swim as a Fish (lesser)",
+      "level": 4,
+      "ppe": 6,
+      "range": "Self or others up to 10 ft (3 m) away",
+      "duration": "5 minutes (20 melees) per level",
+      "savingThrow": "none",
+      "description": "Swim at 96% (100x P.S. in yards without tiring), survive 600 ft (183 m) depths; +1 to parry and dodge in water.",
+      "page": 206
+    },
+    {
+      "id": "trance",
+      "name": "Trance",
+      "level": 4,
+      "ppe": 10,
+      "range": "Touch or within 12 ft (3.6 m)",
+      "duration": "5 minutes per level",
+      "savingThrow": "standard",
+      "description": "Places the victim in a zombie-like hypnotic daze obeying only simple commands; cannot fight, betray friends, or reveal secrets.",
+      "page": 206
     }
   ]
 }
