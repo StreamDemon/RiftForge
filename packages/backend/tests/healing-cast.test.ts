@@ -109,6 +109,10 @@ describe("healing casts — castSpell with a target (#41)", () => {
     const caster = await savedCaster(t);
     const patient = await savedCaster(t, "Kestrel");
     await t.mutation(api.characters.applyDamage, { id: patient, amount: 1 }); // sdc 19, hp 18
+    // A treatment course underway: the full heal below must end it.
+    await t.run(async (ctx) => {
+      await ctx.db.patch(patient, { current: { hitPoints: 18, sdc: 19, treatmentDays: 2 } });
+    });
 
     const result = await t.mutation(api.characters.castSpell, {
       id: caster,
@@ -120,6 +124,8 @@ describe("healing casts — castSpell with a target (#41)", () => {
     expect(result.healed?.sdc).toBe(1);
     const stored = await t.query(api.characters.get, { id: patient });
     expect(stored?.current).toMatchObject({ hitPoints: 18, sdc: 20 });
+    // Fully mended by the cast → the treatment course ended with it.
+    expect(stored?.current?.treatmentDays).toBeUndefined();
   });
 
   test("targetId defaults to the caster: spend and heal in one write", async () => {

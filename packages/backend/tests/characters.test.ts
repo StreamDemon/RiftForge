@@ -418,6 +418,30 @@ describe("living vitals — current vs. max (#38)", () => {
     expect(sheet?.vitals.treatmentDays).toBe(0);
   });
 
+  test("healing to full ends the treatment course automatically", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+
+    // A treat that completes the mend clears the counter in the same write.
+    await t.mutation(api.characters.applyDamage, { id, amount: 3 }); // sdc 17, hp 18
+    const final = await t.mutation(api.characters.treat, { id, professional: false });
+    expect(final.day).toBe(1); // the day still happened (telemetry reports it)
+    expect(final.sdc).toEqual({ current: 20, max: 20 });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBeUndefined();
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.vitals.treatmentDays).toBe(0);
+
+    // A partial heal leaves the course running...
+    await t.mutation(api.characters.applyDamage, { id, amount: 30 }); // sdc 0, hp 8
+    await t.mutation(api.characters.treat, { id, professional: true }); // day 1
+    await t.mutation(api.characters.heal, { id, sdc: 5 });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBe(1);
+
+    // ...and ANY route to full ends it — here a plain heal, not a treat.
+    await t.mutation(api.characters.heal, { id, hitPoints: 999, sdc: 999 });
+    expect((await t.query(api.characters.get, { id }))?.current?.treatmentDays).toBeUndefined();
+  });
+
   test("treat before vitals are rolled is refused", async () => {
     const t = convexTest(schema, modules);
     const id = await t.mutation(api.characters.create, vesper);

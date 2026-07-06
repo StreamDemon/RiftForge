@@ -174,7 +174,28 @@ function healPools(
     current[field] = Math.min(max, before + amount);
     gained[field] = current[field] - before;
   }
+  // A fully mended body ends the treatment course: once BOTH battle-injury
+  // pools sit at their rolled maximums, the day counter clears itself — the
+  // next treatment starts a new course at day 1. Sitting in the shared heal
+  // path, this covers every route to full: treatment, manual heals, and
+  // healing casts.
+  if (current.treatmentDays !== undefined && fullyMended(current, character.rolled)) {
+    delete current.treatmentDays;
+  }
   return { current, gained };
+}
+
+/** Whether both battle-injury pools are at their rolled maximums. */
+function fullyMended(
+  current: NonNullable<Character["current"]>,
+  rolled: Character["rolled"],
+): boolean {
+  return (
+    rolled?.hitPoints !== undefined &&
+    rolled.sdc !== undefined &&
+    (current.hitPoints ?? rolled.hitPoints) === rolled.hitPoints &&
+    (current.sdc ?? rolled.sdc) === rolled.sdc
+  );
 }
 
 /**
@@ -400,7 +421,10 @@ export const treat = mutation({
     // `treatmentRecovery` re-checks the counts; rates come from the content.
     const amounts = treatmentRecovery(1, professional, courseDay - 1);
     const { current, gained } = healPools(character, amounts);
-    await patchCurrent(ctx, id, character, { ...current, treatmentDays: courseDay });
+    // Record the day just applied — unless this very day completed the mend,
+    // in which case the course is over and the counter stays cleared.
+    const next = fullyMended(current, rolled) ? current : { ...current, treatmentDays: courseDay };
+    await patchCurrent(ctx, id, character, next);
     return {
       day: courseDay,
       gained: { hitPoints: gained.hitPoints, sdc: gained.sdc },
