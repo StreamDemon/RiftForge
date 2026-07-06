@@ -198,8 +198,12 @@ export function CharacterSheetPage() {
   // back after the dossier switched characters is dropped.
   const cast = async (spell: Spell) => {
     const castFor = id();
-    // Exclusive either/or heals (Light Healing) need a pool choice; until a
-    // target picker exists, prefer the wounded pool: H.P. if down, else S.D.C.
+    // Exclusive either/or heals (Light Healing) need a pool choice: prefer
+    // the wounded pool (H.P. if down, else S.D.C.) of the character the heal
+    // LANDS on. Today that is always the caster (`sheet()`), and the only
+    // exclusive spell is also others-only, so the server refuses the cast
+    // before the pool matters — but when the VTT target picker arrives, this
+    // MUST read the TARGET's vitals instead.
     let healPool: "hitPoints" | "sdc" | undefined;
     if (spell.healing?.exclusive) {
       const hp = sheet()?.vitals.hitPoints;

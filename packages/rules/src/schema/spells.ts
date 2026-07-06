@@ -34,6 +34,9 @@ export const spellHealingSchema = z
   })
   .refine((h) => h.full !== true || (h.hitPoints === undefined && h.sdc === undefined), {
     message: "A full restoration cannot also declare dice pools.",
+  })
+  .refine((h) => !(h.othersOnly === true && h.target === "self"), {
+    message: "An others-only healing effect cannot target self — it would be uncastable.",
   });
 export type SpellHealing = z.infer<typeof spellHealingSchema>;
 
@@ -53,11 +56,12 @@ export const spellSchema = z.object({
   name: z.string().min(1),
   /** Spell level (1-15). */
   level: z.number().int().min(1).max(15),
-  /** P.P.E. cost to cast. For variable-cost spells this is the printed
-   * MINIMUM (see `ppeNote` for the full rule). */
+  /** The numeric P.P.E. cost that casting/affordability checks charge. For
+   * variable or conditional printed costs this is the book's headline number
+   * — see `ppeNote` for the full printed rule (which may go lower OR higher). */
   ppe: z.number().int().nonnegative(),
   /** Printed cost rule when the P.P.E. cost is variable or conditional
-   * (e.g. "Two P.P.E. per five pounds", "Ten for oneself or fifty for another"). */
+   * (e.g. "Two P.P.E. per five pounds", "half for Ley Line Walkers"). */
   ppeNote: z.string().optional(),
   /** Range as printed (e.g. "150 feet", "Self", "Touch"). */
   range: z.string().min(1),

@@ -97,7 +97,9 @@ describe("healing casts — real RUE spells through castSpell (#13)", () => {
     const result = await t.mutation(api.characters.castSpell, { id: caster, spellId: "heal-self" });
     expect(result.spent).toBe(20); // printed cost, RUE p.212
     expect(result.healed?.hitPoints).toBeGreaterThanOrEqual(1);
+    expect(result.healed?.hitPoints).toBeLessThanOrEqual(6);
     expect(result.healed?.sdc).toBeGreaterThanOrEqual(3);
+    expect(result.healed?.sdc).toBeLessThanOrEqual(18);
     const stored = await t.query(api.characters.get, { id: caster });
     expect(stored?.current).toEqual({
       ppe: 980,
