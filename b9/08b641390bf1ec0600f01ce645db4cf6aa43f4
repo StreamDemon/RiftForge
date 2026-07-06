@@ -1,0 +1,24 @@
+packages/rules/tests/spells.test.ts
+  s_dde58116fbb58f::t_b59eeb174b5d97 30,32-34
+packages/rules/src/content/spells/spells.json
+  s_dde58116fbb58f::t_4c72b139830832 139-216,240-252,366-461,518-645
+packages/rules/src/schema/spells.ts
+  s_dde58116fbb58f::t_8916fdda2fdcc1 20-24,28-30
+  s_dde58116fbb58f::t_3723f488f6e63f 50-51,53-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b908b641390bf1ec0600f01ce645db4cf6aa43f4",
+  "prompts": {},
+  "sessions": {
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    }
+  }
+}
