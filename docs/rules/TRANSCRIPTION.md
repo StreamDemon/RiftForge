@@ -22,6 +22,7 @@ pipeline is render-and-read:
    ```
 
    (PyMuPDF is installed; `pdftoppm`/poppler is not.)
+
 3. **Read each PNG visually** and transcribe into content JSON:
    - keep printed wording for ranges, durations, and notes;
    - stamp `page` with the **printed** page number (not the PDF index);
