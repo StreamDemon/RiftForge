@@ -158,6 +158,10 @@ export function CharacterSheetPage() {
   // number and apply it twice.
   const [treatedDays, setTreatedDays] = createSignal(0);
   const [treating, setTreating] = createSignal(false);
+  // Monotonic token naming the request that holds the `treating` gate. Newer
+  // requests and route changes bump it, so a stale settle can never release a
+  // gate it no longer owns — not even back on the same dossier.
+  let treatToken = 0;
 
   // A new dossier starts with a fresh log: rolls belong to the character
   // they were rolled for, not whoever the page shows next.
@@ -172,6 +176,7 @@ export function CharacterSheetPage() {
         setAtNexus(false);
         setProfessional(false);
         setTreatedDays(0);
+        treatToken++;
         setTreating(false);
       },
       { defer: true },
@@ -261,6 +266,7 @@ export function CharacterSheetPage() {
   const treatDay = async () => {
     if (treating()) return;
     setTreating(true);
+    const token = ++treatToken;
     const treatedFor = id();
     const pro = professional();
     const day = treatedDays() + 1;
@@ -281,10 +287,9 @@ export function CharacterSheetPage() {
       if (id() !== treatedFor) return;
       telemetry.log(`> TREATMENT :: REFUSED (${reason(error)})`, "bad");
     } finally {
-      // Only release the gate for the dossier that took it: the route-change
-      // effect already unblocked the next character, and a stale settle must
-      // not unlock a treat the NEW dossier has in flight.
-      if (id() === treatedFor) setTreating(false);
+      // Only the gate's current owner may release it: a stale settle must not
+      // unlock a treat a newer request has in flight.
+      if (token === treatToken) setTreating(false);
     }
   };
 
