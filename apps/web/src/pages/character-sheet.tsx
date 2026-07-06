@@ -153,8 +153,11 @@ export function CharacterSheetPage() {
   const [professional, setProfessional] = createSignal(false);
   // Which treatment day the NEXT click is — the professional ramp (2 H.P./day
   // for two days, then 4) depends on it. Session-local: the GM adjudicates
-  // elapsed time, the page just counts clicks for this sitting.
+  // elapsed time, the page just counts clicks for this sitting. `treating`
+  // serializes the clicks: two in-flight calls would both read the same day
+  // number and apply it twice.
   const [treatedDays, setTreatedDays] = createSignal(0);
+  const [treating, setTreating] = createSignal(false);
 
   // A new dossier starts with a fresh log: rolls belong to the character
   // they were rolled for, not whoever the page shows next.
@@ -255,6 +258,8 @@ export function CharacterSheetPage() {
   };
 
   const treatDay = async () => {
+    if (treating()) return;
+    setTreating(true);
     const treatedFor = id();
     const pro = professional();
     const day = treatedDays() + 1;
@@ -274,6 +279,8 @@ export function CharacterSheetPage() {
     } catch (error) {
       if (id() !== treatedFor) return;
       telemetry.log(`> TREATMENT :: REFUSED (${reason(error)})`, "bad");
+    } finally {
+      setTreating(false);
     }
   };
 
