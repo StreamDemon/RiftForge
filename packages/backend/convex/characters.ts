@@ -315,6 +315,37 @@ function withoutArmorPool(current: Character["current"]): Character["current"] {
   return Object.keys(rest).length > 0 ? rest : undefined;
 }
 
+/** Client's snapshot of the item instance it targeted (index + this state). */
+const expectedItemValidator = v.object({
+  itemId: v.string(),
+  worn: v.optional(v.boolean()),
+  rolledMdc: v.optional(v.number()),
+});
+type ExpectedItem = { itemId: string; worn?: boolean; rolledMdc?: number };
+
+/**
+ * Resolve the item instance an index-based inventory mutation targets. The
+ * index alone can go stale — the manifest may have changed while the click
+ * was in flight — so the client also names the instance state it saw, and a
+ * mismatch is refused instead of landing on whatever now sits at that slot.
+ */
+function requireItemAt(
+  character: Character,
+  index: number,
+  expect: ExpectedItem,
+): Character["items"][number] {
+  const entry = Number.isInteger(index) ? character.items[index] : undefined;
+  if (entry === undefined) throw new Error(`No item at index ${index}.`);
+  if (
+    entry.itemId !== expect.itemId ||
+    (entry.worn === true) !== (expect.worn === true) ||
+    entry.rolledMdc !== expect.rolledMdc
+  ) {
+    throw new Error("The manifest changed while the request was in flight — try again.");
+  }
+  return entry;
+}
+
 /**
  * Add an item to the inventory. Dice-capacity armor (the Ley Line Walker's
  * concealed suit prints "2D6+32 M.D.C. main body", RUE p.113) rolls its
@@ -344,16 +375,16 @@ export const addItem = mutation({
 });
 
 /**
- * Drop the item at `index`. Removing the worn armor also clears its live
- * pool — `current.armor` measures the WORN suit, so it can't outlive it.
+ * Drop the item at `index` (verified against the client's `expect` snapshot).
+ * Removing the worn armor also clears its live pool — `current.armor`
+ * measures the WORN suit, so it can't outlive it.
  */
 export const removeItem = mutation({
-  args: { id: v.id("characters"), index: v.number() },
+  args: { id: v.id("characters"), index: v.number(), expect: expectedItemValidator },
   returns: v.null(),
-  handler: async (ctx, { id, index }) => {
+  handler: async (ctx, { id, index, expect }) => {
     const character = await loadCharacter(ctx, id);
-    const entry = Number.isInteger(index) ? character.items[index] : undefined;
-    if (entry === undefined) throw new Error(`No item at index ${index}.`);
+    const entry = requireItemAt(character, index, expect);
     const items = character.items.filter((_, i) => i !== index);
     const current = entry.worn === true ? withoutArmorPool(character.current) : character.current;
     validateCharacter({ ...character, items, current });
@@ -363,24 +394,33 @@ export const removeItem = mutation({
 });
 
 /**
- * Wear the armor at `index` (exclusively — at most one worn suit), or pass
- * `null` to unequip. Changing what's worn resets the live pool: a freshly
- * equipped suit starts at its maximum (per-suit damage memory across swaps
- * is future scope — the pool follows the fresh-pools pattern of vitals).
+ * Wear the armor at `index` (exclusively — at most one worn suit; verified
+ * against the client's `expect` snapshot), or pass `null` to unequip.
+ * Changing what's worn resets the live pool: a freshly equipped suit starts
+ * at its maximum (per-suit damage memory across swaps is future scope — the
+ * pool follows the fresh-pools pattern of vitals). Asking for the state the
+ * character is already in is a no-op, so a repeated click can never
+ * "repair" the worn suit by resetting its pool.
  */
 export const equipArmor = mutation({
-  args: { id: v.id("characters"), index: v.union(v.number(), v.null()) },
+  args: {
+    id: v.id("characters"),
+    index: v.union(v.number(), v.null()),
+    expect: v.optional(expectedItemValidator),
+  },
   returns: v.null(),
-  handler: async (ctx, { id, index }) => {
+  handler: async (ctx, { id, index, expect }) => {
     const character = await loadCharacter(ctx, id);
     if (index !== null) {
-      const entry = Number.isInteger(index) ? character.items[index] : undefined;
-      if (entry === undefined) throw new Error(`No item at index ${index}.`);
+      if (expect === undefined) throw new Error("Equipping needs the expected item snapshot.");
+      const entry = requireItemAt(character, index, expect);
       const item = getItem(entry.itemId);
       if (item?.kind !== "armor") {
         throw new Error(`Only armor can be worn — "${entry.itemId}" is not armor.`);
       }
     }
+    const wornIndex = character.items.findIndex((e) => e.worn === true);
+    if (index === (wornIndex === -1 ? null : wornIndex)) return null; // already there
     const items = character.items.map((e, i) => {
       const { worn: _worn, ...rest } = e;
       return i === index ? { ...rest, worn: true } : rest;
@@ -424,8 +464,15 @@ export const applyDamage = mutation({
       if (max === undefined) {
         throw new Error("The worn armor's M.D.C. has not been rolled — no pool to deplete.");
       }
+      const pool = character.current?.armor ?? max;
+      // A depleted suit "no longer affords protection. Any future attacks
+      // will hit the character's body." (RUE p.287) — refuse rather than
+      // silently soak the hit at zero; the GM routes it to the body.
+      if (pool <= 0) {
+        throw new Error("The worn armor is depleted — the hit strikes the body (RUE p.287).");
+      }
       // `damageArmor` rejects amounts that aren't whole, non-negative counts.
-      const next = damageArmor(character.current?.armor ?? max, amount);
+      const next = damageArmor(pool, amount);
       await patchCurrent(ctx, id, character, { ...character.current, armor: next });
       return { armor: next };
     }

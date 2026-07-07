@@ -87,7 +87,7 @@ export const armorSchema = z
     message: "Armor must be M.D.C. (mdc) or S.D.C. (both ar and sdc).",
   })
   .refine((a) => a.mdc === undefined || (a.ar === undefined && a.sdc === undefined), {
-    message: "M.D.C. armor is a Mega-Damage shell with no A.R./S.D.C. — it cannot declare both.",
+    message: "M.D.C. armor is a Mega-Damage shell — it cannot declare an A.R. or an S.D.C. pool.",
   });
 export type Armor = z.infer<typeof armorSchema>;
 

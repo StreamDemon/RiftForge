@@ -8,6 +8,7 @@ import {
   rollSkillCheck,
   type CharacterSheet,
   type Narrative,
+  type SheetEquipmentEntry,
   type Spell,
   type Weapon,
 } from "@riftforge/rules";
@@ -376,12 +377,19 @@ export function CharacterSheetPage() {
     }
   };
 
-  const discard = async (index: number) => {
+  // The instance state the click targeted — the server refuses the write if
+  // the manifest shifted under an in-flight request (index races).
+  const expectOf = (entry: SheetEquipmentEntry) => ({
+    itemId: entry.item.id,
+    ...(entry.worn === true ? { worn: true } : {}),
+    ...(entry.rolledMdc !== undefined ? { rolledMdc: entry.rolledMdc } : {}),
+  });
+
+  const discard = async (index: number, entry: SheetEquipmentEntry) => {
     const forId = id();
-    // Name the item before the write moves the manifest under the index.
-    const name = (sheet()?.equipment[index]?.item.name ?? `ITEM #${index}`).toUpperCase();
+    const name = entry.item.name.toUpperCase();
     try {
-      await removeItemMutation({ id: forId, index });
+      await removeItemMutation({ id: forId, index, expect: expectOf(entry) });
       if (id() !== forId) return;
       telemetry.log(`> DISCARD :: ${name}`);
     } catch (error) {
@@ -390,14 +398,15 @@ export function CharacterSheetPage() {
     }
   };
 
-  const equip = async (index: number | null) => {
+  const equip = async (index: number | null, entry?: SheetEquipmentEntry) => {
     const forId = id();
-    const name =
-      index === null
-        ? undefined
-        : (sheet()?.equipment[index]?.item.name ?? `ITEM #${index}`).toUpperCase();
+    const name = entry?.item.name.toUpperCase();
     try {
-      await equipArmorMutation({ id: forId, index });
+      await equipArmorMutation({
+        id: forId,
+        index,
+        ...(index !== null && entry !== undefined ? { expect: expectOf(entry) } : {}),
+      });
       if (id() !== forId) return;
       telemetry.log(index === null ? "> DOFF :: ARMOR OFFLINE" : `> EQUIP :: ${name} — WORN`);
     } catch (error) {
@@ -452,11 +461,11 @@ export function CharacterSheetPage() {
     acquireItem: (itemId) => {
       void acquire(itemId);
     },
-    discardItem: (index) => {
-      void discard(index);
+    discardItem: (index, entry) => {
+      void discard(index, entry);
     },
-    equipArmor: (index) => {
-      void equip(index);
+    equipArmor: (index, entry) => {
+      void equip(index, entry);
     },
   };
 

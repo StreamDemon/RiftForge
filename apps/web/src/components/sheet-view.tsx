@@ -57,10 +57,12 @@ export interface SheetActions {
   rollCombat: (kind: "strike" | "parry" | "dodge", bonus: number) => void;
   /** Weapon damage rolls are client-side telemetry, like skills and saves. */
   rollWeapon: (weapon: Weapon) => void;
-  /** Inventory writes persist via mutations (`index` into `sheet.equipment`). */
+  /** Inventory writes persist via mutations. `index` points into
+   * `sheet.equipment`; the entry rides along so the server can verify the
+   * instance didn't shift under an in-flight click. */
   acquireItem: (itemId: string) => void;
-  discardItem: (index: number) => void;
-  equipArmor: (index: number | null) => void;
+  discardItem: (index: number, entry: SheetEquipmentEntry) => void;
+  equipArmor: (index: number | null, entry?: SheetEquipmentEntry) => void;
 }
 
 /** Schematic silhouette — the portrait frame ships before upload does. */
@@ -284,7 +286,7 @@ function EquipmentRow(props: {
             type="button"
             class="cursor-pointer font-hud text-[11px] font-semibold tracking-[0.08em] text-muted uppercase hover:text-amber"
             onClick={() =>
-              props.actions!.equipArmor(props.entry.worn === true ? null : props.index)
+              props.actions!.equipArmor(props.entry.worn === true ? null : props.index, props.entry)
             }
           >
             {props.entry.worn === true ? "[doff]" : "[wear]"}
@@ -296,7 +298,7 @@ function EquipmentRow(props: {
             title={`Discard ${item().name}`}
             aria-label={`Discard ${item().name}`}
             class="cursor-pointer font-mono text-[12px] text-dead hover:text-blood-text"
-            onClick={() => props.actions!.discardItem(props.index)}
+            onClick={() => props.actions!.discardItem(props.index, props.entry)}
           >
             ✕
           </button>
