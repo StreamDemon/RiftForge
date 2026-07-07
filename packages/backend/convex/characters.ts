@@ -1,12 +1,17 @@
 import {
   applyDamage as damagePools,
+  armorMaxPool,
+  armorNeedsRoll,
   characterSchema,
   comaDeathFloor,
+  damageArmor,
   deriveSheet,
+  getItem,
   getOcc,
   getSpell,
   leyLineDraw as leyLineDrawAmount,
   restRecovery,
+  rollArmorMdc,
   rollHitPoints,
   rollPhysicalSdc,
   rollPpe,
@@ -303,16 +308,180 @@ export const castSpell = mutation({
   },
 });
 
+/** `current` without the armor pool (dropped when nothing else remains). */
+function withoutArmorPool(current: Character["current"]): Character["current"] {
+  if (current === undefined) return undefined;
+  const { armor: _armor, ...rest } = current;
+  return Object.keys(rest).length > 0 ? rest : undefined;
+}
+
+/** Client's snapshot of the item instance it targeted (index + this state). */
+const expectedItemValidator = v.object({
+  itemId: v.string(),
+  worn: v.optional(v.boolean()),
+  rolledMdc: v.optional(v.number()),
+});
+type ExpectedItem = { itemId: string; worn?: boolean; rolledMdc?: number };
+
 /**
- * Deal damage to the live pools: S.D.C. absorbs first, the overflow comes off
- * Hit Points, which stop at the -(P.E.) coma/death floor (rules-layer
- * `applyDamage`, RUE pp.287/347).
+ * Resolve the item instance an index-based inventory mutation targets. The
+ * index alone can go stale — the manifest may have changed while the click
+ * was in flight — so the client also names the instance state it saw, and a
+ * mismatch is refused instead of landing on whatever now sits at that slot.
+ */
+function requireItemAt(
+  character: Character,
+  index: number,
+  expect: ExpectedItem,
+): Character["items"][number] {
+  const entry = Number.isInteger(index) ? character.items[index] : undefined;
+  if (entry === undefined) throw new Error(`No item at index ${index}.`);
+  if (
+    entry.itemId !== expect.itemId ||
+    (entry.worn === true) !== (expect.worn === true) ||
+    entry.rolledMdc !== expect.rolledMdc
+  ) {
+    throw new Error("The manifest changed while the request was in flight — try again.");
+  }
+  return entry;
+}
+
+/**
+ * Add an item to the inventory. Dice-capacity armor (the Ley Line Walker's
+ * concealed suit prints "2D6+32 M.D.C. main body", RUE p.113) rolls its
+ * per-suit maximum HERE — a mutation, not an action, for the same reason as
+ * `rollVitals`: mutations get seeded randomness, and rolling + persisting in
+ * one transaction means a suit's roll can never be observed and then lost.
+ */
+export const addItem = mutation({
+  args: { id: v.id("characters"), itemId: v.string() },
+  returns: v.object({ index: v.number(), rolledMdc: v.optional(v.number()) }),
+  handler: async (ctx, { id, itemId }) => {
+    const character = await loadCharacter(ctx, id);
+    const item = getItem(itemId);
+    if (!item) throw new Error(`Unknown item "${itemId}".`);
+    const entry =
+      item.kind === "armor" && armorNeedsRoll(item)
+        ? { itemId, rolledMdc: rollArmorMdc(item, Math.random) }
+        : { itemId };
+    const items = [...character.items, entry];
+    validateCharacter({ ...character, items });
+    await ctx.db.patch(id, { items });
+    return {
+      index: items.length - 1,
+      ...("rolledMdc" in entry ? { rolledMdc: entry.rolledMdc } : {}),
+    };
+  },
+});
+
+/**
+ * Drop the item at `index` (verified against the client's `expect` snapshot).
+ * Removing the worn armor also clears its live pool — `current.armor`
+ * measures the WORN suit, so it can't outlive it.
+ */
+export const removeItem = mutation({
+  args: { id: v.id("characters"), index: v.number(), expect: expectedItemValidator },
+  returns: v.null(),
+  handler: async (ctx, { id, index, expect }) => {
+    const character = await loadCharacter(ctx, id);
+    const entry = requireItemAt(character, index, expect);
+    const items = character.items.filter((_, i) => i !== index);
+    const current = entry.worn === true ? withoutArmorPool(character.current) : character.current;
+    validateCharacter({ ...character, items, current });
+    await ctx.db.patch(id, { items, current });
+    return null;
+  },
+});
+
+/**
+ * Wear the armor at `index` (exclusively — at most one worn suit; verified
+ * against the client's `expect` snapshot), or pass `null` to unequip.
+ * Changing what's worn resets the live pool: a freshly equipped suit starts
+ * at its maximum (per-suit damage memory across swaps is future scope — the
+ * pool follows the fresh-pools pattern of vitals). Asking for the state the
+ * character is already in is a no-op, so a repeated click can never
+ * "repair" the worn suit by resetting its pool.
+ */
+export const equipArmor = mutation({
+  args: {
+    id: v.id("characters"),
+    index: v.union(v.number(), v.null()),
+    expect: v.optional(expectedItemValidator),
+  },
+  returns: v.null(),
+  handler: async (ctx, { id, index, expect }) => {
+    const character = await loadCharacter(ctx, id);
+    const wornIndex = character.items.findIndex((e) => e.worn === true);
+    if (index !== null) {
+      if (expect === undefined) throw new Error("Equipping needs the expected item snapshot.");
+      const entry = requireItemAt(character, index, expect);
+      const item = getItem(entry.itemId);
+      if (item?.kind !== "armor") {
+        throw new Error(`Only armor can be worn — "${entry.itemId}" is not armor.`);
+      }
+    } else if (wornIndex !== -1) {
+      // Doff verifies too: unequip the suit the CLIENT saw worn, not whatever
+      // a racing write made worn since. (Nothing worn = already unequipped —
+      // the desired state, a no-op below.)
+      if (expect === undefined) throw new Error("Unequipping needs the expected item snapshot.");
+      requireItemAt(character, wornIndex, expect);
+    }
+    if (index === (wornIndex === -1 ? null : wornIndex)) return null; // already there
+    const items = character.items.map((e, i) => {
+      const { worn: _worn, ...rest } = e;
+      return i === index ? { ...rest, worn: true } : rest;
+    });
+    const current = withoutArmorPool(character.current);
+    validateCharacter({ ...character, items, current });
+    await ctx.db.patch(id, { items, current });
+    return null;
+  },
+});
+
+/**
+ * Deal damage to the live pools. Body hits (the default): S.D.C. absorbs
+ * first, the overflow comes off Hit Points, which stop at the -(P.E.)
+ * coma/death floor (rules-layer `applyDamage`, RUE pp.287/347).
+ *
+ * `toArmor` lands the hit on the WORN armor instead: the suit absorbs the
+ * whole attack ("subtract the damage from the armor's S.D.C.", RUE p.287) and
+ * nothing spills onto the body — a depleted suit stops protecting *future*
+ * hits. WHICH hits strike armor (the strike-vs-A.R. threshold roll) is
+ * combat-resolver scope; until then the flag keeps it GM-adjudicated, the
+ * same philosophy as elapsed time in rest/treatment.
  */
 export const applyDamage = mutation({
-  args: { id: v.id("characters"), amount: v.number() },
-  returns: v.object({ sdc: v.number(), hitPoints: v.number() }),
-  handler: async (ctx, { id, amount }) => {
+  args: { id: v.id("characters"), amount: v.number(), toArmor: v.optional(v.boolean()) },
+  returns: v.object({
+    sdc: v.optional(v.number()),
+    hitPoints: v.optional(v.number()),
+    armor: v.optional(v.number()),
+  }),
+  handler: async (ctx, { id, amount, toArmor }) => {
     const character = await loadCharacter(ctx, id);
+    if (toArmor === true) {
+      const worn = character.items.find((e) => e.worn === true);
+      if (worn === undefined) throw new Error("No armor is worn — nothing to strike.");
+      const item = getItem(worn.itemId);
+      if (item?.kind !== "armor") {
+        throw new Error(`Worn item "${worn.itemId}" is not armor.`); // unreachable for stored docs
+      }
+      const max = armorMaxPool(item, worn.rolledMdc);
+      if (max === undefined) {
+        throw new Error("The worn armor's M.D.C. has not been rolled — no pool to deplete.");
+      }
+      const pool = character.current?.armor ?? max;
+      // A depleted suit "no longer affords protection. Any future attacks
+      // will hit the character's body." (RUE p.287) — refuse rather than
+      // silently soak the hit at zero; the GM routes it to the body.
+      if (pool <= 0) {
+        throw new Error("The worn armor is depleted — the hit strikes the body (RUE p.287).");
+      }
+      // `damageArmor` rejects amounts that aren't whole, non-negative counts.
+      const next = damageArmor(pool, amount);
+      await patchCurrent(ctx, id, character, { ...character.current, armor: next });
+      return { armor: next };
+    }
     const rolled = character.rolled;
     if (rolled?.hitPoints === undefined || rolled.sdc === undefined) {
       throw new Error("Roll vitals before applying damage — no pools to deplete.");

@@ -1,13 +1,21 @@
-import type {
-  Appearance,
-  CharacterSheet,
-  ResolvedSkill,
-  SheetSave,
-  Spell,
-  StatValue,
+import {
+  armorMaxPool,
+  diceAverage,
+  diceMax,
+  diceMin,
+  itemsByKind,
+  type Appearance,
+  type CharacterSheet,
+  type ResolvedSkill,
+  type SheetArmor,
+  type SheetEquipmentEntry,
+  type SheetSave,
+  type Spell,
+  type StatValue,
+  type Weapon,
 } from "@riftforge/rules";
 import { createEffect, createSignal, For, on, onCleanup, Show, type JSX } from "solid-js";
-import { Chip, DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
+import { Button, Chip, DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
 
 function statRange(stat: StatValue): string {
   return `${stat.min}–${stat.max} (avg ${stat.average})`;
@@ -47,6 +55,14 @@ export interface SheetActions {
   rollSkill: (skill: ResolvedSkill) => void;
   castSpell: (spell: Spell) => void;
   rollCombat: (kind: "strike" | "parry" | "dodge", bonus: number) => void;
+  /** Weapon damage rolls are client-side telemetry, like skills and saves. */
+  rollWeapon: (weapon: Weapon) => void;
+  /** Inventory writes persist via mutations. `index` points into
+   * `sheet.equipment`; the entry rides along so the server can verify the
+   * instance didn't shift under an in-flight click. */
+  acquireItem: (itemId: string) => void;
+  discardItem: (index: number, entry: SheetEquipmentEntry) => void;
+  equipArmor: (index: number | null, entry?: SheetEquipmentEntry) => void;
 }
 
 /** Schematic silhouette — the portrait frame ships before upload does. */
@@ -130,8 +146,27 @@ function StatRow(props: {
 const barFill = {
   blood: "bg-gradient-to-r from-[#7a2018] to-blood shadow-[0_0_10px_rgb(226_59_46/0.4)]",
   amber: "bg-gradient-to-r from-[#7a5a17] to-amber shadow-[0_0_10px_rgb(255_174_61/0.35)]",
+  // Worn metal: the armor layer speaks rust, amber-family — it is NOT magic.
+  rust: "bg-gradient-to-r from-[#5c421c] to-rust shadow-[0_0_10px_rgb(168_121_50/0.35)]",
   ley: "bg-gradient-to-r from-[#14606e] to-ley ppe-pulse",
 } as const;
+
+/**
+ * The worn armor's pool as a `StatValue`: the printed dice (or constant) give
+ * the range, the per-suit roll (or constant) is the maximum, and the live
+ * remainder rides `current` — so the armor bar behaves exactly like a vital.
+ */
+function armorStat(armor: SheetArmor): StatValue {
+  const formula = armor.item.mdc?.mainBody;
+  const fixed = armor.item.sdc ?? 0;
+  return {
+    min: formula ? diceMin(formula) : fixed,
+    max: formula ? diceMax(formula) : fixed,
+    average: formula ? diceAverage(formula) : fixed,
+    rolled: armor.max,
+    current: armor.current,
+  };
+}
 
 /**
  * A vital as a resource bar: fill = what's LEFT of the rolled maximum
@@ -184,6 +219,128 @@ function VitalBar(props: { label: string; stat: StatValue; tone: keyof typeof ba
           style={{ width: `${pct()}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+const KIND_LABEL = { weapon: "WPN", armor: "ARM", gear: "GEAR" } as const;
+
+/** The manifest value column: a weapon's dice, an armor's pool, a gear dash. */
+function equipmentValue(entry: SheetEquipmentEntry, armor: SheetArmor | undefined): string {
+  const item = entry.item;
+  if (item.kind === "weapon") {
+    return `${item.damage.formula} ${item.damage.type === "md" ? "M.D." : "S.D.C."}`;
+  }
+  if (item.kind === "armor") {
+    const unit = item.mdc ? "M.D.C." : "S.D.C.";
+    const max = armorMaxPool(item, entry.rolledMdc);
+    if (max === undefined) return `UNRATED ${unit}`;
+    // The worn suit shows its live remainder; stowed suits just their rating.
+    if (entry.worn === true && armor?.current !== undefined) {
+      return `${armor.current} / ${max} ${unit}`;
+    }
+    return `${max} ${unit}`;
+  }
+  return "—";
+}
+
+/** One manifest row: name + kind tag, the value column (weapons roll on
+ * click), and the equip/discard controls when the page wires actions. */
+function EquipmentRow(props: {
+  entry: SheetEquipmentEntry;
+  index: number;
+  armor: SheetArmor | undefined;
+  actions?: SheetActions;
+}) {
+  const item = () => props.entry.item;
+  const value = () => equipmentValue(props.entry, props.armor);
+  return (
+    <div class="flex items-center justify-between gap-3 border-b border-dotted border-line py-1 text-[13.5px] last:border-b-0">
+      <span class="min-w-0 truncate" title={item().notes}>
+        {item().name}
+        <span class="ml-2 font-mono text-[9.5px] tracking-[0.12em] text-dead">
+          {KIND_LABEL[item().kind]}
+        </span>
+        <Show when={props.entry.worn}>
+          <span class="notch-6 ml-2 border border-rust/60 px-1.5 font-hud text-[10px] font-semibold tracking-[0.08em] text-rust uppercase">
+            Worn
+          </span>
+        </Show>
+      </span>
+      <span class="flex shrink-0 items-center gap-2">
+        <Show
+          when={item().kind === "weapon" && props.actions}
+          fallback={<span class="font-data text-[12.5px] font-semibold">{value()}</span>}
+        >
+          <button
+            type="button"
+            title="Roll damage"
+            class="cursor-pointer font-data text-[12.5px] font-semibold hover:bg-amber/5 hover:text-amber"
+            onClick={() => props.actions!.rollWeapon(item() as Weapon)}
+          >
+            {value()}
+          </button>
+        </Show>
+        <Show when={props.actions && item().kind === "armor"}>
+          <button
+            type="button"
+            class="cursor-pointer font-hud text-[11px] font-semibold tracking-[0.08em] text-muted uppercase hover:text-amber"
+            onClick={() =>
+              props.actions!.equipArmor(props.entry.worn === true ? null : props.index, props.entry)
+            }
+          >
+            {props.entry.worn === true ? "[doff]" : "[wear]"}
+          </button>
+        </Show>
+        <Show when={props.actions}>
+          <button
+            type="button"
+            title={`Discard ${item().name}`}
+            aria-label={`Discard ${item().name}`}
+            class="cursor-pointer font-mono text-[12px] text-dead hover:text-blood-text"
+            onClick={() => props.actions!.discardItem(props.index, props.entry)}
+          >
+            ✕
+          </button>
+        </Show>
+      </span>
+    </div>
+  );
+}
+
+/** Catalog picker + acquire button, grouped by kind (armory requisition). */
+function AcquireControl(props: { onAcquire: (itemId: string) => void }) {
+  const [selected, setSelected] = createSignal("");
+  return (
+    <div class="mt-3 flex gap-2 border-t border-line pt-3">
+      <select
+        aria-label="Item to acquire"
+        class="notch-8 min-w-0 flex-1 cursor-pointer border border-line bg-noir px-2 py-1.5 font-mono text-[12px] text-fg focus:border-amber"
+        value={selected()}
+        onChange={(e) => setSelected(e.currentTarget.value)}
+      >
+        <option value="" disabled>
+          — SELECT ITEM —
+        </option>
+        <For each={["armor", "weapon", "gear"] as const}>
+          {(kind) => (
+            <optgroup label={kind.toUpperCase()}>
+              <For each={itemsByKind(kind)}>
+                {(item) => <option value={item.id}>{item.name}</option>}
+              </For>
+            </optgroup>
+          )}
+        </For>
+      </select>
+      <Button
+        class="shrink-0 px-3 py-1.5"
+        disabled={selected() === ""}
+        onClick={() => {
+          if (selected() !== "") props.onAcquire(selected());
+        }}
+      >
+        {"> Acquire"}
+      </Button>
     </div>
   );
 }
@@ -272,6 +429,15 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
             <div class="mt-2">
               <VitalBar label="HIT POINTS" stat={s().vitals.hitPoints} tone="blood" />
               <VitalBar label="S.D.C." stat={s().vitals.sdc} tone="amber" />
+              <Show when={s().armor}>
+                {(armor) => (
+                  <VitalBar
+                    label={`ARMOR — ${armor().item.mdc ? "M.D.C." : "S.D.C."}`}
+                    stat={armorStat(armor())}
+                    tone="rust"
+                  />
+                )}
+              </Show>
               <Show when={s().ppe}>
                 {(ppe) => <VitalBar label="P.P.E. ◈ LIVE" stat={ppe()} tone="ley" />}
               </Show>
@@ -421,6 +587,37 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
           </div>
         </Panel>
       </div>
+
+      <Panel class="p-4">
+        <div class="flex items-baseline justify-between">
+          <SectionTitle>EQUIPMENT — MANIFEST ({s().equipment.length})</SectionTitle>
+          <Show when={props.actions}>
+            <MonoLabel class="text-dead">WEAPONS: CLICK DICE TO ROLL</MonoLabel>
+          </Show>
+        </div>
+        <div class="mt-2">
+          <For
+            each={s().equipment}
+            fallback={
+              <p class="font-mono text-[11.5px] tracking-[0.1em] text-dead">
+                // NOTHING ON MANIFEST
+              </p>
+            }
+          >
+            {(entry, index) => (
+              <EquipmentRow
+                entry={entry}
+                index={index()}
+                armor={s().armor}
+                actions={props.actions}
+              />
+            )}
+          </For>
+        </div>
+        <Show when={props.actions}>
+          {(actions) => <AcquireControl onAcquire={(itemId) => actions().acquireItem(itemId)} />}
+        </Show>
+      </Panel>
 
       <Show when={s().narrative?.backstory}>
         {(backstory) => (

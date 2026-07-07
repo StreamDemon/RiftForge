@@ -13,6 +13,22 @@ export const characterSkillSchema = z.object({
 });
 export type CharacterSkill = z.infer<typeof characterSkillSchema>;
 
+/**
+ * An item the character owns — one array entry per physical instance, with
+ * per-instance state. Only `itemId` is validated here; item-kind rules (worn
+ * requires armor, rolledMdc requires a dice-capacity suit, at most one worn
+ * armor) live in `deriveSheet`, where the catalog is available.
+ */
+export const characterItemSchema = z.object({
+  itemId: z.string().min(1),
+  /** This armor is currently worn (at most one worn armor across the inventory). */
+  worn: z.boolean().optional(),
+  /** Per-suit rolled main-body M.D.C. maximum, for armor whose printed
+   * capacity is dice (LLW concealed armor: "2D6+32 M.D.C.", RUE p.113). */
+  rolledMdc: z.number().int().positive().optional(),
+});
+export type CharacterItem = z.infer<typeof characterItemSchema>;
+
 /** The eight rolled attributes (I.Q., M.E., M.A., P.S., P.P., P.E., P.B., Spd). */
 export const characterAttributesSchema = z.object({
   IQ: z.number().int().positive(),
@@ -97,6 +113,9 @@ export const characterSchema = z.object({
       message: "A spell cannot be known twice (duplicate spellId).",
     })
     .default([]),
+  /** Owned items (one entry per physical instance). Item-kind rules are
+   * checked in `deriveSheet`, which can see the catalog. */
+  items: z.array(characterItemSchema).default([]),
   rolled: z
     .object({
       hitPoints: z.number().int().positive().optional(),
@@ -115,6 +134,12 @@ export const characterSchema = z.object({
       hitPoints: z.number().int().optional(),
       sdc: z.number().int().nonnegative().optional(),
       ppe: z.number().int().nonnegative().optional(),
+      /** Remaining main-body pool of the WORN armor — armor is its own
+       * ablative layer (RUE p.287), so it lives beside the body pools. Only
+       * legal while an armor with a known maximum is worn, never above that
+       * maximum (enforced in `deriveSheet`). Cleared when armor changes:
+       * a freshly equipped suit starts at its maximum. */
+      armor: z.number().int().nonnegative().optional(),
       /** Days of battle-injury treatment already applied this course (drives
        * the professional 2-then-4 ramp, RUE p.354). Lives in `current` on
        * purpose: a full restore or vitals reroll clears it — fresh pools,
