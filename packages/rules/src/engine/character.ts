@@ -260,10 +260,14 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
       throw new Error("current.armor requires a worn armor — no pool to measure against.");
     }
     if (wornArmor.max === undefined) {
-      throw new Error("current.armor requires the suit's rolled M.D.C. — no maximum to measure against.");
+      throw new Error(
+        "current.armor requires the suit's rolled M.D.C. — no maximum to measure against.",
+      );
     }
     if (currentArmor > wornArmor.max) {
-      throw new Error(`current.armor (${currentArmor}) exceeds the suit's maximum (${wornArmor.max}).`);
+      throw new Error(
+        `current.armor (${currentArmor}) exceeds the suit's maximum (${wornArmor.max}).`,
+      );
     }
   }
   if (wornArmor !== undefined && wornArmor.max !== undefined) {

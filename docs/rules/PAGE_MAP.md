@@ -55,20 +55,20 @@ vision extraction (`scratchpad/extract_pages.py` renders a page to PNG for readi
 
 ## Equipment (printed 256+)
 
-| Section                                                          | Printed pp. | PDF idx |
-| ---------------------------------------------------------------- | ----------- | ------- |
-| Missile Stats & Prices                                           | 256         | 258     |
-| Coalition Combat Weapons (CS ammo, Vibro-Blades, explosives)     | 257–260     | 259–262 |
-| Dead Boy Body Armor / Dog Pack Light Riot Armor                  | 261         | 263     |
+| Section                                                         | Printed pp. | PDF idx |
+| --------------------------------------------------------------- | ----------- | ------- |
+| Missile Stats & Prices                                          | 256         | 258     |
+| Coalition Combat Weapons (CS ammo, Vibro-Blades, explosives)    | 257–260     | 259–262 |
+| Dead Boy Body Armor / Dog Pack Light Riot Armor                 | 261         | 263     |
 | Common Gear (basic, communications, medical, optics, sensors)   | 261–265     | 263–267 |
-| Common Vehicles                                                  | 266         | 268     |
-| Mega-Damage Capacity Body Armor (Gladiator, Crusader, Juicer)    | 267         | 269     |
-| — More suits (Urban Warrior, Plastic-Man, Huntsman, Bushman)     | 268         | 270     |
-| Weapons (E-Clips, Wilk's 320; 447/NG pistols 269; rifles 270)    | 268–270     | 270–272 |
-| Power Armor / Robot Vehicles                                     | 271–273     | 273–275 |
-| S.D.C. Armor & A.R. rules (under Step 2: Damage Ratings)         | 287         | 289     |
-| Ancient W.P. weapon damage (axe 326, knife 327)                  | 326–327     | 328–329 |
-| Modern W.P. weapon damage (handguns 328, SMG/shotgun/rifle 329)  | 328–329     | 330–331 |
+| Common Vehicles                                                 | 266         | 268     |
+| Mega-Damage Capacity Body Armor (Gladiator, Crusader, Juicer)   | 267         | 269     |
+| — More suits (Urban Warrior, Plastic-Man, Huntsman, Bushman)    | 268         | 270     |
+| Weapons (E-Clips, Wilk's 320; 447/NG pistols 269; rifles 270)   | 268–270     | 270–272 |
+| Power Armor / Robot Vehicles                                    | 271–273     | 273–275 |
+| S.D.C. Armor & A.R. rules (under Step 2: Damage Ratings)        | 287         | 289     |
+| Ancient W.P. weapon damage (axe 326, knife 327)                 | 326–327     | 328–329 |
+| Modern W.P. weapon damage (handguns 328, SMG/shotgun/rifle 329) | 328–329     | 330–331 |
 
 ## Magic (printed 185+) — needed for Ley Line Walker
 

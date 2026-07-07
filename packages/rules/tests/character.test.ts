@@ -205,9 +205,9 @@ describe("deriveSheet — edge cases", () => {
       deriveSheet({ ...leyLineWalker, items: [{ ...worn, rolledMdc: 40 }] }).armor,
     ).toMatchObject({ max: 40, current: 40 });
     // A roll outside the printed 2D6+32 range (34-44) is a bug upstream.
-    expect(() =>
-      deriveSheet({ ...leyLineWalker, items: [{ ...worn, rolledMdc: 45 }] }),
-    ).toThrow(/outside the printed 2D6\+32 range/);
+    expect(() => deriveSheet({ ...leyLineWalker, items: [{ ...worn, rolledMdc: 45 }] })).toThrow(
+      /outside the printed 2D6\+32 range/,
+    );
     // rolledMdc on a fixed suit or a non-armor item is meaningless.
     expect(() =>
       deriveSheet({ ...leyLineWalker, items: [{ itemId: "gladiator", rolledMdc: 40 }] }),

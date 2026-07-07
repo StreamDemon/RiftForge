@@ -1,12 +1,15 @@
 import { api } from "@riftforge/backend/api";
 import type { Id } from "@riftforge/backend/dataModel";
 import {
+  getItem,
   rollD20,
+  rollDice,
   rollSave,
   rollSkillCheck,
   type CharacterSheet,
   type Narrative,
   type Spell,
+  type Weapon,
 } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
 import {
@@ -145,9 +148,15 @@ export function CharacterSheetPage() {
   const restMutation = createMutation(convex, api.characters.rest);
   const leyLineDrawMutation = createMutation(convex, api.characters.leyLineDraw);
   const treatMutation = createMutation(convex, api.characters.treat);
+  const addItemMutation = createMutation(convex, api.characters.addItem);
+  const removeItemMutation = createMutation(convex, api.characters.removeItem);
+  const equipArmorMutation = createMutation(convex, api.characters.equipArmor);
   const telemetry = createTelemetry(["// ley-link established", "// awaiting command…"]);
   const [rollError, setRollError] = createSignal<Error>();
   const [damageInput, setDamageInput] = createSignal("");
+  // Where the hit lands: the body pools, or the worn armor's own layer.
+  // WHICH hits strike armor (strike-vs-A.R.) is GM adjudication for now.
+  const [toArmor, setToArmor] = createSignal(false);
   const [restHours, setRestHours] = createSignal("");
   const [atNexus, setAtNexus] = createSignal(false);
   const [professional, setProfessional] = createSignal(false);
@@ -173,6 +182,7 @@ export function CharacterSheetPage() {
         telemetry.reset();
         setRollError(undefined);
         setDamageInput("");
+        setToArmor(false);
         setRestHours("");
         setAtNexus(false);
         setProfessional(false);
@@ -326,14 +336,73 @@ export function CharacterSheetPage() {
       return;
     }
     const damagedFor = id();
+    const strikesArmor = toArmor();
     try {
-      const next = await applyDamageMutation({ id: damagedFor, amount });
+      const next = await applyDamageMutation({
+        id: damagedFor,
+        amount,
+        ...(strikesArmor ? { toArmor: true } : {}),
+      });
       if (id() !== damagedFor) return;
       setDamageInput("");
-      telemetry.log(`> DAMAGE :: ${amount} — S.D.C. ${next.sdc} · H.P. ${next.hitPoints}`, "bad");
+      telemetry.log(
+        "armor" in next
+          ? `> DAMAGE (ARMOR) :: ${amount} — ARMOR ${next.armor}`
+          : `> DAMAGE :: ${amount} — S.D.C. ${next.sdc} · H.P. ${next.hitPoints}`,
+        "bad",
+      );
     } catch (error) {
       if (id() !== damagedFor) return;
       telemetry.log(`> DAMAGE :: REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  // Inventory writes persist; like every persisting action, a result that
+  // arrives after the dossier switched characters is dropped.
+  const acquire = async (itemId: string) => {
+    const forId = id();
+    const name = (getItem(itemId)?.name ?? itemId).toUpperCase();
+    try {
+      const result = await addItemMutation({ id: forId, itemId });
+      if (id() !== forId) return;
+      // Dice-capacity suits (LLW concealed) are rated at acquisition.
+      telemetry.log(
+        `> ACQUIRE :: ${name}${result.rolledMdc !== undefined ? ` — SUIT RATED ${result.rolledMdc} M.D.C.` : ""}`,
+        "good",
+      );
+    } catch (error) {
+      if (id() !== forId) return;
+      telemetry.log(`> ACQUIRE :: ${name} — REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  const discard = async (index: number) => {
+    const forId = id();
+    // Name the item before the write moves the manifest under the index.
+    const name = (sheet()?.equipment[index]?.item.name ?? `ITEM #${index}`).toUpperCase();
+    try {
+      await removeItemMutation({ id: forId, index });
+      if (id() !== forId) return;
+      telemetry.log(`> DISCARD :: ${name}`);
+    } catch (error) {
+      if (id() !== forId) return;
+      telemetry.log(`> DISCARD :: ${name} — REFUSED (${reason(error)})`, "bad");
+    }
+  };
+
+  const equip = async (index: number | null) => {
+    const forId = id();
+    const name =
+      index === null
+        ? undefined
+        : (sheet()?.equipment[index]?.item.name ?? `ITEM #${index}`).toUpperCase();
+    try {
+      await equipArmorMutation({ id: forId, index });
+      if (id() !== forId) return;
+      telemetry.log(index === null ? "> DOFF :: ARMOR OFFLINE" : `> EQUIP :: ${name} — WORN`);
+    } catch (error) {
+      if (id() !== forId) return;
+      telemetry.log(`> EQUIP :: ${name ?? "—"} — REFUSED (${reason(error)})`, "bad");
     }
   };
 
@@ -370,6 +439,24 @@ export function CharacterSheetPage() {
     },
     rollCombat: (kind, bonus) => {
       telemetry.log(`> ${kind.toUpperCase()} :: ${d20Line(rollD20(bonus))}`);
+    },
+    // Weapon damage is table telemetry, not a persisted write — the rolled
+    // points go through the Damage control on whoever they actually hit.
+    rollWeapon: (weapon: Weapon) => {
+      const total = rollDice(weapon.damage.formula);
+      const unit = weapon.damage.type === "md" ? "M.D." : "S.D.C.";
+      telemetry.log(
+        `> WEAPON :: ${weapon.name.toUpperCase()} — ${weapon.damage.formula} = ${total} ${unit}`,
+      );
+    },
+    acquireItem: (itemId) => {
+      void acquire(itemId);
+    },
+    discardItem: (index) => {
+      void discard(index);
+    },
+    equipArmor: (index) => {
+      void equip(index);
     },
   };
 
@@ -434,6 +521,9 @@ export function CharacterSheetPage() {
                     <Button class="flex-1 px-2 text-left" onClick={() => void damage()}>
                       {"> Damage"}
                     </Button>
+                    <ToggleChip pressed={toArmor()} onToggle={() => setToArmor((v) => !v)}>
+                      Armor
+                    </ToggleChip>
                   </div>
                   <Button class="w-full text-left" onClick={() => void restore()}>
                     {"> Full Restore"}
