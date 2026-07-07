@@ -1,0 +1,38 @@
+apps/web/src/components/sheet-view.tsx
+  s_7fd190bf3e433e::t_044892a346841d 289
+  s_7fd190bf3e433e::t_8964557eb61f8e 301
+  s_7fd190bf3e433e::t_a78d7fbeff513e 60-62,64-65
+packages/backend/convex/characters.ts
+  s_7fd190bf3e433e::t_dbdbfdc8765b73 378-380,383,385,387,397-403,406-410,412,415-416,422-423
+  s_7fd190bf3e433e::t_88a7b2b270a701 318-348
+  s_7fd190bf3e433e::t_b571394b1b4827 467-473,475
+packages/backend/tests/characters.test.ts
+  s_7fd190bf3e433e::t_aa576830d1b5ae 565-566,568-614,616-621
+  s_7fd190bf3e433e::t_068e593ed72126 542-546
+  s_7fd190bf3e433e::t_71c1822e2e6e7c 507-512,514-518,523-527
+  s_7fd190bf3e433e::t_cf27b88ee3c7cc 552-554
+  s_7fd190bf3e433e::t_adbec921cfe647 645-649,652-654,656-660
+  s_7fd190bf3e433e::t_35f6b6950fcd85 615
+apps/web/src/pages/character-sheet.tsx
+  s_7fd190bf3e433e::t_2257c8dcf16a14 11
+  s_7fd190bf3e433e::t_f8cb0da1fae904 380-388,390,392,401,403,405-409
+  s_7fd190bf3e433e::t_92c2c0743ae1c4 464-465,467-468
+packages/rules/src/schema/items.ts
+  s_7fd190bf3e433e::t_2419b47cc2186f 90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "19105fb7adb2f755ef4f221817cdade4c6ecfee8",
+  "prompts": {},
+  "sessions": {
+    "s_7fd190bf3e433e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23d50e21-9b13-45a7-b88f-10bf5b887a6a",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
