@@ -411,6 +411,7 @@ export const equipArmor = mutation({
   returns: v.null(),
   handler: async (ctx, { id, index, expect }) => {
     const character = await loadCharacter(ctx, id);
+    const wornIndex = character.items.findIndex((e) => e.worn === true);
     if (index !== null) {
       if (expect === undefined) throw new Error("Equipping needs the expected item snapshot.");
       const entry = requireItemAt(character, index, expect);
@@ -418,8 +419,13 @@ export const equipArmor = mutation({
       if (item?.kind !== "armor") {
         throw new Error(`Only armor can be worn — "${entry.itemId}" is not armor.`);
       }
+    } else if (wornIndex !== -1) {
+      // Doff verifies too: unequip the suit the CLIENT saw worn, not whatever
+      // a racing write made worn since. (Nothing worn = already unequipped —
+      // the desired state, a no-op below.)
+      if (expect === undefined) throw new Error("Unequipping needs the expected item snapshot.");
+      requireItemAt(character, wornIndex, expect);
     }
-    const wornIndex = character.items.findIndex((e) => e.worn === true);
     if (index === (wornIndex === -1 ? null : wornIndex)) return null; // already there
     const items = character.items.map((e, i) => {
       const { worn: _worn, ...rest } = e;

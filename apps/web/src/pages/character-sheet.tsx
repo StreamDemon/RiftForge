@@ -402,10 +402,12 @@ export function CharacterSheetPage() {
     const forId = id();
     const name = entry?.item.name.toUpperCase();
     try {
+      // Wear and doff both name the instance the click saw: doffing verifies
+      // the WORN suit, so a racing swap can't be unequipped blind.
       await equipArmorMutation({
         id: forId,
         index,
-        ...(index !== null && entry !== undefined ? { expect: expectOf(entry) } : {}),
+        ...(entry !== undefined ? { expect: expectOf(entry) } : {}),
       });
       if (id() !== forId) return;
       telemetry.log(index === null ? "> DOFF :: ARMOR OFFLINE" : `> EQUIP :: ${name} — WORN`);

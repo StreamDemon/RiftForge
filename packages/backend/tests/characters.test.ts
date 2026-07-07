@@ -529,10 +529,25 @@ describe("living vitals — current vs. max (#38)", () => {
     expect(sheet?.armor?.max).toBe(suit.rolledMdc);
     expect((await t.query(api.characters.get, { id }))?.items?.[1]?.worn).toBeUndefined();
 
-    // Unequip: no worn armor, no armor layer on the sheet.
-    await t.mutation(api.characters.equipArmor, { id, index: null });
+    // Doff verifies the worn suit's snapshot too — a stale one is refused...
+    await expect(
+      t.mutation(api.characters.equipArmor, {
+        id,
+        index: null,
+        expect: { itemId: "gladiator", worn: true },
+      }),
+    ).rejects.toThrow(/manifest changed/);
+    // ...and the matching snapshot unequips: no worn armor, no armor layer.
+    await t.mutation(api.characters.equipArmor, {
+      id,
+      index: null,
+      expect: { itemId: "llw-concealed-light", worn: true, rolledMdc: suit.rolledMdc },
+    });
     sheet = await t.query(api.characters.sheet, { id });
     expect(sheet?.armor).toBeUndefined();
+
+    // Nothing worn: doff is already satisfied — a no-op, snapshot or not.
+    await t.mutation(api.characters.equipArmor, { id, index: null });
   });
 
   test("toArmor damage lands on the worn suit and never spills onto the body (#43)", async () => {
