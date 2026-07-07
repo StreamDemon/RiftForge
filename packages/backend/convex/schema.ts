@@ -39,6 +39,18 @@ export const characterFields = {
     }),
   ),
   spellIds: v.array(v.string()),
+  /** Owned items (one entry per physical instance, with per-instance state).
+   * Optional in storage: characters stored before the inventory existed have
+   * none; the rules layer defaults it to []. */
+  items: v.optional(
+    v.array(
+      v.object({
+        itemId: v.string(),
+        worn: v.optional(v.boolean()),
+        rolledMdc: v.optional(v.number()),
+      }),
+    ),
+  ),
   rolled: v.optional(
     v.object({
       hitPoints: v.optional(v.number()),
@@ -53,6 +65,7 @@ export const characterFields = {
       hitPoints: v.optional(v.number()),
       sdc: v.optional(v.number()),
       ppe: v.optional(v.number()),
+      armor: v.optional(v.number()),
       treatmentDays: v.optional(v.number()),
     }),
   ),

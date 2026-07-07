@@ -468,6 +468,125 @@ describe("living vitals — current vs. max (#38)", () => {
     expect(result).toEqual({ spent: 5, ppe: { current: 79, max: 84 } });
   });
 
+  test("addItem stocks the inventory; dice-capacity armor rolls its suit (#43)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+
+    expect(await t.mutation(api.characters.addItem, { id, itemId: "canteen" })).toEqual({
+      index: 0,
+    });
+    expect(
+      await t.mutation(api.characters.addItem, { id, itemId: "wilks-320-laser-pistol" }),
+    ).toEqual({ index: 1 });
+
+    // The LLW concealed suit prints "2D6+32 M.D.C. main body" (p.113) — the
+    // per-suit roll happens at acquisition and lands in the same transaction.
+    const suit = await t.mutation(api.characters.addItem, { id, itemId: "llw-concealed-light" });
+    expect(suit.index).toBe(2);
+    expect(suit.rolledMdc).toBeGreaterThanOrEqual(34);
+    expect(suit.rolledMdc).toBeLessThanOrEqual(44);
+    expect((await t.query(api.characters.get, { id }))?.items?.[2]?.rolledMdc).toBe(suit.rolledMdc);
+
+    // A fixed suit (Gladiator: 70, p.267) has nothing to roll.
+    expect(await t.mutation(api.characters.addItem, { id, itemId: "gladiator" })).toEqual({
+      index: 3,
+    });
+
+    await expect(t.mutation(api.characters.addItem, { id, itemId: "bfg-9000" })).rejects.toThrow(
+      /Unknown item/,
+    );
+  });
+
+  test("equipArmor wears one suit exclusively; the sheet surfaces its pool (#43)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.addItem, { id, itemId: "canteen" }); // 0
+    await t.mutation(api.characters.addItem, { id, itemId: "gladiator" }); // 1
+    const suit = await t.mutation(api.characters.addItem, { id, itemId: "llw-concealed-light" }); // 2
+
+    await expect(t.mutation(api.characters.equipArmor, { id, index: 0 })).rejects.toThrow(
+      /Only armor can be worn/,
+    );
+    await expect(t.mutation(api.characters.equipArmor, { id, index: 9 })).rejects.toThrow(
+      /No item at index/,
+    );
+
+    await t.mutation(api.characters.equipArmor, { id, index: 1 });
+    let sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.armor).toMatchObject({ max: 70, current: 70 }); // Gladiator, p.267
+
+    // Swapping suits moves the worn flag and the pool follows the new suit.
+    await t.mutation(api.characters.equipArmor, { id, index: 2 });
+    sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.armor?.max).toBe(suit.rolledMdc);
+    expect((await t.query(api.characters.get, { id }))?.items?.[1]?.worn).toBeUndefined();
+
+    // Unequip: no worn armor, no armor layer on the sheet.
+    await t.mutation(api.characters.equipArmor, { id, index: null });
+    sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.armor).toBeUndefined();
+  });
+
+  test("toArmor damage lands on the worn suit and never spills onto the body (#43)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.addItem, { id, itemId: "gladiator" });
+    await t.mutation(api.characters.equipArmor, { id, index: 0 });
+
+    // "Subtract the damage from the armor's S.D.C." (RUE p.287).
+    expect(await t.mutation(api.characters.applyDamage, { id, amount: 30, toArmor: true })).toEqual(
+      { armor: 40 },
+    );
+    // The depleting hit is fully absorbed — the body pools stay untouched
+    // (only FUTURE attacks reach the body once the suit reads 0).
+    expect(await t.mutation(api.characters.applyDamage, { id, amount: 99, toArmor: true })).toEqual(
+      { armor: 0 },
+    );
+    const sheet = await t.query(api.characters.sheet, { id });
+    expect(sheet?.armor).toMatchObject({ max: 70, current: 0 });
+    expect(sheet?.vitals.hitPoints.current).toBe(18);
+    expect(sheet?.vitals.sdc.current).toBe(20);
+
+    await expect(
+      t.mutation(api.characters.applyDamage, { id, amount: -5, toArmor: true }),
+    ).rejects.toThrow(/non-negative/);
+  });
+
+  test("toArmor without a worn (or rolled) suit is refused (#43)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await expect(
+      t.mutation(api.characters.applyDamage, { id, amount: 5, toArmor: true }),
+    ).rejects.toThrow(/No armor is worn/);
+
+    // A worn dice-capacity suit that somehow lost its roll has no pool yet.
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { items: [{ itemId: "llw-concealed-light", worn: true }] });
+    });
+    await expect(
+      t.mutation(api.characters.applyDamage, { id, amount: 5, toArmor: true }),
+    ).rejects.toThrow(/has not been rolled/);
+  });
+
+  test("removeItem drops the instance; removing the worn suit clears its pool (#43)", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await t.mutation(api.characters.addItem, { id, itemId: "gladiator" }); // 0
+    await t.mutation(api.characters.addItem, { id, itemId: "canteen" }); // 1
+    await t.mutation(api.characters.equipArmor, { id, index: 0 });
+    await t.mutation(api.characters.applyDamage, { id, amount: 30, toArmor: true });
+
+    await expect(t.mutation(api.characters.removeItem, { id, index: 5 })).rejects.toThrow(
+      /No item at index/,
+    );
+
+    await t.mutation(api.characters.removeItem, { id, index: 0 });
+    const stored = await t.query(api.characters.get, { id });
+    expect(stored?.items).toEqual([{ itemId: "canteen" }]);
+    // current.armor measured the removed suit — it can't outlive it.
+    expect(stored?.current?.armor).toBeUndefined();
+  });
+
   test("illegal `current` states are rejected at every write", async () => {
     const t = convexTest(schema, modules);
     // Above the maximum on create.

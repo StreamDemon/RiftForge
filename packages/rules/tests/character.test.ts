@@ -172,6 +172,90 @@ describe("deriveSheet — edge cases", () => {
     );
   });
 
+  test("equipment resolves against the catalog; unknown item ids throw", () => {
+    const sheet = deriveSheet({
+      ...leyLineWalker,
+      items: [{ itemId: "wilks-320-laser-pistol" }, { itemId: "canteen" }],
+    });
+    expect(sheet.equipment.map((e) => e.item.id)).toEqual(["wilks-320-laser-pistol", "canteen"]);
+    expect(sheet.armor).toBeUndefined();
+    expect(() => deriveSheet({ ...leyLineWalker, items: [{ itemId: "bfg-9000" }] })).toThrow(
+      /Unknown item "bfg-9000"/,
+    );
+  });
+
+  test("a worn fixed suit surfaces its pool at maximum; current.armor depletes it", () => {
+    const items = [{ itemId: "gladiator", worn: true }]; // 70 M.D.C. main body, p.267
+    expect(deriveSheet({ ...leyLineWalker, items }).armor).toMatchObject({
+      max: 70,
+      current: 70,
+    });
+    const damaged = deriveSheet({ ...leyLineWalker, items, current: { armor: 12 } });
+    expect(damaged.armor).toMatchObject({ max: 70, current: 12 });
+  });
+
+  test("a dice-capacity suit (LLW concealed, 2D6+32, p.113) needs its per-suit roll", () => {
+    const worn = { itemId: "llw-concealed-light", worn: true };
+    // Unrolled: the suit is worn but has no pool yet.
+    expect(deriveSheet({ ...leyLineWalker, items: [worn] }).armor).toMatchObject({
+      max: undefined,
+    });
+    // Rolled: the roll is the maximum.
+    expect(
+      deriveSheet({ ...leyLineWalker, items: [{ ...worn, rolledMdc: 40 }] }).armor,
+    ).toMatchObject({ max: 40, current: 40 });
+    // A roll outside the printed 2D6+32 range (34-44) is a bug upstream.
+    expect(() =>
+      deriveSheet({ ...leyLineWalker, items: [{ ...worn, rolledMdc: 45 }] }),
+    ).toThrow(/outside the printed 2D6\+32 range/);
+    // rolledMdc on a fixed suit or a non-armor item is meaningless.
+    expect(() =>
+      deriveSheet({ ...leyLineWalker, items: [{ itemId: "gladiator", rolledMdc: 40 }] }),
+    ).toThrow(/only armor with dice-capacity/);
+    expect(() =>
+      deriveSheet({ ...leyLineWalker, items: [{ itemId: "canteen", rolledMdc: 40 }] }),
+    ).toThrow(/only armor with dice-capacity/);
+  });
+
+  test("worn is armor-only and exclusive; illegal current.armor states are rejected", () => {
+    expect(() =>
+      deriveSheet({ ...leyLineWalker, items: [{ itemId: "canteen", worn: true }] }),
+    ).toThrow(/Only armor can be worn/);
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        items: [
+          { itemId: "gladiator", worn: true },
+          { itemId: "crusader", worn: true },
+        ],
+      }),
+    ).toThrow(/At most one armor/);
+    // No worn armor -> no pool to measure against.
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        items: [{ itemId: "gladiator" }],
+        current: { armor: 10 },
+      }),
+    ).toThrow(/requires a worn armor/);
+    // Worn but unrolled dice suit -> no maximum yet.
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        items: [{ itemId: "llw-concealed-light", worn: true }],
+        current: { armor: 10 },
+      }),
+    ).toThrow(/requires the suit's rolled M\.D\.C\./);
+    // Above the suit's maximum.
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        items: [{ itemId: "gladiator", worn: true }],
+        current: { armor: 71 },
+      }),
+    ).toThrow(/exceeds the suit's maximum/);
+  });
+
   test("an O.C.C. flat-value grant overrides the computed percentage (Native Tongue 98%)", () => {
     const sheet = deriveSheet({
       ...leyLineWalker,

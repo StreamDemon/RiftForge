@@ -1,0 +1,362 @@
+{
+  "book": "Rifts Ultimate Edition",
+  "items": [
+    {
+      "kind": "armor",
+      "id": "llw-concealed-light",
+      "name": "Ley Line Walker Concealed Armor (Light)",
+      "mdc": { "mainBody": "2D6+32" },
+      "notes": "Light to medium body armor worn under the robes; chest, shoulders, thighs and back of the head are always protected. Made from natural M.D.C. materials interlaced with M.D. ceramic plates, padding and miracle fibers. Very common.",
+      "page": 113
+    },
+    {
+      "kind": "armor",
+      "id": "llw-concealed-medium",
+      "name": "Ley Line Walker Concealed Armor (Medium)",
+      "mdc": {
+        "mainBody": "3D6+50",
+        "byLocation": "Arms typically have 11-18 M.D.C., legs have 22-28 M.D.C."
+      },
+      "movementPenalty": "-5% to Prowl, Climb, Swimming and other physical skills",
+      "notes": "Medium concealed armor worn under the robes. Very common.",
+      "page": 113
+    },
+    {
+      "kind": "armor",
+      "id": "urban-warrior",
+      "name": "Urban Warrior Padded Environmental Body Armor",
+      "mdc": {
+        "mainBody": "50",
+        "byLocation": "Helmet: 35, Arms: 16 each, Legs: 30 each"
+      },
+      "environmental": true,
+      "movementPenalty": "excellent mobility, -5% movement penalty",
+      "weight": "11 pounds (5 kg)",
+      "cost": "35,000 credits",
+      "notes": "A lightweight full body suit with special flexible padding and strategic placement of light metal plates.",
+      "page": 268
+    },
+    {
+      "kind": "armor",
+      "id": "plastic-man",
+      "name": "Plastic-Man Full Environmental Body Armor",
+      "mdc": {
+        "mainBody": "35",
+        "byLocation": "Helmet: 30, Arms: 15 each, Legs: 22 each"
+      },
+      "environmental": true,
+      "movementPenalty": "fair mobility, -10% movement penalty",
+      "weight": "13 pounds (5.8 kg)",
+      "cost": "18,000 credits",
+      "notes": "An inexpensive armor made of lightweight M.D.C. polycarbonate plate.",
+      "page": 268
+    },
+    {
+      "kind": "armor",
+      "id": "huntsman",
+      "name": "Huntsman Plate & Padded Armor",
+      "mdc": {
+        "mainBody": "45",
+        "byLocation": "Helmet: 35, Arms: 15 each, Legs: 25 each"
+      },
+      "environmental": false,
+      "movementPenalty": "fair mobility, -10% movement penalty",
+      "weight": "16 pounds (7.2 kg)",
+      "cost": "24,000 credits",
+      "notes": "Non-environmental. A lightweight body with a heavy plate and padded vest and padded armor with leg and arm plates.",
+      "page": 268
+    },
+    {
+      "kind": "armor",
+      "id": "bushman",
+      "name": "Bushman Full Composite Environmental Body Armor",
+      "mdc": {
+        "mainBody": "60",
+        "byLocation": "Helmet: 50, Arms: 30 each, Legs: 55 each"
+      },
+      "environmental": true,
+      "movementPenalty": "fair mobility, -10% movement penalty",
+      "weight": "17 pounds (7.6 kg)",
+      "cost": "32,000 credits",
+      "notes": "A lightweight padding, Kevlar, and plate composite armor. Also available as the Bushman Trooper: a bit bulkier, main body 90 M.D.C., -15% movement penalty, 46,000 credits.",
+      "page": 268
+    },
+    {
+      "kind": "armor",
+      "id": "gladiator",
+      "name": "Gladiator Full Environmental Body Armor",
+      "mdc": {
+        "mainBody": "70",
+        "byLocation": "Helmet: 45, Arms: 25 each, Legs: 45 each"
+      },
+      "environmental": true,
+      "movementPenalty": "fair mobility, -10% movement penalty",
+      "weight": "21 pounds (9.5 kg)",
+      "cost": "38,000 credits",
+      "notes": "One of the most popular medium-weight full environmental suits on the market; super lightweight fiber armor resembling chain mail with light plates.",
+      "page": 267
+    },
+    {
+      "kind": "armor",
+      "id": "crusader",
+      "name": "Crusader Full Environmental Body Armor",
+      "mdc": {
+        "mainBody": "95",
+        "byLocation": "Helmet: 50, Arms: 30 each, Legs: 50 each"
+      },
+      "environmental": true,
+      "movementPenalty": "fair mobility, -15% movement penalty",
+      "weight": "24 pounds (10.8 kg)",
+      "cost": "55,000 credits",
+      "notes": "Full suit of body armor resembling the knights of the ancient Crusades, with chain mail-like M.D.C. materials and knee length skirt.",
+      "page": 267
+    },
+    {
+      "kind": "weapon",
+      "id": "survival-knife",
+      "name": "Survival Knife",
+      "category": "knife",
+      "damage": {
+        "formula": "1D6",
+        "type": "sdc",
+        "note": "Typical knife damage; very small knives do 1D4 (W.P. Knife)."
+      },
+      "page": 327
+    },
+    {
+      "kind": "weapon",
+      "id": "hand-axe",
+      "name": "Hand Axe",
+      "category": "axe",
+      "damage": {
+        "formula": "1D6",
+        "type": "sdc",
+        "note": "Small axes and hatchets do 1D6; battle axes do 2D6 or 2D8 depending on size and style (W.P. Axe)."
+      },
+      "page": 326
+    },
+    {
+      "kind": "weapon",
+      "id": "automatic-pistol",
+      "name": ".45 Automatic Pistol",
+      "category": "handgun",
+      "damage": {
+        "formula": "4D6",
+        "type": "sdc",
+        "note": "Heavy/large caliber handguns: 4D6 (.45 automatic) to 6D6 S.D.C. (Magnum revolvers). Double damage for a standard short burst (three rounds fired); only pistols (not revolvers) can fire in bursts."
+      },
+      "range": "140 feet (42.7 m) average",
+      "payload": "Automatic Pistol: 8-16 rounds",
+      "page": 328
+    },
+    {
+      "kind": "weapon",
+      "id": "submachine-gun",
+      "name": "Submachine-Gun",
+      "category": "submachineGun",
+      "damage": {
+        "formula": "4D6",
+        "type": "sdc",
+        "note": "4D6 S.D.C. per single round or 1D4*10 S.D.C. per three round burst. Can only fire in bursts."
+      },
+      "range": "500-600 feet (152 to 183 m; an Uzi is the latter range)",
+      "payload": "Fires pistol rounds",
+      "page": 329
+    },
+    {
+      "kind": "weapon",
+      "id": "wilks-320-laser-pistol",
+      "name": "Wilk's 320 Laser Pistol",
+      "category": "energyPistol",
+      "damage": { "formula": "1D6", "type": "md" },
+      "range": "1000 feet (305 m)",
+      "payload": "20 shots",
+      "strikeBonusNote": "+2 bonus to strike on an Aimed shot because of the light weight and superior balance",
+      "weight": "2 lbs (0.9 kg)",
+      "cost": "11,000 credits",
+      "notes": "An excellent laser pistol known for its durability, range, accuracy and light weight; sleek, black plastic and ceramic.",
+      "page": 268
+    },
+    {
+      "kind": "weapon",
+      "id": "wilks-447-laser-rifle",
+      "name": "Wilk's 447 Laser Rifle",
+      "category": "energyRifle",
+      "damage": { "formula": "3D6", "type": "md" },
+      "range": "2000 feet (610 m)",
+      "payload": "20 shots per standard clip, can not use a Long E-Clip",
+      "strikeBonusNote": "+1 to strike on an Aimed shot",
+      "weight": "5 lbs (2.25 kg)",
+      "cost": "18,000 credits",
+      "notes": "A rifle version of the handgun; sleek, black plastic and ceramic weapon with all the usual features of a Wilk's product.",
+      "page": 269
+    },
+    {
+      "kind": "weapon",
+      "id": "ng-57-ion-blaster",
+      "name": "NG-57 Northern Gun Heavy-Duty Ion Blaster",
+      "category": "energyPistol",
+      "damage": {
+        "formula": "3D6",
+        "type": "md",
+        "note": "Two settings, 2D4 or 3D6 M.D."
+      },
+      "range": "500 feet (152 m)",
+      "payload": "10 shots",
+      "weight": "5 lbs (2.25 kg)",
+      "cost": "8,000 credits",
+      "notes": "A sturdy pistol that packs a wallop, but is comparatively heavy. A variety of scopes can be attached.",
+      "page": 269
+    },
+    {
+      "kind": "weapon",
+      "id": "ng-33-laser-pistol",
+      "name": "NG-33 Northern Gun Laser Pistol",
+      "category": "energyPistol",
+      "damage": { "formula": "1D6", "type": "md" },
+      "range": "800 feet (244 m)",
+      "payload": "20 shots",
+      "weight": "4 lbs (1.8 kg)",
+      "cost": "6,500 credits",
+      "notes": "Looks like a sleeker ion blaster with a pointed nose.",
+      "page": 269
+    },
+    {
+      "kind": "weapon",
+      "id": "ng-l5-laser-rifle",
+      "name": "NG-L5 Northern Gun Laser Rifle",
+      "category": "energyRifle",
+      "damage": { "formula": "3D6", "type": "md" },
+      "range": "1600 feet (488 m)",
+      "payload": "10 shots standard clip or 20 shots Long E-Clip",
+      "weight": "14 lbs (6.3 kg)",
+      "cost": "16,000 credits",
+      "notes": "A durable, heavy-duty laser rifle that suffers from the usual problem of weight, but can endure a massive amount of abuse and keep on working.",
+      "page": 270
+    },
+    {
+      "kind": "weapon",
+      "id": "ng-p7-particle-beam-rifle",
+      "name": "NG-P7 Northern Gun Particle Beam Rifle",
+      "category": "energyRifle",
+      "damage": { "formula": "1D4*10", "type": "md" },
+      "range": "1200 feet (365 m)",
+      "payload": "8 shots",
+      "weight": "21 lbs (9.45 kg)",
+      "cost": "22,000 credits",
+      "notes": "Another heavy-duty weapon that is a bit heavy and awkward, but sturdy and dependable in combat.",
+      "page": 270
+    },
+    {
+      "kind": "weapon",
+      "id": "l-20-pulse-rifle",
+      "name": "L-20 Pulse Rifle",
+      "category": "energyRifle",
+      "damage": {
+        "formula": "2D6",
+        "type": "md",
+        "note": "2D6 M.D. single shot, or 6D6 multiple pulse burst (three simultaneous shots)."
+      },
+      "range": "1600 feet (488 m)",
+      "payload": "40 shots short E-Clip or 50 shots Long E-Clip",
+      "weight": "7 lbs (3 kg)",
+      "cost": "25,000 credits",
+      "notes": "A common frontier weapon manufactured by the Black Market and several kingdoms across the land; dependable, lightweight, with multiple laser bursts.",
+      "page": 270
+    },
+    {
+      "kind": "gear",
+      "id": "robe-or-cape",
+      "name": "Robe or Cape",
+      "notes": "Part of the traditional garb of the Ley Line Walker.",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "set-of-clothing",
+      "name": "Set of Clothing",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "traveling-clothes",
+      "name": "Set of Traveling Clothes",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "knapsack",
+      "name": "Knapsack",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "backpack",
+      "name": "Backpack",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "small-sacks",
+      "name": "Small Sacks",
+      "notes": "1D4 small sacks.",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "large-sack",
+      "name": "Large Sack",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "wooden-stakes-and-mallet",
+      "name": "Wooden Stakes & Mallet",
+      "notes": "Six wooden stakes and mallet (for vampires and other practical applications).",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "canteen",
+      "name": "Canteen",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "binoculars",
+      "name": "Binoculars",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "tinted-goggles",
+      "name": "Tinted Goggles or Sunglasses",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "air-filter-and-gas-mask",
+      "name": "Air Filter & Gas Mask",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "flashlight",
+      "name": "Flashlight",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "cord-and-grappling-hook",
+      "name": "Lightweight Cord & Grappling Hook",
+      "notes": "100 feet (30.5 m) of lightweight cord and grappling hook.",
+      "page": 116
+    },
+    {
+      "kind": "gear",
+      "id": "pens-and-sketch-pad",
+      "name": "Pen or Pencils & Note or Sketch Pad",
+      "page": 116
+    }
+  ]
+}

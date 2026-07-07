@@ -1,10 +1,13 @@
 import type { Alignment } from "../schema/alignments.ts";
 import type { Character, CharacterInput, Narrative } from "../schema/character.ts";
 import { characterSchema } from "../schema/character.ts";
+import type { Armor, Item } from "../schema/items.ts";
 import type { Occ } from "../schema/occ.ts";
 import type { Spell } from "../schema/spells.ts";
 import { getAlignment } from "./alignments.ts";
 import { deriveAttributeBonuses } from "./attributes.ts";
+import { diceMax, diceMin } from "./dice.ts";
+import { armorMaxPool, armorNeedsRoll, getItem } from "./items.ts";
 import {
   combatProfile,
   comaDeathFloor,
@@ -33,6 +36,23 @@ export interface SheetSave {
   bonus: number;
   /** Set for percentile saves (e.g. coma/death), whose "bonus" is a percentage. */
   percent?: boolean;
+}
+
+/** An owned item resolved against the catalog, with its per-instance state. */
+export interface SheetEquipmentEntry {
+  item: Item;
+  worn?: boolean;
+  rolledMdc?: number;
+}
+
+/** The worn armor's live layer — its own ablative pool, never mixed into the
+ * body vitals (there is no AC in Palladium; RUE p.287). */
+export interface SheetArmor {
+  item: Armor;
+  /** Maximum main-body pool; absent until a dice-capacity suit is rolled. */
+  max?: number;
+  /** Remaining pool (equals max until damaged); present exactly when `max` is. */
+  current?: number;
 }
 
 export interface CharacterSheet {
@@ -65,6 +85,9 @@ export interface CharacterSheet {
   saves: Record<string, SheetSave>;
   skills: ResolvedSkill[];
   spells: { known: Spell[]; count: number };
+  equipment: SheetEquipmentEntry[];
+  /** Present when an armor is worn. */
+  armor?: SheetArmor;
 }
 
 /** Total O.C.C. save bonus for a given save target at a level (respects level gating). */
@@ -193,6 +216,60 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     return spell;
   });
 
+  // Resolve owned items, enforcing the kind rules the schema can't see:
+  // `worn` and `rolledMdc` are armor-only, a per-suit roll must match its
+  // printed dice, and at most one armor is worn at a time.
+  let wornArmor: SheetArmor | undefined;
+  const equipment = character.items.map((entry): SheetEquipmentEntry => {
+    const item = getItem(entry.itemId);
+    if (!item) throw new Error(`Unknown item "${entry.itemId}".`);
+    if (entry.rolledMdc !== undefined) {
+      if (item.kind !== "armor" || !armorNeedsRoll(item)) {
+        throw new Error(
+          `rolledMdc on "${item.id}" — only armor with dice-capacity M.D.C. is rolled per suit.`,
+        );
+      }
+      const formula = item.mdc!.mainBody;
+      if (entry.rolledMdc < diceMin(formula) || entry.rolledMdc > diceMax(formula)) {
+        throw new Error(
+          `rolledMdc (${entry.rolledMdc}) is outside the printed ${formula} range for "${item.id}".`,
+        );
+      }
+    }
+    if (entry.worn === true) {
+      if (item.kind !== "armor") {
+        throw new Error(`Only armor can be worn — "${item.id}" is ${item.kind}.`);
+      }
+      if (wornArmor !== undefined) {
+        throw new Error("At most one armor can be worn at a time.");
+      }
+      wornArmor = { item, max: armorMaxPool(item, entry.rolledMdc) };
+    }
+    return {
+      item,
+      ...(entry.worn === true ? { worn: true } : {}),
+      ...(entry.rolledMdc !== undefined ? { rolledMdc: entry.rolledMdc } : {}),
+    };
+  });
+
+  // The armor pool follows the vitals rule: `current` is only meaningful
+  // against a known maximum, and a write above it is rejected, not clamped.
+  const currentArmor = character.current?.armor;
+  if (currentArmor !== undefined) {
+    if (wornArmor === undefined) {
+      throw new Error("current.armor requires a worn armor — no pool to measure against.");
+    }
+    if (wornArmor.max === undefined) {
+      throw new Error("current.armor requires the suit's rolled M.D.C. — no maximum to measure against.");
+    }
+    if (currentArmor > wornArmor.max) {
+      throw new Error(`current.armor (${currentArmor}) exceeds the suit's maximum (${wornArmor.max}).`);
+    }
+  }
+  if (wornArmor !== undefined && wornArmor.max !== undefined) {
+    wornArmor.current = currentArmor ?? wornArmor.max;
+  }
+
   return {
     name: character.name,
     occ: { id: occ.id, name: occ.name, category: occ.category },
@@ -225,5 +302,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     saves,
     skills,
     spells: { known: knownSpells, count: knownSpells.length },
+    equipment,
+    armor: wornArmor,
   };
 }
