@@ -1,0 +1,30 @@
+packages/rules/tests/combat.test.ts
+  s_29ab400f373454::t_2b02ac1cfc3592 325-330
+  s_29ab400f373454::t_c4cd1d53b542dd 278-324,331-343
+packages/rules/src/content/combat/hand-to-hand.json
+  s_29ab400f373454::t_0b7bc7efccb04a 35-39,73-77,122-126,176-180,273
+packages/rules/tests/character.test.ts
+  s_29ab400f373454::t_c4cd1d53b542dd 33-34,37-43
+packages/rules/src/schema/combat.ts
+  s_29ab400f373454::t_0b7bc7efccb04a 38-39
+packages/rules/src/engine/combat.ts
+  s_29ab400f373454::t_0b7bc7efccb04a 148,153-158,168-178,188,191-192,196-201
+packages/rules/src/engine/character.ts
+  s_29ab400f373454::t_0b7bc7efccb04a 18,69,133,165,169,173,177,187,281
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "27434e355fc3d8b44eebcae511d572a9e73baea4",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
