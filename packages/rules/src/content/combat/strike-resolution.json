@@ -1,0 +1,8 @@
+{
+  "book": "Rifts Ultimate Edition",
+  "page": 346,
+  "meleeSeconds": 15,
+  "automaticMissAtOrBelow": 4,
+  "sdcPerMd": 100,
+  "naturalTwentyDamageMultiplier": 2
+}
