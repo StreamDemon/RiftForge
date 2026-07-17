@@ -1,7 +1,14 @@
 import type { Occ } from "../schema/occ.ts";
-import { spellBookSchema, type Spell } from "../schema/spells.ts";
+import type { DamageType } from "../schema/damage.ts";
+import {
+  spellBookSchema,
+  type Spell,
+  type SpellDamageEnvironment,
+  type SpellDamageOptionalBonus,
+  type SpellDamageVariant,
+} from "../schema/spells.ts";
 import spellsRaw from "../content/spells/spells.json" with { type: "json" };
-import { rollDice, type Rng } from "./dice.ts";
+import { parseDice, rollDice, type DiceFormula, type Rng } from "./dice.ts";
 
 /** The spell book (RUE Magic Spells), validated at load. */
 export const spellBook = spellBookSchema.parse(spellsRaw);
@@ -31,6 +38,172 @@ export function getSpell(id: string): Spell | undefined {
 
 export function getSpellByName(name: string): Spell | undefined {
   return spellByName.get(normalizeName(name));
+}
+
+export interface DeriveSpellDamageOptions {
+  casterLevel: number;
+  variantId?: string;
+  environment?: SpellDamageEnvironment;
+  diceCount?: number;
+  optionalBonusIds?: readonly string[];
+}
+
+export interface DerivedSpellDamageComponent {
+  formula: string;
+  repetitions: number;
+  parsed: DiceFormula;
+}
+
+export interface DerivedSpellDamage {
+  variantId: string;
+  type: DamageType;
+  components: DerivedSpellDamageComponent[];
+  optionalBonuses: SpellDamageOptionalBonus[];
+  bonus: number;
+  displayFormula: string;
+  maximumDiceCount?: number;
+  selectedDiceCount?: number;
+}
+
+function selectDamageVariant(spell: Spell, options: DeriveSpellDamageOptions): SpellDamageVariant {
+  const effect = spell.damageEffect!;
+  if (effect.selection === "single") {
+    if (options.environment !== undefined) {
+      throw new Error(`${spell.name}: environment is not a valid choice for single damage.`);
+    }
+    const variant = effect.variants[0]!;
+    if (options.variantId !== undefined && options.variantId !== variant.id) {
+      throw new Error(`Unknown damage variant "${options.variantId}" for ${spell.name}.`);
+    }
+    return variant;
+  }
+  if (effect.selection === "casterChoice") {
+    if (options.environment !== undefined) {
+      throw new Error(`${spell.name} uses variantId, not environment, for its caster choice.`);
+    }
+    if (options.variantId === undefined) {
+      throw new Error(`${spell.name} requires a damage variantId.`);
+    }
+    const variant = effect.variants.find((candidate) => candidate.id === options.variantId);
+    if (!variant)
+      throw new Error(`Unknown damage variant "${options.variantId}" for ${spell.name}.`);
+    return variant;
+  }
+  if (options.variantId !== undefined) {
+    throw new Error(`${spell.name}: variantId contradicts environment selection.`);
+  }
+  if (options.environment === undefined) {
+    throw new Error(`${spell.name} requires a damage environment.`);
+  }
+  const variant = effect.variants.find(
+    (candidate) => candidate.environment === options.environment,
+  );
+  if (!variant)
+    throw new Error(`Unknown damage environment "${options.environment}" for ${spell.name}.`);
+  return variant;
+}
+
+function scalingRepetitions(
+  casterLevel: number,
+  scaling: NonNullable<SpellDamageVariant["scaling"]>,
+): number {
+  if (casterLevel < scaling.startsAtLevel) return 0;
+  return Math.floor((casterLevel - scaling.startsAtLevel) / scaling.everyLevels) + 1;
+}
+
+function repeatedFormula(components: readonly DerivedSpellDamageComponent[]): string[] {
+  return components.flatMap((component) =>
+    Array.from({ length: component.repetitions }, () => component.formula),
+  );
+}
+
+/** Expand one selected spell-damage application without consuming randomness. */
+export function deriveSpellDamage(
+  spell: Spell,
+  options: DeriveSpellDamageOptions,
+): DerivedSpellDamage | undefined {
+  if (spell.damageEffect === undefined) return undefined;
+  if (!Number.isInteger(options.casterLevel)) {
+    throw new Error(`casterLevel must be a positive integer, got ${options.casterLevel}.`);
+  }
+  if (options.casterLevel < 1) {
+    throw new Error(`casterLevel must be positive, got ${options.casterLevel}.`);
+  }
+
+  const variant = selectDamageVariant(spell, options);
+  let components: DerivedSpellDamageComponent[] = [];
+  if (variant.base !== undefined) {
+    components.push({ formula: variant.base, repetitions: 1, parsed: parseDice(variant.base) });
+  }
+  if (variant.scaling !== undefined) {
+    const repetitions = scalingRepetitions(options.casterLevel, variant.scaling);
+    if (repetitions > 0) {
+      components.push({
+        formula: variant.scaling.formula,
+        repetitions,
+        parsed: parseDice(variant.scaling.formula),
+      });
+    }
+  }
+
+  let maximumDiceCount: number | undefined;
+  let selectedDiceCount: number | undefined;
+  if (variant.adjustableDiceCount === undefined) {
+    if (options.diceCount !== undefined) {
+      throw new Error(`${spell.name} damage is not adjustable; diceCount is invalid.`);
+    }
+  } else {
+    maximumDiceCount = components.reduce(
+      (total, component) => total + component.parsed.count * component.repetitions,
+      0,
+    );
+    selectedDiceCount = options.diceCount ?? maximumDiceCount;
+    if (!Number.isInteger(selectedDiceCount)) {
+      throw new Error(`diceCount must be an integer, got ${selectedDiceCount}.`);
+    }
+    const { minimum, step } = variant.adjustableDiceCount;
+    if (selectedDiceCount < minimum) {
+      throw new Error(`diceCount must be at least ${minimum}, got ${selectedDiceCount}.`);
+    }
+    if (selectedDiceCount > maximumDiceCount) {
+      throw new Error(
+        `diceCount ${selectedDiceCount} exceeds the derived maximum ${maximumDiceCount}.`,
+      );
+    }
+    if ((selectedDiceCount - minimum) % step !== 0) {
+      throw new Error(`diceCount must advance from ${minimum} in steps of ${step}.`);
+    }
+    const sides = components[0]!.parsed.sides;
+    const formula = `${selectedDiceCount}D${sides}`;
+    components = [{ formula, repetitions: 1, parsed: parseDice(formula) }];
+  }
+
+  const selectedIds = options.optionalBonusIds ?? [];
+  if (new Set(selectedIds).size !== selectedIds.length) {
+    throw new Error(`Duplicate optional damage bonus id for ${spell.name}.`);
+  }
+  const availableBonuses = new Map(
+    (variant.optionalBonuses ?? []).map((bonus) => [bonus.id, bonus] as const),
+  );
+  const optionalBonuses = selectedIds.map((id) => {
+    const bonus = availableBonuses.get(id);
+    if (!bonus) throw new Error(`Unknown optional damage bonus "${id}" for ${spell.name}.`);
+    return bonus;
+  });
+  const bonus = optionalBonuses.reduce((total, selected) => total + selected.amount, 0);
+  const displayParts = [...repeatedFormula(components), ...(bonus === 0 ? [] : [String(bonus)])];
+
+  return {
+    variantId: variant.id,
+    type: variant.type,
+    components,
+    optionalBonuses,
+    bonus,
+    displayFormula: displayParts.join(" + "),
+    ...(maximumDiceCount === undefined || selectedDiceCount === undefined
+      ? {}
+      : { maximumDiceCount, selectedDiceCount }),
+  };
 }
 
 /** All spells of a given level. */

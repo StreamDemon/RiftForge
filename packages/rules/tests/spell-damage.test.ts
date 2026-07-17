@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vite-plus/test";
 import {
+  deriveSpellDamage,
   getSpell,
   spellBook,
   spellDamageEffectSchema,
+  spellSchema,
   type Spell,
   type SpellDamageEffect,
   type SpellHealing,
@@ -515,5 +517,179 @@ describe("spell content prose/structure correspondence", () => {
         .sort(),
     );
     for (const id of specialOnlyDamageIds) expect(getSpell(id)?.damageEffect, id).toBeUndefined();
+  });
+});
+
+function requireSpell(id: string): Spell {
+  const spell = getSpell(id);
+  if (!spell) throw new Error(`Missing test spell ${id}.`);
+  return spell;
+}
+
+describe("deriveSpellDamage", () => {
+  test("returns undefined for a spell without finite structured damage", () => {
+    expect(
+      deriveSpellDamage(requireSpell("globe-of-daylight"), { casterLevel: 1 }),
+    ).toBeUndefined();
+  });
+
+  test("requires and resolves environment context", () => {
+    const spell = requireSpell("energy-bolt");
+    expect(() => deriveSpellDamage(spell, { casterLevel: 1 })).toThrow(/environment/i);
+    expect(() =>
+      deriveSpellDamage(spell, { casterLevel: 1, environment: "rift" as never }),
+    ).toThrow(/environment/i);
+    expect(deriveSpellDamage(spell, { casterLevel: 1, environment: "normal" })).toMatchObject({
+      variantId: "normal",
+      type: "sdc",
+      displayFormula: "4D6",
+      bonus: 0,
+    });
+    expect(deriveSpellDamage(spell, { casterLevel: 1, environment: "leyLine" })).toMatchObject({
+      variantId: "leyLine",
+      displayFormula: "6D6",
+    });
+    expect(deriveSpellDamage(spell, { casterLevel: 1, environment: "nexus" })).toMatchObject({
+      variantId: "nexus",
+      displayFormula: "8D6",
+    });
+    expect(() =>
+      deriveSpellDamage(spell, { casterLevel: 1, environment: "normal", variantId: "normal" }),
+    ).toThrow(/variantId.*environment/i);
+  });
+
+  test("requires and resolves a caster choice", () => {
+    const spell = requireSpell("fire-bolt");
+    expect(() => deriveSpellDamage(spell, { casterLevel: 1 })).toThrow(/variantId/i);
+    expect(() => deriveSpellDamage(spell, { casterLevel: 1, variantId: "cold" })).toThrow(
+      /unknown.*variant/i,
+    );
+    expect(deriveSpellDamage(spell, { casterLevel: 1, variantId: "megaDamage" })).toMatchObject({
+      variantId: "megaDamage",
+      type: "md",
+      displayFormula: "4D6",
+    });
+    expect(
+      deriveSpellDamage(spell, { casterLevel: 1, variantId: "structuralDamage" }),
+    ).toMatchObject({ variantId: "structuralDamage", type: "sdc", displayFormula: "1D6*10" });
+  });
+
+  test("expands per-level and delayed every-two-level scaling without RNG", () => {
+    expect(deriveSpellDamage(requireSpell("call-lightning"), { casterLevel: 3 })).toMatchObject({
+      components: [
+        {
+          formula: "1D6",
+          repetitions: 3,
+          parsed: { count: 1, sides: 6, multiplier: 1, modifier: 0 },
+        },
+      ],
+      displayFormula: "1D6 + 1D6 + 1D6",
+    });
+    for (const [level, maximumDiceCount] of [
+      [1, 2],
+      [2, 2],
+      [3, 3],
+      [4, 3],
+      [5, 4],
+    ] as const) {
+      expect(
+        deriveSpellDamage(requireSpell("ley-line-tendril-bolts"), { casterLevel: level }),
+      ).toMatchObject({ maximumDiceCount, selectedDiceCount: maximumDiceCount });
+    }
+    expect(deriveSpellDamage(requireSpell("lightning-arc"), { casterLevel: 3 })).toMatchObject({
+      components: [
+        { formula: "4D6", repetitions: 1 },
+        { formula: "2", repetitions: 3 },
+      ],
+      displayFormula: "4D6 + 2 + 2 + 2",
+    });
+  });
+
+  test("regulates Tendril dice and attaches only explicitly selected bonuses", () => {
+    const spell = requireSpell("ley-line-tendril-bolts");
+    expect(deriveSpellDamage(spell, { casterLevel: 5, diceCount: 1 })).toMatchObject({
+      components: [
+        {
+          formula: "1D6",
+          repetitions: 1,
+          parsed: { count: 1, sides: 6, multiplier: 1, modifier: 0 },
+        },
+      ],
+      maximumDiceCount: 4,
+      selectedDiceCount: 1,
+      optionalBonuses: [],
+      bonus: 0,
+      displayFormula: "1D6",
+    });
+    expect(
+      deriveSpellDamage(spell, {
+        casterLevel: 5,
+        diceCount: 3,
+        optionalBonusIds: ["doublePpe"],
+      }),
+    ).toMatchObject({
+      components: [{ formula: "3D6", repetitions: 1 }],
+      maximumDiceCount: 4,
+      selectedDiceCount: 3,
+      optionalBonuses: [{ id: "doublePpe", label: "Double P.P.E.", amount: 20 }],
+      bonus: 20,
+      displayFormula: "3D6 + 20",
+    });
+    expect(() => deriveSpellDamage(spell, { casterLevel: 5, diceCount: 0 })).toThrow(/diceCount/i);
+    expect(() => deriveSpellDamage(spell, { casterLevel: 5, diceCount: 5 })).toThrow(/maximum/i);
+    expect(() => deriveSpellDamage(spell, { casterLevel: 5, diceCount: 2.5 })).toThrow(/integer/i);
+    expect(() =>
+      deriveSpellDamage(spell, { casterLevel: 5, optionalBonusIds: ["overcharge"] }),
+    ).toThrow(/unknown.*bonus/i);
+    expect(() =>
+      deriveSpellDamage(spell, {
+        casterLevel: 5,
+        optionalBonusIds: ["doublePpe", "doublePpe"],
+      }),
+    ).toThrow(/duplicate.*bonus/i);
+  });
+
+  test("rejects invalid levels and choices that contradict the selection mode", () => {
+    expect(() => deriveSpellDamage(requireSpell("fire-ball"), { casterLevel: 0 })).toThrow(
+      /casterLevel.*positive/i,
+    );
+    expect(() => deriveSpellDamage(requireSpell("fire-ball"), { casterLevel: 1.5 })).toThrow(
+      /casterLevel.*integer/i,
+    );
+    expect(() =>
+      deriveSpellDamage(requireSpell("fire-ball"), { casterLevel: 1, environment: "normal" }),
+    ).toThrow(/environment.*single/i);
+    expect(() =>
+      deriveSpellDamage(requireSpell("fire-ball"), { casterLevel: 1, diceCount: 1 }),
+    ).toThrow(/not adjustable/i);
+    const stepped = spellSchema.parse({
+      id: "stepped-test",
+      name: "Stepped Test",
+      level: 1,
+      ppe: 1,
+      range: "Self",
+      duration: "Instant",
+      savingThrow: "none",
+      damage: "Up to 5D6 M.D. in two-die steps",
+      damageEffect: {
+        selection: "single",
+        variants: [
+          {
+            id: "default",
+            type: "md",
+            base: "5D6",
+            adjustableDiceCount: { minimum: 1, step: 2 },
+          },
+        ],
+      },
+      page: 1,
+    });
+    expect(() => deriveSpellDamage(stepped, { casterLevel: 1, diceCount: 2 })).toThrow(
+      /steps of 2/i,
+    );
+    expect(deriveSpellDamage(stepped, { casterLevel: 1, diceCount: 3 })).toMatchObject({
+      selectedDiceCount: 3,
+      displayFormula: "3D6",
+    });
   });
 });
