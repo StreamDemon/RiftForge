@@ -331,10 +331,19 @@ Content load rejects:
 - `single` effects with anything other than exactly one variant;
 - `casterChoice` effects with fewer than two variants;
 - `environment` effects without a complete, unambiguous normal/ley-line/nexus
-  set for the spell that declares those modes; and
-- duplicate optional-bonus IDs or non-positive optional-bonus amounts; and
+  set for the spell that declares those modes;
+- duplicate optional-bonus IDs or non-positive optional-bonus amounts;
 - adjustable dice counts on formulas that cannot be safely reduced in the
-  declared increments.
+  declared increments;
+- an adjustable base whose dice count is not on the declared
+  `minimum + n * step` grid;
+- adjustable scaling whose per-application dice count is not divisible by the
+  declared step, because any scaling application would move the maximum
+  off-grid; and
+- a `damageEffect` without the authoritative printed `damage` prose string.
+
+Printed `damage` prose without a `damageEffect` remains legal for compound and
+special-only spells whose full mechanic is deliberately not structured.
 
 All formula strings pass the existing `diceFormulaSchema` at content load.
 
@@ -488,6 +497,8 @@ Tests will first assert:
 Tests will first assert:
 
 - schema rejection for every invariant above;
+- focused load-time rejection of an off-grid adjustable base, off-grid
+  adjustable scaling, and structured damage without printed damage prose;
 - exact page-stamped structured content for representative fixed, scaling,
   choice, and environment spells;
 - per-level and every-two-level derivation at boundary levels;
@@ -499,7 +510,9 @@ Tests will first assert:
   for every structured spell through the explicit correspondence table;
 - structured `healing` staying consistent with its display description through
   the same test helper; and
-- the complete structured/special-only classification.
+- the complete structured/special-only classification; and
+- exact equality between catalog IDs carrying `damageEffect` and the explicit
+  structured-damage correspondence-table IDs.
 
 Existing structured-healing and weapon-damage tests remain regression coverage.
 

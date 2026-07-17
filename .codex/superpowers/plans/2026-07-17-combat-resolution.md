@@ -888,6 +888,18 @@ git commit -m "feat(rules): surface complete combat bonuses"
 - Consumes: `damageTypeSchema`, `diceFormulaSchema`, and `parseDice`.
 - Produces: `SpellDamageSelection`, `SpellDamageEnvironment`, `SpellDamageScaling`, `AdjustableDiceCount`, `SpellDamageOptionalBonus`, `SpellDamageVariant`, `SpellDamageEffect`, `spellDamageEffectSchema`, and optional `damageEffect` on `Spell`.
 
+**Final-review load-time invariants:** For adjustable, unmodified same-sided
+dice, the base count must satisfy `(baseDiceCount - minimum) % step === 0`, and
+each scaling application must satisfy `scalingDiceCount % step === 0` so every
+derived maximum stays on-grid. At the spell boundary, `damageEffect` requires
+the authoritative printed `damage` prose; prose-only damage remains legal for
+special-only spells.
+
+**Focused regression coverage:** Add failing schema tests for an off-grid base,
+off-grid scaling, and structured damage without prose before adding the
+refinements. The focused GREEN run must prove all three are rejected without
+changing runtime derivation behavior or valid catalog content.
+
 - [ ] **Step 1: Write exhaustive failing schema-refinement tests**
 
 Create `packages/rules/tests/spell-damage.test.ts`:
@@ -1245,6 +1257,11 @@ git commit -m "feat(rules): define structured spell damage"
 
 - Consumes: `spellBook`, `getSpell`, and `SpellDamageEffect` from Task 4; the approved rendered-page transcriptions listed in the design spec.
 - Produces: exact `damageEffect` content for 15 finite per-application damage spells; explicit seven-ID special-only classification; a reusable prose/structure correspondence assertion also applied to all five healing entries.
+
+**Final-review catalog guard:** In addition to the structured/special-only
+disjointness and union checks, assert that catalog IDs carrying `damageEffect`
+exactly equal the IDs in `structuredDamageRows`. This prevents structured-only
+entries from bypassing the prose/structure correspondence table.
 
 - [ ] **Step 1: Add the failing catalog correspondence and classification tests**
 

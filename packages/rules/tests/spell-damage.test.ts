@@ -242,6 +242,57 @@ describe("spellDamageEffectSchema", () => {
     expect(() => spellDamageEffectSchema.safeParse(effect)).not.toThrow();
     expect(spellDamageEffectSchema.safeParse(effect).success).toBe(false);
   });
+
+  test("rejects adjustable damage whose base maximum is off the declared step grid", () => {
+    const effect = {
+      selection: "single",
+      variants: [
+        {
+          id: "default",
+          type: "md",
+          base: "2D6",
+          adjustableDiceCount: { minimum: 1, step: 2 },
+        },
+      ],
+    };
+
+    expect(spellDamageEffectSchema.safeParse(effect).success).toBe(false);
+  });
+
+  test("rejects adjustable scaling whose dice count moves the maximum off-grid", () => {
+    const effect = {
+      selection: "single",
+      variants: [
+        {
+          id: "default",
+          type: "md",
+          base: "3D6",
+          scaling: { formula: "1D6", startsAtLevel: 3, everyLevels: 2 },
+          adjustableDiceCount: { minimum: 1, step: 2 },
+        },
+      ],
+    };
+
+    expect(spellDamageEffectSchema.safeParse(effect).success).toBe(false);
+  });
+});
+
+describe("spellSchema structured damage authority", () => {
+  test("rejects structured damage without authoritative printed damage prose", () => {
+    const spell = {
+      id: "structured-without-prose",
+      name: "Structured Without Prose",
+      level: 1,
+      ppe: 1,
+      range: "Self",
+      duration: "Instant",
+      savingThrow: "none",
+      damageEffect: { selection: "single", variants: [fixed] },
+      page: 1,
+    };
+
+    expect(spellSchema.safeParse(spell).success).toBe(false);
+  });
 });
 
 function expectCorrespondence<T>(
@@ -510,6 +561,12 @@ describe("spell content prose/structure correspondence", () => {
 
   test("classifies every current spell with damage prose exactly once", () => {
     const structuredIds = structuredDamageRows.map((row) => row.id);
+    expect(
+      spellBook.spells
+        .filter((spell) => spell.damageEffect !== undefined)
+        .map((spell) => spell.id)
+        .sort(),
+    ).toEqual([...structuredIds].sort());
     expect(structuredIds.filter((id) => specialOnlyDamageIds.includes(id as never))).toEqual([]);
     expect([...structuredIds, ...specialOnlyDamageIds].sort()).toEqual(
       spellBook.spells
