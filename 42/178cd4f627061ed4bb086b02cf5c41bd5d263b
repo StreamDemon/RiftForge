@@ -1,0 +1,19 @@
+.codex/superpowers/plans/2026-07-17-combat-resolution.md
+  s_29ab400f373454::t_82b3a5706479a3 2364-2366,2480-2489,2505-2506,2510-2512
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "42178cd4f627061ed4bb086b02cf5c41bd5d263b",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
