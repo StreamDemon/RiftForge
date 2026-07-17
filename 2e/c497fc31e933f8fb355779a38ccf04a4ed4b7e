@@ -1,0 +1,32 @@
+packages/rules/src/engine/spells.ts
+  s_29ab400f373454::t_0d79bc1242a299 2-9,11,43-71,73-92,94-207
+  s_29ab400f373454::t_a14fa415907cb2 72,93
+  s_dde58116fbb58f::t_d8509a3a275871 208
+packages/rules/tests/spell-damage.test.ts
+  s_29ab400f373454::t_59ba1fde640a37 3,7,522-694
+  s_29ab400f373454::t_3af775bedd8843 695
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "2ec497fc31e933f8fb355779a38ccf04a4ed4b7e",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    },
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
