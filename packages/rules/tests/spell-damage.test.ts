@@ -2,6 +2,7 @@ import { describe, expect, test } from "vite-plus/test";
 import {
   deriveSpellDamage,
   getSpell,
+  rollSpellDamage,
   spellBook,
   spellDamageEffectSchema,
   spellSchema,
@@ -690,6 +691,81 @@ describe("deriveSpellDamage", () => {
     expect(deriveSpellDamage(stepped, { casterLevel: 1, diceCount: 3 })).toMatchObject({
       selectedDiceCount: 3,
       displayFormula: "3D6",
+    });
+  });
+});
+
+function sequenceRng(values: readonly number[]): () => number {
+  let index = 0;
+  return () => {
+    const value = values[index];
+    if (value === undefined) throw new Error("Test RNG exhausted.");
+    index += 1;
+    return value;
+  };
+}
+
+describe("rollSpellDamage", () => {
+  test("returns undefined without structured damage", () => {
+    expect(
+      rollSpellDamage(requireSpell("globe-of-daylight"), { casterLevel: 1 }, () => 0),
+    ).toBeUndefined();
+  });
+
+  test("rolls one fixed environment variant with individual dice", () => {
+    expect(
+      rollSpellDamage(
+        requireSpell("energy-bolt"),
+        { casterLevel: 1, environment: "normal" },
+        sequenceRng([0, 0.2, 0.4, 0.999]),
+      ),
+    ).toEqual({
+      variantId: "normal",
+      type: "sdc",
+      components: [{ formula: "4D6", dice: [1, 2, 3, 6], total: 12 }],
+      dice: [1, 2, 3, 6],
+      optionalBonuses: [],
+      bonus: 0,
+      total: 12,
+      displayFormula: "4D6",
+    });
+  });
+
+  test("rolls repeated scaling as separate telemetry components", () => {
+    expect(
+      rollSpellDamage(requireSpell("call-lightning"), { casterLevel: 3 }, sequenceRng([0, 0, 0])),
+    ).toMatchObject({
+      variantId: "default",
+      type: "md",
+      components: [
+        { formula: "1D6", dice: [1], total: 1 },
+        { formula: "1D6", dice: [1], total: 1 },
+        { formula: "1D6", dice: [1], total: 1 },
+      ],
+      dice: [1, 1, 1],
+      bonus: 0,
+      total: 3,
+    });
+  });
+
+  test("adds the explicitly selected Tendril bonus after regulated dice", () => {
+    expect(
+      rollSpellDamage(
+        requireSpell("ley-line-tendril-bolts"),
+        { casterLevel: 5, diceCount: 3, optionalBonusIds: ["doublePpe"] },
+        sequenceRng([0.5, 0.5, 0.5]),
+      ),
+    ).toEqual({
+      variantId: "default",
+      type: "md",
+      components: [{ formula: "3D6", dice: [4, 4, 4], total: 12 }],
+      dice: [4, 4, 4],
+      optionalBonuses: [{ id: "doublePpe", label: "Double P.P.E.", amount: 20 }],
+      bonus: 20,
+      total: 32,
+      displayFormula: "3D6 + 20",
+      maximumDiceCount: 4,
+      selectedDiceCount: 3,
     });
   });
 });

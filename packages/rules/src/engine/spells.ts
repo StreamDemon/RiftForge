@@ -9,6 +9,7 @@ import {
 } from "../schema/spells.ts";
 import spellsRaw from "../content/spells/spells.json" with { type: "json" };
 import { parseDice, rollDice, type DiceFormula, type Rng } from "./dice.ts";
+import { rollDiceDetailed, type DetailedRoll } from "./rolls.ts";
 
 /** The spell book (RUE Magic Spells), validated at load. */
 export const spellBook = spellBookSchema.parse(spellsRaw);
@@ -203,6 +204,57 @@ export function deriveSpellDamage(
     ...(maximumDiceCount === undefined || selectedDiceCount === undefined
       ? {}
       : { maximumDiceCount, selectedDiceCount }),
+  };
+}
+
+export interface SpellDamageComponentRoll extends DetailedRoll {
+  formula: string;
+}
+
+export interface SpellDamageRoll {
+  variantId: string;
+  type: DamageType;
+  components: SpellDamageComponentRoll[];
+  dice: number[];
+  optionalBonuses: SpellDamageOptionalBonus[];
+  bonus: number;
+  total: number;
+  displayFormula: string;
+  maximumDiceCount?: number;
+  selectedDiceCount?: number;
+}
+
+/** Roll one derived spell-damage application with detailed, deterministic telemetry. */
+export function rollSpellDamage(
+  spell: Spell,
+  options: DeriveSpellDamageOptions,
+  rng: Rng = Math.random,
+): SpellDamageRoll | undefined {
+  const derived = deriveSpellDamage(spell, options);
+  if (derived === undefined) return undefined;
+  const components: SpellDamageComponentRoll[] = [];
+  for (const component of derived.components) {
+    for (let repetition = 0; repetition < component.repetitions; repetition += 1) {
+      components.push({ formula: component.formula, ...rollDiceDetailed(component.parsed, rng) });
+    }
+  }
+  const dice = components.flatMap((component) => component.dice);
+  const rolledTotal = components.reduce((total, component) => total + component.total, 0);
+  return {
+    variantId: derived.variantId,
+    type: derived.type,
+    components,
+    dice,
+    optionalBonuses: derived.optionalBonuses,
+    bonus: derived.bonus,
+    total: rolledTotal + derived.bonus,
+    displayFormula: derived.displayFormula,
+    ...(derived.maximumDiceCount === undefined || derived.selectedDiceCount === undefined
+      ? {}
+      : {
+          maximumDiceCount: derived.maximumDiceCount,
+          selectedDiceCount: derived.selectedDiceCount,
+        }),
   };
 }
 
