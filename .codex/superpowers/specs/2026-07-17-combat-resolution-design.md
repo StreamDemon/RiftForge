@@ -447,7 +447,7 @@ Existing structured-healing and weapon-damage tests remain regression coverage.
 ## Documentation and GitHub bookkeeping
 
 - This design specification is committed before production implementation.
-- The later implementation plan will live under `docs/superpowers/plans/`.
+- The later implementation plan will live under `.codex/superpowers/plans/`.
 - Issue #16 receives evidence-backed progress updates after design, after
   implementation, and after final verification.
 - Issue #44 remains the explicit owner of armor/A.R./persisted hostile damage.
