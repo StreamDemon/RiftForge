@@ -31,7 +31,7 @@ dist-ssr
 .remember/
 
 # Local agent instructions (per-machine; not committed)
-AGENTS.md
+/AGENTS.md
 
 # Source rulebook — copyrighted (Palladium Books); kept local, never committed
 docs/rules/*.pdf
