@@ -41,7 +41,10 @@ The following remain in #44 or later work:
 - called shots, hit locations, paired weapons, bursts, payload, and W.P.
   proficiency;
 - a generic spell-effect interpreter for reflection, percentage pool loss,
-  supernatural-strength substitution, coma, or other non-dice effects; and
+  supernatural-strength substitution, coma, or other non-dice effects;
+- conditional or positional critical/lethal moves — knockout/stun, death blow,
+  and the "critical strike from behind" (and its triple-damage case) — beyond
+  the _unconditional_ critical-strike range, which this slice does model; and
 - new combat controls or other user-visible UI.
 
 No frontend or backend behavior changes are required by this slice. The rules
@@ -57,6 +60,8 @@ Rifts Ultimate Edition rulebook. The PDF has no usable text layer.
 | 344          | Combat bonuses are maneuver-specific; critical strikes deal double damage; automatic dodge uses P.P. and specifically named auto-dodge bonuses.                                                                                                           |
 | 345          | A dodge succeeds when the defender rolls equal to or higher than the attacker's strike.                                                                                                                                                                   |
 | 346          | Parry normally applies to physical attacks, not bullets or energy; one M.D. equals 100 S.D.C.; a melee is 15 seconds; a post-bonus strike total of 1–4 misses; natural 1 always misses; natural 20 is critical and only another natural 20 can defend it. |
+| 326          | Ancient-weapon (incl. thrown) W.P. strike/parry bonuses are combined with the character's P.P. attribute, O.C.C., and Hand to Hand Combat bonuses.                                                                                                        |
+| 360          | Modern weapons (guns/energy): P.P. attribute bonuses and Hand to Hand combat bonuses do NOT apply — only W.P. bonuses. An untrained shooter rolls 1D20 with no strike bonus.                                                                              |
 | 202          | Energy Bolt deals 4D6 S.D.C., 6D6 on a ley line, or 8D6 at a nexus.                                                                                                                                                                                       |
 | 205          | Fire Bolt lets the caster choose 4D6 M.D. or 1D6x10 S.D.C.                                                                                                                                                                                                |
 | 209–210      | Call Lightning deals 1D6 M.D. per caster level; Fire Ball deals 1D4 M.D. per caster level.                                                                                                                                                                |
@@ -64,6 +69,11 @@ Rifts Ultimate Edition rulebook. The PDF has no usable text layer.
 | 219          | Meteor deals 1D6x10 plus 2 M.D. per caster level. Deathword demonstrates a deliberately excluded compound effect: direct Hit Point or M.D. damage plus a conditional doubling rule.                                                                       |
 
 Content JSON continues to use the printed page number, never the PDF index.
+
+The remaining structured spells (Ignite Fire p.202, Electric Arc p.204, Circle
+of Flame p.207, Ballistic Fire p.211, Lightblade p.213, Shockwave p.216, Dragon
+Fire p.217, Firequake p.222) are already page-stamped in the catalog and are
+re-expressed structurally without new transcription.
 
 ## Architecture
 
@@ -111,7 +121,7 @@ interface CombatResolutionRules {
   book: string;
   page: 346;
   meleeSeconds: 15;
-  minimumStrikeTotal: 5;
+  automaticMissAtOrBelow: 4;
   sdcPerMd: 100;
   naturalTwentyDamageMultiplier: 2;
 }
@@ -142,6 +152,9 @@ interface ResolveStrikeInput {
   defense?: StrikeDefense;
   allowedDefenses: readonly DefenseKind[];
   damageType: DamageType;
+  /** Lowest natural die that scores a critical strike. Defaults to 20; trained
+   * fighters crit lower (see `criticalStrikeOn` on the combat profile). */
+  criticalOn?: number;
 }
 
 type StrikeOutcome = "hit" | "miss" | "defended";
@@ -171,52 +184,78 @@ defense kind that is not allowed is contradictory input and throws.
 Although the input reuses `D20Roll`, the resolver derives natural-roll status
 from `die` and validates that the die is an integer from 1–20 and that
 `total === die + bonus`. It does not trust contradictory natural-roll booleans
-or totals supplied by an external caller.
+or totals supplied by an external caller. When supplied, `criticalOn` must be an
+integer from 2–20 because a natural 1 always misses.
 
 ### Resolution order
 
 `resolveStrike` evaluates in this order:
 
 1. A natural 1 strike misses regardless of bonuses.
-2. A strike whose final total is less than `minimumStrikeTotal` misses. Thus a
-   natural 2 with +3 reaches 5 and is not an automatic miss; the printed 1–4
-   threshold is explicitly after bonuses.
-3. With no defense, the strike hits. A natural 20 is critical.
-4. A natural 20 strike defeats any defense that is not also a natural 20.
-5. If both rolls are natural 20, the ordinary equal-or-higher defense comparison
-   still applies. The second natural 20 makes defense possible; it does not
-   discard the printed opposed-roll rule.
+2. A strike whose final total is at or below `automaticMissAtOrBelow` (the
+   printed 1–4) misses. Thus a natural 2 with +3 reaches 5 and is not an
+   automatic miss; the printed threshold is explicitly after bonuses.
+3. With no defense, the strike hits. It is critical when its natural die is at
+   or above `criticalOn` (default 20; lower for trained fighters).
+4. A natural 20 strike defeats any defense that is not also a natural 20. This
+   "undefendable" property is keyed strictly to a natural 20 — NOT to the
+   critical threshold — so a critical strike on an 18 or 19 is still defended by
+   a normal equal-or-higher roll.
+5. If both the strike and the defense are natural 20, the strike is defended. A
+   matching natural 20 is the only thing that can defend a natural-20 strike,
+   and it does so regardless of modified totals.
 6. In every other opposed roll, a defense total equal to or greater than the
    strike total defends; otherwise the strike hits.
 
-A successful natural-20 strike returns `critical: true` and multiplier 2. A
-defended or missed strike returns `critical: false` and multiplier 1 so callers
-cannot accidentally apply damage for a failed strike.
+A successful critical strike (natural die at or above `criticalOn`) returns
+`critical: true`, with `damageMultiplier` 2 (RUE p.346). A defended or
+missed strike returns `critical: false` and multiplier 1 so callers cannot
+accidentally apply damage for a failed strike.
 
 `resolveStrike` does not roll damage, apply a multiplier, inspect armor, or
 write state. It reports the authoritative outcome and damage system to the next
 stage.
 
+A natural 1 on a defense has no special auto-fail rule on page 346. It uses the
+ordinary equal-or-higher comparison with its bonus.
+
 ## Complete combat bonus surface
 
 `hthBonuses` already accumulates every content key, but `combatProfile` and
-`CharacterSheet.combat` currently retain only strike, parry, dodge, and damage.
-The change adds the complete raw Hand-to-Hand record while preserving existing
-fields.
+`CharacterSheet.combat` currently retain only `strike`, `parry`, `dodge`,
+`damageBonus`, and `attacksPerMelee`. The change adds the complete raw
+Hand-to-Hand record while preserving existing fields.
 
 The profile will expose:
 
-- `handToHandBonuses`: the complete accumulated content record, including
-  future keys without requiring another projection change;
-- existing compatible totals: `strike`, `parry`, `dodge`, and `damageBonus`;
+- `handToHandBonuses`: the complete accumulated content record, including future
+  keys without requiring another projection change. This is the RAW Hand-to-Hand
+  accumulation — e.g. `handToHandBonuses.strike` is the H2H strike alone,
+  distinct from the combined `strike` total below, which also folds in the
+  attribute bonus;
+- existing compatible totals: `strike`, `parry`, `dodge`, and `damageBonus`
+  (each = attribute bonus + the like-named Hand-to-Hand bonus, as today);
 - `initiative`: the Hand-to-Hand initiative bonus;
-- `autoDodge`: P.P.-derived dodge plus the specifically named auto-dodge bonus,
-  but not ordinary Hand-to-Hand dodge progression;
-- `strikeThrown`: the general strike total plus the specifically named thrown
-  strike bonus;
-- `strikeGuns`: the general strike total plus the specifically named gun strike
-  bonus; and
-- `saveVsHorrorFactor`: the specifically named Hand-to-Hand bonus.
+- `autoDodge`: the P.P. attribute dodge bonus plus the specifically named
+  auto-dodge bonus, but not the ordinary Hand-to-Hand dodge progression;
+- `strikeThrown`: the general strike total (P.P. attribute plus Hand-to-Hand
+  strike) plus the specifically named thrown-strike bonus. Pages 326 and 347
+  direct ancient/thrown attacks to combine the applicable P.P. and Hand-to-Hand
+  combat bonuses; the future W.P. thrown bonus remains out of scope;
+- `strikeGuns`: the specifically named gun-strike bonus only — p.360 states P.P.
+  attribute and Hand-to-Hand bonuses do NOT apply to modern weapons, so neither
+  the P.P. bonus nor the general strike is added;
+- `saveVsHorrorFactor`: the specifically named Hand-to-Hand bonus; and
+- `criticalStrikeOn`: the lowest natural die that scores a critical strike at
+  this level (default 20; 17–19 for trained fighters), promoted from the H2H
+  content's unconditional "Critical Strike on an unmodified roll of X-20" notes
+  so the caller can pass it to the resolver as `criticalOn`.
+
+Each Hand-to-Hand level entry gains an optional, load-validated
+`criticalStrikeOn` integer from 2–20. `combatProfile` selects the lowest
+threshold reached at the character's level, defaulting to 20. Only
+unconditional critical ranges are structured; knockout/stun, death blow, and
+from-behind moves remain page-faithful prose and out of scope.
 
 All absent bonuses resolve to zero at the named-total boundary. The raw record
 remains sparse so absence is distinguishable from printed `+0` content.
@@ -299,6 +338,13 @@ Content load rejects:
   declared increments.
 
 All formula strings pass the existing `diceFormulaSchema` at content load.
+
+Because the display `damage` sentence and `damageEffect` represent the same
+printed damage, table-driven tests assert both values together for every
+structured spell. The tests use explicit expected prose and structured objects;
+the content loader does not attempt to infer mechanics from free text. The same
+test helper can pair healing descriptions with their structured `healing`
+objects.
 
 ## Spell-damage derivation and rolling
 
@@ -412,8 +458,13 @@ Tests will first assert:
 - an equal-total parry or dodge defending;
 - natural 20 beating a non-natural-20 defense even when its modified total is
   lower;
-- natural 20 versus natural 20 returning to equal-or-higher comparison;
-- critical multiplier 2 only on a successful natural-20 strike;
+- natural 20 versus natural 20 resolving as defended (a matching natural 20
+  defends regardless of modified totals);
+- an expanded `criticalOn` (e.g. 18) making a natural 18 a critical HIT that is
+  still defendable by a normal equal-or-higher roll (crit ≠ undefendable);
+- default `criticalOn` of 20 leaving a natural 19 a non-critical hit;
+- the critical multiplier applied only on a successful critical strike;
+- a defender natural 1 receiving no special auto-fail (ordinary comparison);
 - an invalid defense kind throwing; and
 - S.D.C./M.D. type propagation without armor routing.
 
@@ -423,7 +474,10 @@ Tests will first assert:
 
 - the raw accumulated bonus record survives `combatProfile`;
 - Commando automatic dodge uses P.P. plus `autoDodge`, not ordinary dodge;
-- Assassin thrown/gun totals include general strike and their specific bonus;
+- Assassin thrown totals include P.P., general Hand-to-Hand strike, and the
+  specific thrown bonus, while gun totals include only the specific gun bonus;
+- `criticalStrikeOn` per type/level: Expert 18 at L6, Commando 17 at L15, and
+  the default 20 below the granting level;
 - initiative and Horror Factor bonuses survive; and
 - the same values appear on `deriveSheet` output without regressing current
   combat fields.
@@ -439,7 +493,11 @@ Tests will first assert:
 - Tendril Bolt regulated dice counts;
 - Tendril Bolt's explicitly selected doubled-P.P.E. +20 M.D. bonus;
 - deterministic detailed rolls from injected RNG;
-- errors for missing/unknown choices and environments; and
+- errors for missing/unknown choices and environments;
+- structured `damageEffect` staying consistent with the display `damage` string
+  for every structured spell through the explicit correspondence table;
+- structured `healing` staying consistent with its display description through
+  the same test helper; and
 - the complete structured/special-only classification.
 
 Existing structured-healing and weapon-damage tests remain regression coverage.
