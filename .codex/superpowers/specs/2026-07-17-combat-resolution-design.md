@@ -197,13 +197,12 @@ integer from 2–20 because a natural 1 always misses.
    automatic miss; the printed threshold is explicitly after bonuses.
 3. With no defense, the strike hits. It is critical when its natural die is at
    or above `criticalOn` (default 20; lower for trained fighters).
-4. A natural 20 strike defeats any defense that is not also a natural 20. This
+4. A natural 20 defense succeeds regardless of modified totals, including
+   against a natural-20 strike.
+5. A natural 20 strike defeats every non-natural-20 defense. This
    "undefendable" property is keyed strictly to a natural 20 — NOT to the
    critical threshold — so a critical strike on an 18 or 19 is still defended by
    a normal equal-or-higher roll.
-5. If both the strike and the defense are natural 20, the strike is defended. A
-   matching natural 20 is the only thing that can defend a natural-20 strike,
-   and it does so regardless of modified totals.
 6. In every other opposed roll, a defense total equal to or greater than the
    strike total defends; otherwise the strike hits.
 
@@ -460,6 +459,8 @@ Tests will first assert:
   lower;
 - natural 20 versus natural 20 resolving as defended (a matching natural 20
   defends regardless of modified totals);
+- a natural-20 defense beating a non-natural-20 strike even when the strike's
+  modified total is higher;
 - an expanded `criticalOn` (e.g. 18) making a natural 18 a critical HIT that is
   still defendable by a normal equal-or-higher roll (crit ≠ undefendable);
 - default `criticalOn` of 20 leaving a natural 19 a non-critical hit;
