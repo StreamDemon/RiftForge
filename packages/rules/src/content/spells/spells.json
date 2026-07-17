@@ -293,6 +293,32 @@
       "savingThrow": "dodge",
       "savingThrowNote": "dodge of 18 or higher",
       "damage": "4D6 S.D.C. (6D6 on a ley line, 8D6 at a nexus)",
+      "damageEffect": {
+        "selection": "environment",
+        "variants": [
+          {
+            "id": "normal",
+            "label": "Normal",
+            "type": "sdc",
+            "base": "4D6",
+            "environment": "normal"
+          },
+          {
+            "id": "leyLine",
+            "label": "Ley Line",
+            "type": "sdc",
+            "base": "6D6",
+            "environment": "leyLine"
+          },
+          {
+            "id": "nexus",
+            "label": "Nexus",
+            "type": "sdc",
+            "base": "8D6",
+            "environment": "nexus"
+          }
+        ]
+      },
       "description": "A mentally-directed energy bolt; one target per casting.",
       "page": 202
     },
@@ -338,6 +364,17 @@
       "duration": "Instant (fire lasts until put out)",
       "savingThrow": "none",
       "damage": "2D6 S.D.C. per melee (clothes/hair, after first 2 melees)",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "sdc",
+            "base": "2D6",
+            "note": "Per melee after the first two melees."
+          }
+        ]
+      },
       "description": "Spontaneous combustion of flammable material (max 3 ft area). Cannot ignite contained volatiles.",
       "page": 202
     },
@@ -513,6 +550,10 @@
       "duration": "One melee round",
       "savingThrow": "dodge",
       "damage": "2D6 M.D.",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [{ "id": "default", "type": "md", "base": "2D6" }]
+      },
       "description": "A crackling bolt of blue energy; +2 to strike. Each blast counts as one melee attack.",
       "page": 204
     },
@@ -535,6 +576,18 @@
       "range": "100 ft (30.5 m) plus 5 ft (1.5 m) per level",
       "duration": "Instant",
       "damage": "4D6 M.D. or 1D6x10 S.D.C. (caster's choice)",
+      "damageEffect": {
+        "selection": "casterChoice",
+        "variants": [
+          { "id": "megaDamage", "label": "Mega-Damage", "type": "md", "base": "4D6" },
+          {
+            "id": "structuralDamage",
+            "label": "S.D.C.",
+            "type": "sdc",
+            "base": "1D6*10"
+          }
+        ]
+      },
       "savingThrow": "dodge",
       "description": "A directed bolt of magic fire, +4 to strike.",
       "page": 205
@@ -686,6 +739,17 @@
       "range": "10 ft (3 m) around self",
       "duration": "2 minutes (8 melee rounds) per level",
       "damage": "6D6 S.D.C. to anybody passing through",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "sdc",
+            "base": "6D6",
+            "note": "One passage through the circle."
+          }
+        ]
+      },
       "savingThrow": "none",
       "description": "A 5 ft (1.5 m) tall circle of flame around the caster; no combustible material required.",
       "page": 207
@@ -863,6 +927,16 @@
       "range": "300 ft (91.5 m); line of sight",
       "duration": "Instant",
       "damage": "1D6 M.D. per level of the spell caster",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "md",
+            "scaling": { "formula": "1D6", "startsAtLevel": 1, "everyLevels": 1 }
+          }
+        ]
+      },
       "savingThrow": "none",
       "description": "A lightning bolt shoots down from the sky onto any target in the caster's line of vision.",
       "page": 209
@@ -898,6 +972,16 @@
       "range": "90 ft (27.4 m)",
       "duration": "Instant",
       "damage": "1D4 M.D. per level of the spell caster",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "md",
+            "scaling": { "formula": "1D4", "startsAtLevel": 1, "everyLevels": 1 }
+          }
+        ]
+      },
       "savingThrow": "dodge",
       "savingThrowNote": "None except dodge; the victim must know the attack is coming and roll 18 or higher",
       "description": "A large, magically directed fire ball that seldom misses.",
@@ -1024,6 +1108,10 @@
       "range": "1000 ft (305 m) +10 ft (3 m) per level of experience",
       "duration": "Instant",
       "damage": "1D6 M.D. per fiery missile",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [{ "id": "default", "type": "md", "base": "1D6", "note": "One fiery missile." }]
+      },
       "savingThrow": "none",
       "savingThrowNote": "Victims can attempt to dodge at -10 without benefit of any other bonuses",
       "description": "One magically guided fiery missile per level, fired at any mix of targets in a single spell attack.",
@@ -1122,6 +1210,17 @@
       "range": "Self; close combat/hand to hand",
       "duration": "1 minute (4 melee rounds) per level of experience",
       "damage": "1D4x10 +1 M.D. point per level of experience",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "md",
+            "base": "1D4*10",
+            "scaling": { "formula": "1", "startsAtLevel": 1, "everyLevels": 1 }
+          }
+        ]
+      },
       "savingThrow": "dodge",
       "savingThrowNote": "Parry or dodge",
       "description": "A weightless sword of brilliant white light: +1 to strike, double damage to vampires and demons vulnerable to light.",
@@ -1245,6 +1344,20 @@
       "range": "10 ft (3 m) per level of experience",
       "duration": "One melee round; each four-tier blast counts as one melee attack",
       "damage": "2D6 M.D. at level one, +1D6 M.D. per two additional levels",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "md",
+            "base": "2D6",
+            "scaling": { "formula": "1D6", "startsAtLevel": 3, "everyLevels": 2 },
+            "adjustableDiceCount": { "minimum": 1, "step": 1 },
+            "optionalBonuses": [{ "id": "doublePpe", "label": "Double P.P.E.", "amount": 20 }],
+            "note": "One bolt; the caster may regulate damage in 1D6 increments."
+          }
+        ]
+      },
       "savingThrow": "standard",
       "savingThrowNote": "-2 to save; a successful save means half damage",
       "description": "Four bolts of mystic energy strike the four nearest enemies simultaneously. Can only be cast on a ley line.",
@@ -1258,6 +1371,17 @@
       "range": "100 ft (30.5 m) per level of experience",
       "duration": "One melee round per level of experience",
       "damage": "4D6 +2 M.D. per level of experience",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "md",
+            "base": "4D6",
+            "scaling": { "formula": "2", "startsAtLevel": 1, "everyLevels": 1 }
+          }
+        ]
+      },
       "savingThrow": "dodge",
       "description": "A sustained electric arc, point and shoot: +4 to strike within 100 ft, +1 beyond; each blast counts as one attack.",
       "page": 215
@@ -1338,6 +1462,17 @@
       "range": "Radius around the spell caster: 10 ft (3 m) per level of experience",
       "duration": "Instant",
       "damage": "1D4 M.D. per level plus knockdown",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "md",
+            "scaling": { "formula": "1D4", "startsAtLevel": 1, "everyLevels": 1 },
+            "note": "Damage only; knockdown remains in printed prose."
+          }
+        ]
+      },
       "savingThrow": "special",
       "savingThrowNote": "Roll percentile vs knockdown by weight class; the caster and those touching him are unaffected",
       "description": "A circular shockwave in all directions: Mega-Damage plus likely knockdown (hurled 3D4 yards, lose initiative and two attacks).",
@@ -1397,6 +1532,10 @@
       "range": "100 ft (30.5 m)",
       "duration": "One melee round per level of experience",
       "damage": "1D4x10 M.D.",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [{ "id": "default", "type": "md", "base": "1D4*10" }]
+      },
       "savingThrow": "dodge",
       "savingThrowNote": "None except dodge; the victim must know the attack is coming and roll a 16 or higher",
       "description": "Breathe fire like an adult Fire Dragon: two searing, magically directed blasts per melee round.",
@@ -1536,6 +1675,18 @@
       "range": "200 ft (61 m) per level of experience",
       "duration": "Instant",
       "damage": "1D6x10 M.D. to a 40 ft (12.2 m) radius, +2 M.D. per level of the spell caster",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "default",
+            "type": "md",
+            "base": "1D6*10",
+            "scaling": { "formula": "2", "startsAtLevel": 1, "everyLevels": 1 },
+            "note": "One target in the 40 ft (12.2 m) radius."
+          }
+        ]
+      },
       "savingThrow": "dodge",
       "savingThrowNote": "Dodge if victims see it coming",
       "description": "A flaming meteor plunges from the sky, +4 to strike; devastating against large targets and troops.",
@@ -1640,6 +1791,18 @@
       "range": "Up to 500 ft (152 m) away; 100 ft (30.5 m) radius",
       "duration": "One melee round per level of experience",
       "damage": "Varies; jets of flame do 5D6 M.D. on a failed dodge",
+      "damageEffect": {
+        "selection": "single",
+        "variants": [
+          {
+            "id": "flameJet",
+            "label": "Flame jet",
+            "type": "md",
+            "base": "5D6",
+            "note": "On a failed dodge."
+          }
+        ]
+      },
       "savingThrow": "dodge",
       "description": "The ground rumbles, cracks, and spews sulfur and gouts of fire; movement drops to 10% and flame jets erupt underfoot.",
       "page": 222

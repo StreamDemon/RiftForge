@@ -1469,7 +1469,7 @@ const specialOnlyDamageIds = [
   "lifeblast",
   "agony",
   "life-drain",
-  "desiccate",
+  "desiccate-the-supernatural",
   "deathword",
 ] as const;
 

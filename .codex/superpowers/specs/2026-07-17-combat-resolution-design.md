@@ -423,7 +423,7 @@ other rules.
 - Lifeblast — changes effect and damage system by target creature category.
 - Agony — explicitly causes no physical damage.
 - Life Drain — removes a percentage of current pools.
-- Desiccate — branches between M.D.C. and direct Hit Point damage.
+- Desiccate the Supernatural — branches between M.D.C. and direct Hit Point damage.
 - Deathword — branches between direct Hit Point and M.D. damage, includes a
   conditional double, and has coma/death consequences.
 
