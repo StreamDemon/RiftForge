@@ -15,6 +15,7 @@ import {
   physicalSdcRange,
   psionicsSaveTarget,
   savingThrowTarget,
+  type CombatProfile,
   type StatRange,
 } from "./combat.ts";
 import { getOcc, ppeRange } from "./occ.ts";
@@ -65,13 +66,7 @@ export interface CharacterSheet {
   level: number;
   attributes: Character["attributes"];
   attributeBonuses: Record<string, number>;
-  combat: {
-    attacksPerMelee: number;
-    strike: number;
-    parry: number;
-    dodge: number;
-    damageBonus: number;
-  };
+  combat: Omit<CombatProfile, "saveBonuses">;
   vitals: {
     hitPoints: StatValue;
     sdc: StatValue;
@@ -135,6 +130,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     hthType: character.hthType,
     level,
   });
+  const { saveBonuses, ...sheetCombat } = combat;
 
   const isCaster = occ.spellKnowledge !== undefined || occ.ppe !== undefined;
 
@@ -166,19 +162,19 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
   const saves: Record<string, SheetSave> = {
     magic: {
       targetRange: savingThrowTarget("magic")?.targetRange,
-      bonus: combat.saveBonuses.magic + occSaveBonus(occ, "magic", level),
+      bonus: saveBonuses.magic + occSaveBonus(occ, "magic", level),
     },
     psionics: {
       target: psionicsSaveTarget(character.psychicClass),
-      bonus: combat.saveBonuses.psionic,
+      bonus: saveBonuses.psionic,
     },
     insanity: {
       target: savingThrowTarget("insanity")?.target,
-      bonus: combat.saveBonuses.insanity,
+      bonus: saveBonuses.insanity,
     },
     lethalPoison: {
       target: savingThrowTarget("lethalPoison")?.target,
-      bonus: combat.saveBonuses.poison,
+      bonus: saveBonuses.poison,
     },
     curses: {
       target: savingThrowTarget("curses")?.target,
@@ -188,7 +184,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     possession: {
       bonus: occSaveBonus(occ, "possessionAndMindControl", level),
     },
-    comaDeath: { bonus: combat.saveBonuses.comaDeathPct, percent: true },
+    comaDeath: { bonus: saveBonuses.comaDeathPct, percent: true },
   };
 
   const seenSkillIds = new Set<string>();
@@ -282,13 +278,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     level,
     attributes: attrs,
     attributeBonuses,
-    combat: {
-      attacksPerMelee: combat.attacksPerMelee,
-      strike: combat.strike,
-      parry: combat.parry,
-      dodge: combat.dodge,
-      damageBonus: combat.damageBonus,
-    },
+    combat: sheetCombat,
     vitals: {
       hitPoints: withRolled(
         hitPointsRange(attrs.PE, level),
