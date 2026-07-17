@@ -532,3 +532,25 @@ vp test
 Because this design intentionally makes no user-visible change, browser
 verification is not required for #16. It becomes mandatory when #44 wires these
 APIs into live hostile combat.
+
+## Implementation outcome
+
+Implemented on `feat/combat-resolution` with the approved content/schema/engine
+boundary:
+
+- `combatResolutionRules` loads the exact printed p.346 constants;
+- `resolveStrike` validates completed d20 rolls and applies the approved natural
+  roll, post-bonus miss, opposed-defense, and trained-critical ordering;
+- `combatProfile` and `deriveSheet` preserve the sparse raw H2H bonus record and
+  expose maneuver-specific auto-dodge, thrown, gun, initiative, Horror Factor,
+  and unconditional critical values;
+- 15 finite damage spells carry explicit `damageEffect` content, while seven
+  compound/special spells remain deliberately prose-only; and
+- `deriveSpellDamage` and `rollSpellDamage` provide pure, caller-selected,
+  RNG-injectable damage plans and detailed rolls without applying armor or
+  mutating a target.
+
+Final verification passed the package-equivalent CI gates and the repository
+gates listed below. No frontend/backend behavior changed, so browser verification
+was not applicable to this slice. Equipment-aware A.R., armor routing, and
+persisted hostile damage remain in #44.
