@@ -2361,7 +2361,9 @@ git commit -m "feat(rules): roll structured spell damage"
 - Verify only: all files changed in Tasks 1-7
 - GitHub update: issue #16 progress comment `5002421933`
 - GitHub update: issue #20 progress comment (leave open pending human merge)
-- GitHub verify only: issue #44 and milestone `M3: Rules breadth`
+- GitHub update: issue #44 body (remove stale H2H-debt wording only; preserve
+  every other paragraph, label, scope, and its open state)
+- GitHub verify only: milestone `M3: Rules breadth`
 
 **Interfaces:**
 
@@ -2475,7 +2477,16 @@ The implementation on `feat/combat-resolution` now carries the complete sparse `
 Focused coverage in `packages/rules/tests/combat.test.ts` and `packages/rules/tests/character.test.ts` proves the raw Basic level-1 keys reach the sheet and verifies the new maneuver-specific totals. Package and root check/test gates pass. Leaving #20 open until the branch is published, reviewed, and human-merged.
 ```
 
-- [ ] **Step 8: Verify tracker boundaries and branch state**
+- [ ] **Step 8: Align #44 wording, then verify tracker boundaries and branch state**
+
+Replace only the stale issue #44 Engine bullet that says the H2H bonus keys are
+still unwired / #16 standing debt with:
+
+```md
+- #16 now surfaces the needed H2H bonuses (`initiative`, `autoDodge`, `saveVsHorrorFactor`, `strikeThrown`, and `strikeGuns`); this issue consumes those derived values when it adds equipment-aware resolution.
+```
+
+Preserve every other paragraph, label, scope, and the issue's open state.
 
 Run:
 
@@ -2491,11 +2502,14 @@ Expected:
 
 - #16 remains open in `M3: Rules breadth`.
 - #20 remains open until merge.
-- #44 still explicitly owns A.R., armor damage, M.D.C. application, and hostile persistence.
+- #44's stale H2H-debt wording is replaced while the open issue still explicitly
+  owns A.R., armor damage, M.D.C. application, and hostile persistence.
 - The working tree is clean on `feat/combat-resolution`.
 - The log contains the Task 1-8 checkpoint commits and no commit on `main`.
 
-Do not change milestone M3 state: local completion of one issue does not complete the milestone.
+Do not change milestone M3 state or issue #44's labels, scope, or state: local
+completion of one issue does not complete the milestone or its equipment-aware
+follow-on.
 
 ---
 
