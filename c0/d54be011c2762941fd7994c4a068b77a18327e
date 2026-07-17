@@ -1,0 +1,19 @@
+.gitignore
+  s_83622065cd90c8::t_e3b388ab15d8d0 33-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c0d54be011c2762941fd7994c4a068b77a18327e",
+  "prompts": {},
+  "sessions": {
+    "s_83622065cd90c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1003e6d0-4668-4cfe-9b91-65a78e264263",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
