@@ -1,0 +1,27 @@
+packages/rules/src/content/spells/spells.json
+  s_29ab400f373454::t_b72ed9323109fc 296-321,367-377,553-556,579-590,742-752,930-939,975-984,1111-1112,1114,1213-1223,1347-1360,1374-1384,1465-1475,1535-1538,1678-1689,1794-1805
+  s_29ab400f373454::t_98a62aeef30764 1113
+packages/rules/tests/spell-damage.test.ts
+  s_29ab400f373454::t_ed5625a7c5c194 2-9,243-518
+  s_29ab400f373454::t_f499e7b1eba329 519
+.codex/superpowers/plans/2026-07-17-combat-resolution.md
+  s_29ab400f373454::t_a219ebd482eec8 1472
+.codex/superpowers/specs/2026-07-17-combat-resolution-design.md
+  s_29ab400f373454::t_a219ebd482eec8 426
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "24493c652266c89062599a2a5432166bfff278fe",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
