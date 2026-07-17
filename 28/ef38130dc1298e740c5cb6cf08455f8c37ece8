@@ -1,0 +1,31 @@
+packages/rules/tests/spell-damage.test.ts
+  s_29ab400f373454::t_d70db09ae90fcd 5,697-770
+  s_29ab400f373454::t_de6cbd089aeda6 771
+packages/rules/src/engine/spells.ts
+  s_29ab400f373454::t_7bbf36737f403f 12,210-257,259
+  s_dde58116fbb58f::t_6882745298d5f5 258,260
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "28ef38130dc1298e740c5cb6cf08455f8c37ece8",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    },
+    "s_dde58116fbb58f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ae15d81-631c-4435-822a-05a93875592b",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
