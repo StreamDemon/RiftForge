@@ -30,6 +30,9 @@ dist-ssr
 # Session memory (local only)
 .remember/
 
+# Local agent instructions (per-machine; not committed)
+/AGENTS.md
+
 # Source rulebook — copyrighted (Palladium Books); kept local, never committed
 docs/rules/*.pdf
 .gstack/
