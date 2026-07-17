@@ -1,0 +1,27 @@
+.codex/superpowers/specs/2026-07-17-combat-resolution-design.md
+  s_29ab400f373454::t_07c00c79bd2844 334-335
+  s_29ab400f373454::t_a293eb39da2a35 337-346,500-501,513-515
+packages/rules/src/schema/spells.ts
+  s_29ab400f373454::t_aa1477581cfc55 134-153,212-250
+packages/rules/tests/spell-damage.test.ts
+  s_29ab400f373454::t_75be8e396c357b 245-295,564-569
+.codex/superpowers/plans/2026-07-17-combat-resolution.md
+  s_29ab400f373454::t_a293eb39da2a35 891-902,1261-1264
+  s_29ab400f373454::t_65e0a4c6f13a8a 1265
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6e6098fe6f697a9af15d47d31829afbac8104f9e",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
