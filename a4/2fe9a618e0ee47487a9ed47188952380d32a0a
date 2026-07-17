@@ -1,0 +1,21 @@
+docs/superpowers/specs/2026-07-17-combat-resolution-design.md
+  s_29ab400f373454::t_d13e8a1a02aafa 55-64
+  s_29ab400f373454::t_d9b08b91fb9f0e 171-175,244-249,260,272-275,297,313,328-330,338-340,408,440
+  s_29ab400f373454::t_f449167bbbb023 1-54,65-170,176-243,250-259,261-271,276-296,298-312,314-327,331-337,341-407,409-439,441-475
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a42fe9a618e0ee47487a9ed47188952380d32a0a",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
