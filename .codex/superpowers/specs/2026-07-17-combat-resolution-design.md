@@ -327,6 +327,8 @@ Content load rejects:
 - an effect with no variants;
 - duplicate variant IDs;
 - a variant with neither `base` nor `scaling`;
+- a base or scaling damage formula whose minimum result is not strictly
+  positive;
 - non-positive scaling levels or intervals;
 - environment fields on non-environment effects;
 - environment effects with duplicate environments;

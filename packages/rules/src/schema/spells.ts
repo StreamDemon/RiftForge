@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseDice, type DiceFormula } from "../engine/dice.ts";
+import { diceMin, parseDice, type DiceFormula } from "../engine/dice.ts";
 import { damageTypeSchema } from "./damage.ts";
 import { diceFormulaSchema } from "./dice.ts";
 
@@ -93,6 +93,24 @@ export const spellDamageVariantSchema = z
   .superRefine((variant, ctx) => {
     if (variant.base === undefined && variant.scaling === undefined) {
       ctx.addIssue({ code: "custom", message: "A damage variant needs base or scaling damage." });
+    }
+    const damageFormulas = [
+      { formula: variant.base, path: ["base"] },
+      { formula: variant.scaling?.formula, path: ["scaling", "formula"] },
+    ] as const;
+    for (const { formula, path } of damageFormulas) {
+      if (formula === undefined) continue;
+      try {
+        if (diceMin(formula) <= 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: [...path],
+            message: "A damage formula must have a positive minimum result.",
+          });
+        }
+      } catch {
+        // `diceFormulaSchema` reports the malformed formula on its own path.
+      }
     }
     const bonusIds = variant.optionalBonuses?.map((bonus) => bonus.id) ?? [];
     if (new Set(bonusIds).size !== bonusIds.length) {

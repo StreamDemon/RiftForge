@@ -53,6 +53,32 @@ describe("spellDamageEffectSchema", () => {
     ["empty effect", { selection: "single", variants: [] }],
     ["duplicate variant ids", { selection: "casterChoice", variants: [fixed, fixed] }],
     ["variant without damage", { selection: "single", variants: [{ id: "default", type: "md" }] }],
+    ["negative base damage", { selection: "single", variants: [{ ...fixed, base: "1D4-10" }] }],
+    ["zero-capable base damage", { selection: "single", variants: [{ ...fixed, base: "1D4-1" }] }],
+    [
+      "negative scaling damage",
+      {
+        selection: "single",
+        variants: [
+          {
+            ...fixed,
+            scaling: { formula: "-1", startsAtLevel: 1, everyLevels: 1 },
+          },
+        ],
+      },
+    ],
+    [
+      "zero scaling damage",
+      {
+        selection: "single",
+        variants: [
+          {
+            ...fixed,
+            scaling: { formula: "0", startsAtLevel: 1, everyLevels: 1 },
+          },
+        ],
+      },
+    ],
     [
       "non-positive scaling start",
       {
