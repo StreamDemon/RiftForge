@@ -180,7 +180,9 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
       target: savingThrowTarget("curses")?.target,
       bonus: occSaveBonus(occ, "curses", level),
     },
-    horrorFactor: { bonus: occSaveBonus(occ, "horrorFactor", level) },
+    horrorFactor: {
+      bonus: combat.saveVsHorrorFactor + occSaveBonus(occ, "horrorFactor", level),
+    },
     possession: {
       bonus: occSaveBonus(occ, "possessionAndMindControl", level),
     },

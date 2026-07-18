@@ -196,6 +196,7 @@ export function combatProfile(input: CombatProfileInput): CombatProfile {
     initiative: hth.initiative ?? 0,
     autoDodge: hth.autoDodge === undefined ? 0 : sum(attr.dodge, hth.autoDodge),
     strikeThrown: strike + (hth.strikeThrown ?? 0),
+    // RUE p.360: P.P. and general H2H bonuses do not apply to modern weapons.
     strikeGuns: hth.strikeGuns ?? 0,
     saveVsHorrorFactor: hth.saveVsHorrorFactor ?? 0,
     criticalStrikeOn: hthCriticalStrikeOn(input.hthType, input.level),

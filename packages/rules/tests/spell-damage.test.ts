@@ -293,6 +293,26 @@ describe("spellSchema structured damage authority", () => {
 
     expect(spellSchema.safeParse(spell).success).toBe(false);
   });
+
+  test.each(["", "   "])(
+    "rejects structured damage with blank authoritative printed damage prose (%j)",
+    (damage) => {
+      const spell = {
+        id: "structured-with-blank-prose",
+        name: "Structured With Blank Prose",
+        level: 1,
+        ppe: 1,
+        range: "Self",
+        duration: "Instant",
+        savingThrow: "none",
+        damage,
+        damageEffect: { selection: "single", variants: [fixed] },
+        page: 1,
+      };
+
+      expect(spellSchema.safeParse(spell).success).toBe(false);
+    },
+  );
 });
 
 function expectCorrespondence<T>(

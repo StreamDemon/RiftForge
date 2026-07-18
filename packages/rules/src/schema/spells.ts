@@ -240,7 +240,10 @@ export const spellSchema = z
     page: z.number().int().positive(),
   })
   .superRefine((spell, ctx) => {
-    if (spell.damageEffect !== undefined && spell.damage === undefined) {
+    if (
+      spell.damageEffect !== undefined &&
+      (spell.damage === undefined || spell.damage.trim() === "")
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["damage"],

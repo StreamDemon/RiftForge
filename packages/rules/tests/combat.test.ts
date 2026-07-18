@@ -290,7 +290,7 @@ describe("combatProfile integrates attributes + Hand to Hand", () => {
     });
   });
 
-  test("Assassin thrown attacks combine P.P., general strike, and thrown only", () => {
+  test("Assassin thrown attacks combine general bonuses while guns use their named bonus only", () => {
     const p = combatProfile({ attributes: { PP: 20 }, hthType: "assassin", level: 15 });
     expect(p.handToHandBonuses).toMatchObject({
       strike: 6,

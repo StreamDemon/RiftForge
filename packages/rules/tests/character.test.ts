@@ -66,6 +66,13 @@ describe("deriveSheet — a level-1 Ley Line Walker", () => {
     expect(sheet.saves.possession.bonus).toBe(2);
   });
 
+  test("Horror Factor saves combine Hand-to-Hand and O.C.C. bonuses", () => {
+    const commando = deriveSheet({ ...leyLineWalker, hthType: "commando", level: 15 });
+
+    expect(commando.combat.saveVsHorrorFactor).toBe(5);
+    expect(commando.saves.horrorFactor.bonus).toBe(9); // Commando +5, LLW +4
+  });
+
   test("skills resolve with O.C.C. + I.Q.(18 -> +4) bonuses", () => {
     const bySkill = Object.fromEntries(sheet.skills.map((s) => [s.id, s.value]));
     expect(bySkill["wilderness-survival"]).toBe(44); // 30 + 10 + 4

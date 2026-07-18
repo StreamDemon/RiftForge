@@ -259,8 +259,10 @@ from-behind moves remain page-faithful prose and out of scope.
 All absent bonuses resolve to zero at the named-total boundary. The raw record
 remains sparse so absence is distinguishable from printed `+0` content.
 
-`deriveSheet` copies this combat profile without recomputing it. Existing web
-consumers remain valid because no current field is renamed or removed.
+`deriveSheet` copies this combat profile without recomputing it and adds
+`combat.saveVsHorrorFactor` to the O.C.C. bonus in
+`saves.horrorFactor`. Existing web consumers remain valid because no current
+field is renamed or removed.
 
 ## Structured spell damage schema
 
@@ -340,7 +342,8 @@ Content load rejects:
 - adjustable scaling whose per-application dice count is not divisible by the
   declared step, because any scaling application would move the maximum
   off-grid; and
-- a `damageEffect` without the authoritative printed `damage` prose string.
+- a `damageEffect` without a non-blank authoritative printed `damage` prose
+  string.
 
 Printed `damage` prose without a `damageEffect` remains legal for compound and
 special-only spells whose full mechanic is deliberately not structured.
