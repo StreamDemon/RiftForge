@@ -1,0 +1,31 @@
+packages/rules/src/engine/combat.ts
+  s_29ab400f373454::t_c2cf23c34e604a 199
+packages/rules/tests/spell-damage.test.ts
+  s_29ab400f373454::t_8f6cfb0e0d8dc5 296-315
+.codex/superpowers/specs/2026-07-17-combat-resolution-design.md
+  s_29ab400f373454::t_dcc1ffe3c5579e 262-265,345-346
+packages/rules/tests/character.test.ts
+  s_29ab400f373454::t_8f6cfb0e0d8dc5 69-75
+packages/rules/src/engine/character.ts
+  s_29ab400f373454::t_11164eab3c7fb0 183-185
+packages/rules/tests/combat.test.ts
+  s_29ab400f373454::t_c2cf23c34e604a 293
+packages/rules/src/schema/spells.ts
+  s_29ab400f373454::t_11164eab3c7fb0 243-246
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "eb163f759f6cd76ddbc432f73b8d98d1793459a5",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
