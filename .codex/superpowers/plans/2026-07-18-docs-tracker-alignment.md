@@ -18,7 +18,7 @@ final verification in the approved design and this execution plan.
 **Tech Stack:** Markdown, Git, GitHub issues/milestones, GitHub connector, GitHub CLI
 for the milestone mutation, Vite+ (`vp`), pnpm workspace.
 
-**Status:** Approved and ready to execute on 2026-07-18.
+**Status:** Completed on 2026-07-19.
 
 ## Global Constraints
 
@@ -96,7 +96,7 @@ for the milestone mutation, Vite+ (`vp`), pnpm workspace.
 - Modify: `CLAUDE.md`
 - Modify: `docs/rules/PAGE_MAP.md`
 
-- [ ] **Step 1: Reconfirm the living-document claims against source**
+- [x] **Step 1: Reconfirm the living-document claims against source**
 
 Run:
 
@@ -119,7 +119,7 @@ Expected:
 - There is no equipment-aware A.R. selection/routing or hostile-target persistence
   implementation; those remain #44 scope.
 
-- [ ] **Step 2: Replace README's architecture and current-status sections**
+- [x] **Step 2: Replace README's architecture and current-status sections**
 
 In `README.md`, retain the opening description, development commands, source
 material, and licensing sections. Replace the architecture code block and the
@@ -161,7 +161,7 @@ ephemeral sheet rolls use the shared rules package client-side.
 Do not add current test or catalog counts to README. Those values are useful audit
 evidence but would become undated drift-prone claims.
 
-- [ ] **Step 3: Add package gates to CLAUDE.md**
+- [x] **Step 3: Add package gates to CLAUDE.md**
 
 In `CLAUDE.md`, replace the first bullet under `## Definition of done` with:
 
@@ -175,7 +175,7 @@ In `CLAUDE.md`, replace the first bullet under `## Definition of done` with:
 Leave the Vite+ managed checklist intact. This addition makes the repository's
 authoritative contract explicit without duplicating all toolchain documentation.
 
-- [ ] **Step 4: Correct PAGE_MAP's extraction workflow and historical slice**
+- [x] **Step 4: Correct PAGE_MAP's extraction workflow and historical slice**
 
 In `docs/rules/PAGE_MAP.md`, replace:
 
@@ -225,7 +225,7 @@ with:
   covers spell levels 1–15, printed 197–225 (PDF 199–227)
 ```
 
-- [ ] **Step 5: Format and inspect the living-doc diff**
+- [x] **Step 5: Format and inspect the living-doc diff**
 
 Run:
 
@@ -254,7 +254,7 @@ Expected:
 - Modify: `.codex/superpowers/specs/2026-07-17-combat-resolution-design.md`
 - Modify: `docs/reviews/2026-07-03-rules-layer-review.md`
 
-- [ ] **Step 1: Add the completion banner to the combat implementation plan**
+- [x] **Step 1: Add the completion banner to the combat implementation plan**
 
 In `.codex/superpowers/plans/2026-07-17-combat-resolution.md`, add the following
 immediately after the H1 title and before the existing agentic-workers block:
@@ -271,7 +271,7 @@ immediately after the H1 title and before the existing agentic-workers block:
 Do not check, delete, or rewrite the original 54 unchecked checkboxes. Their value is
 as an execution record, not as a current task list.
 
-- [ ] **Step 2: Record the combat design's implemented outcome**
+- [x] **Step 2: Record the combat design's implemented outcome**
 
 In `.codex/superpowers/specs/2026-07-17-combat-resolution-design.md`, replace the
 two existing status paragraphs under `## Status` with:
@@ -298,15 +298,17 @@ UI remain issue #44 scope.
 Cubic review produced four accepted fixes and one rejected finding. The accepted
 hardening covered Horror Factor bonus aggregation and blank damage prose (`eb163f7`),
 strictly positive structured damage (`1a10731`), and safe-integer dice validation
-(`7d23370`), in addition to the earlier contradiction fix. The rejected finding would
-have changed the approved caller-authorized defense boundary and was closed with
-tests and printed-rule evidence.
+(`7d23370`), in addition to the earlier contradiction fix. The rejected finding
+proposed adding P.P. and general Hand-to-Hand strike bonuses to `strikeGuns`. It was
+closed with tests and rendered RUE p.360 evidence because those general bonuses do
+not apply to modern weapons; `strikeGuns` exposes only the specifically named gun
+bonus.
 
 Final verification passed the rules package gates and root gates with 260 rules tests
 and 309 workspace tests across 19 files.
 ```
 
-- [ ] **Step 3: Add a current-context banner to the July 3 rules review**
+- [x] **Step 3: Add a current-context banner to the July 3 rules review**
 
 In `docs/reviews/2026-07-03-rules-layer-review.md`, insert the following after the H1
 title and before the existing opening paragraph:
@@ -325,7 +327,7 @@ claiming every original finding was fixed. The three P1 representation and stric
 findings were fixed in `c319cc1`; the discarded H2H projection was fixed through PR
 #49, but the original review text remains unchanged.
 
-- [ ] **Step 4: Verify that the annotations preserve history**
+- [x] **Step 4: Verify that the annotations preserve history**
 
 Run:
 
@@ -354,18 +356,18 @@ Expected:
 - Verify all six documentation files changed in Tasks 1 and 2.
 - Do not modify runtime source files.
 
-- [ ] **Step 1: Scan for the exact stale statements this cleanup owns**
+- [x] **Step 1: Scan for the exact stale statements this cleanup owns**
 
 Run:
 
 ```powershell
-rg -n 'guided builder and sheet visual design are next|scratchpad/extract_pages\.py|Approved in conversation on 2026-07-17\. This document|constants never modeled|resolveStrike\(attacker, defender, weapon\)' README.md CLAUDE.md docs .codex/superpowers
+rg -n 'guided builder and sheet visual design are next|scratchpad/extract_pages\.py|Approved in conversation on 2026-07-17\. This document|constants never modeled|resolveStrike\(attacker, defender, weapon\)' README.md CLAUDE.md docs/rules/PAGE_MAP.md .codex/superpowers/plans/2026-07-17-combat-resolution.md .codex/superpowers/specs/2026-07-17-combat-resolution-design.md docs/reviews/2026-07-03-rules-layer-review.md
 ```
 
 Expected: no match. Historical numeric baselines and unchecked boxes may remain only
 where their new banners clearly identify them as dated records.
 
-- [ ] **Step 2: Run repository documentation validation**
+- [x] **Step 2: Run repository documentation validation**
 
 Run:
 
@@ -391,7 +393,7 @@ Expected:
   - `docs/reviews/2026-07-03-rules-layer-review.md`
 - The runtime-change guard does not throw.
 
-- [ ] **Step 3: Commit the local documentation alignment**
+- [x] **Step 3: Commit the local documentation alignment**
 
 Run:
 
@@ -422,7 +424,7 @@ Expected:
 - Modify: milestone M2 description and state
 - Verify only: milestone M3
 
-- [ ] **Step 1: Fetch and compare every target before the first write**
+- [x] **Step 1: Fetch and compare every target before the first write**
 
 Use `mcp__codex_apps__github_fetch_issue` to fetch:
 
@@ -454,7 +456,7 @@ Required preconditions:
 If any precondition fails or newer text already supersedes a planned payload, do not
 overwrite it. Reconcile the target against the approved design first.
 
-- [ ] **Step 2: Replace issue #16's body**
+- [x] **Step 2: Replace issue #16's body**
 
 Use `mcp__codex_apps__github_update_issue` for `StreamDemon/RiftForge` issue
 #16, passing only `repository_full_name`, `issue_number`, and `body`. Omitting the
@@ -483,7 +485,7 @@ into #44.
 Read issue #16 back immediately. Confirm it remains closed and the body matches
 exactly before continuing.
 
-- [ ] **Step 3: Replace issue #16's existing progress comment**
+- [x] **Step 3: Replace issue #16's existing progress comment**
 
 Use `mcp__codex_apps__github_update_issue_comment` to update comment
 `5002421933` to exactly:
@@ -494,9 +496,11 @@ includes the page-stamped p.346 constants, deterministic `resolveStrike(input)`,
 complete Hand-to-Hand bonus projection, and structured finite spell damage.
 
 Final verification passed 260 rules tests and 309 workspace tests across 19 files.
-Cubic raised five findings: four were fixed at their root cause and one was rejected
-with printed-rule and test evidence because it would have broken the approved
-caller-authorized defense boundary.
+Cubic raised five findings: four were fixed at their root cause. The rejected
+finding proposed adding P.P. and general Hand-to-Hand strike bonuses to
+`strikeGuns`; tests and rendered RUE p.360 evidence showed those general bonuses do
+not apply to modern weapons, so `strikeGuns` correctly exposes only the specifically
+named gun bonus.
 
 Issues #16 and #20 are closed. Equipment-aware A.R./armor/M.D.C. routing and hostile
 state remain in #44.
@@ -505,7 +509,7 @@ state remain in #44.
 Read the comment back and verify that the existing comment was edited rather than a
 new duplicate being added.
 
-- [ ] **Step 4: Replace issue #20's existing progress comment**
+- [x] **Step 4: Replace issue #20's existing progress comment**
 
 Use `mcp__codex_apps__github_update_issue_comment` to update comment
 `5006583446` to exactly:
@@ -523,7 +527,7 @@ The projection is covered by package and sheet tests and was included in the fin
 Read issue #20 and the comment back. Confirm the issue remains closed and the
 existing comment was edited in place.
 
-- [ ] **Step 5: Replace issue #28's body**
+- [x] **Step 5: Replace issue #28's body**
 
 Use `mcp__codex_apps__github_update_issue` for issue #28, passing only
 `repository_full_name`, `issue_number`, and `body`. This preserves its title, open
@@ -560,7 +564,7 @@ for the remaining fidelity and test-quality work.
 
 Read issue #28 back and confirm it remains open and has the refreshed baseline.
 
-- [ ] **Step 6: Replace issue #44's body**
+- [x] **Step 6: Replace issue #44's body**
 
 Use `mcp__codex_apps__github_update_issue` for issue #44, passing only
 `repository_full_name`, `issue_number`, and `body`. This preserves its title, open
@@ -626,7 +630,7 @@ and a generic spell-effect interpreter unless separately designed and approved.
 Read issue #44 back. Confirm it remains open and accurately treats
 `resolveStrike(input)` as an existing pure boundary, not a future three-argument API.
 
-- [ ] **Step 7: Update and close milestone M2 last**
+- [x] **Step 7: Update and close milestone M2 last**
 
 Re-run:
 
@@ -643,7 +647,7 @@ gh api --method PATCH repos/StreamDemon/RiftForge/milestones/2 -f 'title=M2: Web
 The GitHub connector has issue mutation support but no milestone mutation surface, so
 this narrowly scoped `gh api` call is intentional.
 
-- [ ] **Step 8: Read every tracker value back**
+- [x] **Step 8: Read every tracker value back**
 
 Fetch issues #16, #20, #28, and #44 again with
 `mcp__codex_apps__github_fetch_issue`, and fetch both edited comments again with
@@ -679,7 +683,7 @@ back again before recording completion.
 - Modify:
   `.codex/superpowers/plans/2026-07-18-docs-tracker-alignment.md`
 
-- [ ] **Step 1: Append the implementation outcome to the approved design**
+- [x] **Step 1: Append the implementation outcome to the approved design**
 
 Append this section to
 `.codex/superpowers/specs/2026-07-18-docs-tracker-alignment-design.md`:
@@ -687,7 +691,7 @@ Append this section to
 ```markdown
 ## Implementation outcome
 
-Completed on `docs/align-project-state` on 2026-07-18.
+Completed on `docs/align-project-state` on 2026-07-19.
 
 - Living documentation now describes the merged builder, live sheet, backend
   mutations, and rules APIs while retaining #44's explicit combat-routing boundary.
@@ -702,14 +706,14 @@ Final repository verification passed `vp check`, `vp test`, and `git diff --chec
 The test run completed 309 tests across 19 files.
 ```
 
-- [ ] **Step 2: Mark this plan as completed without rewriting its instructions**
+- [x] **Step 2: Mark this plan as completed without rewriting its instructions**
 
 In this plan:
 
 1. Replace `**Status:** Approved and ready to execute on 2026-07-18.` with:
 
    ```markdown
-   **Status:** Completed on 2026-07-18.
+   **Status:** Completed on 2026-07-19.
    ```
 
 2. Change every execution checkbox in Tasks 1–5 from `- [ ]` to `- [x]` only after
@@ -718,7 +722,7 @@ In this plan:
 Do not check a step that was skipped, partially performed, or blocked. Resolve it or
 leave it visibly incomplete and report the blocker.
 
-- [ ] **Step 3: Run final repository gates**
+- [x] **Step 3: Run final repository gates**
 
 Run:
 
@@ -738,7 +742,7 @@ Expected:
 - Since the Task 3 commit, only the current alignment design and plan are modified.
 - No file under `apps/` or `packages/` is modified.
 
-- [ ] **Step 4: Commit the final outcome record**
+- [x] **Step 4: Commit the final outcome record**
 
 Run:
 
@@ -754,7 +758,7 @@ Expected:
 - Exactly the current alignment design and plan are staged.
 - The commit succeeds without an attribution trailer.
 
-- [ ] **Step 5: Perform the clean handoff check**
+- [x] **Step 5: Perform the clean handoff check**
 
 Run:
 
@@ -775,7 +779,7 @@ Expected:
 - The branch diff contains documentation only and no `apps/` or `packages/` files.
 - The branch has not been pushed and no pull request has been opened.
 
-- [ ] **Step 6: Report completion with evidence**
+- [x] **Step 6: Report completion with evidence**
 
 The handoff must state:
 
@@ -788,3 +792,22 @@ The handoff must state:
 
 Do not claim completion from expected values. Use the final command output and GitHub
 read-backs from this execution.
+
+---
+
+## Final-review correction
+
+The final whole-branch review corrected the rejected Cubic history in this plan and
+the combat design. Review comment `3607819653` proposed adding P.P. and general
+Hand-to-Hand strike bonuses to `strikeGuns`; tests and rendered RUE p.360 evidence
+showed that those general bonuses do not apply to modern weapons and that
+`strikeGuns` correctly exposes only the specifically named gun bonus. The alignment
+design's Date and Status header lines were also normalized to ordinary Markdown
+paragraphs without trailing spaces.
+
+The existing issue #16 comment `5002421933` was updated in place. Live read-back
+confirmed the unique ID, the unchanged total of four issue comments, and an exact
+match to the corrected payload above. The final outcome commit was amended in place,
+preserving the four planned commit subjects. Refreshed `vp check`, `vp test`,
+full-range whitespace, history, documentation-only scope, and clean-status gates
+passed; the test run remained 309 tests across 19 files.

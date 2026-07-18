@@ -1,7 +1,9 @@
 # Documentation and Tracker Alignment Design
 
-**Date:** 2026-07-18  
-**Status:** Approved in conversation  
+**Date:** 2026-07-18
+
+**Status:** Approved in conversation
+
 **Branch:** `docs/align-project-state`
 
 ## Goal
@@ -165,3 +167,36 @@ Browser verification is not required because no user-visible behavior changes.
 - GitHub issues and milestones describe the APIs, counts, sequencing, and
   completion state that exist after PR #49.
 - Engine, backend, and frontend source files are unchanged.
+
+## Implementation outcome
+
+Completed on `docs/align-project-state` on 2026-07-19.
+
+- Living documentation now describes the merged builder, live sheet, backend
+  mutations, and rules APIs while retaining #44's explicit combat-routing boundary.
+- The combat plan, combat design, and July 3 review retain their historical content
+  with completion or snapshot context.
+- Issues #16 and #20 remain closed with merged-outcome comments; issues #28 and #44
+  remain open with current scope and baselines.
+- Milestone M2 is closed with SolidJS/Convex wording; milestone M3 remains open.
+- No runtime source file changed.
+
+Final repository verification passed `vp check`, `vp test`, and `git diff --check`.
+The test run completed 309 tests across 19 files.
+
+## Final-review correction
+
+The final whole-branch review corrected the rejected Cubic history in the alignment
+plan and combat design. Review comment `3607819653` proposed adding P.P. and general
+Hand-to-Hand strike bonuses to `strikeGuns`; tests and rendered RUE p.360 evidence
+showed that those general bonuses do not apply to modern weapons and that
+`strikeGuns` correctly exposes only the specifically named gun bonus. The Date and
+Status header lines above were normalized to ordinary Markdown paragraphs without
+trailing spaces.
+
+The existing issue #16 comment `5002421933` was updated in place. Live read-back
+confirmed the unique ID, the unchanged total of four issue comments, and an exact
+match to the corrected plan payload. The final outcome commit was amended in place,
+preserving the four planned commit subjects. Refreshed `vp check`, `vp test`,
+full-range whitespace, history, documentation-only scope, and clean-status gates
+passed; the test run remained 309 tests across 19 files.

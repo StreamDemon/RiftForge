@@ -588,9 +588,11 @@ UI remain issue #44 scope.
 Cubic review produced four accepted fixes and one rejected finding. The accepted
 hardening covered Horror Factor bonus aggregation and blank damage prose (`eb163f7`),
 strictly positive structured damage (`1a10731`), and safe-integer dice validation
-(`7d23370`), in addition to the earlier contradiction fix. The rejected finding would
-have changed the approved caller-authorized defense boundary and was closed with
-tests and printed-rule evidence.
+(`7d23370`), in addition to the earlier contradiction fix. The rejected finding
+proposed adding P.P. and general Hand-to-Hand strike bonuses to `strikeGuns`. It was
+closed with tests and rendered RUE p.360 evidence because those general bonuses do
+not apply to modern weapons; `strikeGuns` exposes only the specifically named gun
+bonus.
 
 Final verification passed the rules package gates and root gates with 260 rules tests
 and 309 workspace tests across 19 files.
