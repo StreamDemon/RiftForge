@@ -32,7 +32,11 @@
         { "level": 3, "note": "Kick attack does 1D8 damage." },
         { "level": 4, "addAttacks": 1 },
         { "level": 5, "bonuses": { "strike": 1, "disarm": 1 } },
-        { "level": 6, "note": "Critical Strike on an unmodified roll of 19 or 20." },
+        {
+          "level": 6,
+          "criticalStrikeOn": 19,
+          "note": "Critical Strike on an unmodified roll of 19 or 20."
+        },
         { "level": 7, "bonuses": { "damage": 2 } },
         {
           "level": 8,
@@ -66,7 +70,11 @@
         },
         { "level": 4, "addAttacks": 1 },
         { "level": 5, "note": "Can perform a Karate Kick, does 2D6 damage." },
-        { "level": 6, "note": "Critical Strike on an unmodified roll of 18, 19 or 20." },
+        {
+          "level": 6,
+          "criticalStrikeOn": 18,
+          "note": "Critical Strike on an unmodified roll of 18, 19 or 20."
+        },
         {
           "level": 7,
           "note": "W.P. Paired Weapons and backhand strike (average, does 1D4 damage)."
@@ -111,7 +119,11 @@
           "bonuses": { "entangle": 2 },
           "note": "Leap Kick (3D8 damage, but counts as two melee attacks)."
         },
-        { "level": 6, "note": "Critical Strike on an unmodified roll of 18, 19 or 20." },
+        {
+          "level": 6,
+          "criticalStrikeOn": 18,
+          "note": "Critical Strike on an unmodified roll of 18, 19 or 20."
+        },
         {
           "level": 7,
           "bonuses": { "disarm": 2 },
@@ -161,7 +173,11 @@
         },
         { "level": 8, "addAttacks": 1, "bonuses": { "strikeGuns": 1, "initiative": 1 } },
         { "level": 9, "bonuses": { "initiative": 1 }, "note": "Can perform back flip." },
-        { "level": 10, "note": "Critical Strike on an unmodified roll of 19 or 20." },
+        {
+          "level": 10,
+          "criticalStrikeOn": 19,
+          "note": "Critical Strike on an unmodified roll of 19 or 20."
+        },
         {
           "level": 11,
           "bonuses": { "strike": 2, "strikeThrown": 1, "strikeGuns": 1 },
@@ -254,7 +270,7 @@
         },
         { "level": 13, "addAttacks": 1 },
         { "level": 14, "bonuses": { "initiative": 1 }, "note": "Can perform Holds." },
-        { "level": 15, "note": "Critical Strike on a Natural 17-20." }
+        { "level": 15, "criticalStrikeOn": 17, "note": "Critical Strike on a Natural 17-20." }
       ]
     }
   ]

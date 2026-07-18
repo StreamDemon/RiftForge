@@ -19,21 +19,29 @@ export interface DiceFormula {
 /** A random source returning a float in [0, 1), like `Math.random`. */
 export type Rng = () => number;
 
+function parseSafeInteger(component: string, input: string): number {
+  const value = Number.parseInt(component, 10);
+  if (!Number.isSafeInteger(value)) {
+    throw new Error(`Invalid dice formula: "${input}" (numeric components must be safe integers)`);
+  }
+  return value;
+}
+
 export function parseDice(input: string): DiceFormula {
   const s = input.trim();
   if (/^[+-]?\d+$/.test(s)) {
-    return { count: 0, sides: 0, multiplier: 1, modifier: Number.parseInt(s, 10) };
+    return { count: 0, sides: 0, multiplier: 1, modifier: parseSafeInteger(s, input) };
   }
   const m = s.match(/^(\d+)\s*[dD]\s*(\d+)(?:\s*[*x×]\s*(\d+))?(?:\s*([+-])\s*(\d+))?$/);
   if (!m) throw new Error(`Invalid dice formula: "${input}"`);
-  const count = Number.parseInt(m[1]!, 10);
-  const sides = Number.parseInt(m[2]!, 10);
+  const count = parseSafeInteger(m[1]!, input);
+  const sides = parseSafeInteger(m[2]!, input);
   if (count < 1 || sides < 1) throw new Error(`Invalid dice formula: "${input}"`);
   return {
     count,
     sides,
-    multiplier: m[3] ? Number.parseInt(m[3], 10) : 1,
-    modifier: m[4] ? (m[4] === "-" ? -1 : 1) * Number.parseInt(m[5]!, 10) : 0,
+    multiplier: m[3] ? parseSafeInteger(m[3], input) : 1,
+    modifier: m[4] ? (m[4] === "-" ? -1 : 1) * parseSafeInteger(m[5]!, input) : 0,
   };
 }
 

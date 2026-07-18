@@ -145,10 +145,17 @@ export interface CombatProfileInput {
 
 export interface CombatProfile {
   attacksPerMelee: number;
+  handToHandBonuses: CombatBonuses;
   strike: number;
   parry: number;
   dodge: number;
   damageBonus: number;
+  initiative: number;
+  autoDodge: number;
+  strikeThrown: number;
+  strikeGuns: number;
+  saveVsHorrorFactor: number;
+  criticalStrikeOn: number;
   saveBonuses: {
     psionic: number;
     insanity: number;
@@ -156,6 +163,17 @@ export interface CombatProfile {
     magic: number;
     poison: number;
   };
+}
+
+function hthCriticalStrikeOn(hthId: string, level: number): number {
+  const t = requireHandToHand(hthId);
+  let threshold = 20;
+  for (const lv of t.levels) {
+    if (lv.level <= level && lv.criticalStrikeOn !== undefined) {
+      threshold = Math.min(threshold, lv.criticalStrikeOn);
+    }
+  }
+  return threshold;
 }
 
 /**
@@ -167,12 +185,21 @@ export function combatProfile(input: CombatProfileInput): CombatProfile {
   const attr = deriveAttributeBonuses(input.attributes);
   const hth = hthBonuses(input.hthType, input.level);
   const sum = (a: number | undefined, b: number | undefined): number => (a ?? 0) + (b ?? 0);
+  const strike = sum(attr.strike, hth.strike);
   return {
     attacksPerMelee: attacksPerMelee(input.hthType, input.level),
-    strike: sum(attr.strike, hth.strike),
+    handToHandBonuses: hth,
+    strike,
     parry: sum(attr.parry, hth.parry),
     dodge: sum(attr.dodge, hth.dodge),
     damageBonus: sum(attr.hthDamage, hth.damage),
+    initiative: hth.initiative ?? 0,
+    autoDodge: hth.autoDodge === undefined ? 0 : sum(attr.dodge, hth.autoDodge),
+    strikeThrown: strike + (hth.strikeThrown ?? 0),
+    // RUE p.360: P.P. and general H2H bonuses do not apply to modern weapons.
+    strikeGuns: hth.strikeGuns ?? 0,
+    saveVsHorrorFactor: hth.saveVsHorrorFactor ?? 0,
+    criticalStrikeOn: hthCriticalStrikeOn(input.hthType, input.level),
     saveBonuses: {
       psionic: attr.saveVsPsionic ?? 0,
       insanity: attr.saveVsInsanity ?? 0,

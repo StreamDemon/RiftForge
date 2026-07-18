@@ -275,4 +275,70 @@ describe("combatProfile integrates attributes + Hand to Hand", () => {
     expect(p.dodge).toBe(6);
     expect(p.damageBonus).toBe(5); // P.S. +5, no Expert damage bonus until level 10
   });
+
+  test("preserves the sparse raw H2H record and zeroes absent named totals", () => {
+    const p = combatProfile({ attributes: { PP: 20, PS: 16 }, hthType: "basic", level: 1 });
+    expect(p.handToHandBonuses).toEqual({ pullPunch: 2, rollWithImpact: 2 });
+    expect(p).toMatchObject({
+      strike: 3,
+      strikeThrown: 3,
+      strikeGuns: 0,
+      initiative: 0,
+      autoDodge: 0,
+      saveVsHorrorFactor: 0,
+      criticalStrikeOn: 20,
+    });
+  });
+
+  test("Assassin thrown attacks combine general bonuses while guns use their named bonus only", () => {
+    const p = combatProfile({ attributes: { PP: 20 }, hthType: "assassin", level: 15 });
+    expect(p.handToHandBonuses).toMatchObject({
+      strike: 6,
+      strikeThrown: 2,
+      strikeGuns: 3,
+      initiative: 4,
+    });
+    expect(p.strike).toBe(9);
+    expect(p.strikeThrown).toBe(11);
+    expect(p.strikeGuns).toBe(3);
+    expect(p.criticalStrikeOn).toBe(19);
+  });
+
+  test("Commando auto-dodge uses P.P. plus autoDodge, never ordinary dodge", () => {
+    const p = combatProfile({ attributes: { PP: 20 }, hthType: "commando", level: 15 });
+    expect(p.handToHandBonuses).toMatchObject({
+      dodge: 4,
+      autoDodge: 5,
+      initiative: 6,
+      saveVsHorrorFactor: 5,
+    });
+    expect(p.dodge).toBe(7);
+    expect(p.autoDodge).toBe(8);
+    expect(p.initiative).toBe(6);
+    expect(p.saveVsHorrorFactor).toBe(5);
+    expect(p.criticalStrikeOn).toBe(17);
+  });
+
+  test("unconditional critical ranges unlock at their printed levels", () => {
+    expect(combatProfile({ attributes: {}, hthType: "basic", level: 5 }).criticalStrikeOn).toBe(20);
+    expect(combatProfile({ attributes: {}, hthType: "basic", level: 6 }).criticalStrikeOn).toBe(19);
+    expect(combatProfile({ attributes: {}, hthType: "expert", level: 5 }).criticalStrikeOn).toBe(
+      20,
+    );
+    expect(combatProfile({ attributes: {}, hthType: "expert", level: 6 }).criticalStrikeOn).toBe(
+      18,
+    );
+    expect(
+      combatProfile({ attributes: {}, hthType: "martial-arts", level: 6 }).criticalStrikeOn,
+    ).toBe(18);
+    expect(combatProfile({ attributes: {}, hthType: "assassin", level: 10 }).criticalStrikeOn).toBe(
+      19,
+    );
+    expect(combatProfile({ attributes: {}, hthType: "commando", level: 14 }).criticalStrikeOn).toBe(
+      20,
+    );
+    expect(combatProfile({ attributes: {}, hthType: "commando", level: 15 }).criticalStrikeOn).toBe(
+      17,
+    );
+  });
 });

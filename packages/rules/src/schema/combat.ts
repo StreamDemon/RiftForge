@@ -35,6 +35,8 @@ export const handToHandLevelSchema = z.object({
   addNonCombatActions: z.number().int().nonnegative().optional(),
   /** Combat-action bonuses added at this level (strike, parry, dodge, damage, ...). */
   bonuses: z.record(z.string(), z.number()).optional(),
+  /** Lowest natural die for an unconditional critical range granted at this level. */
+  criticalStrikeOn: z.number().int().min(2).max(20).optional(),
   note: z.string().optional(),
 });
 

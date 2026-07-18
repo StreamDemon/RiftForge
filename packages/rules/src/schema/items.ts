@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { damageTypeSchema } from "./damage.ts";
 import { diceFormulaSchema } from "./dice.ts";
 
 /** Weapon category — the hook future W.P. proficiency wiring keys on. */
@@ -21,7 +22,7 @@ export type WeaponCategory = z.infer<typeof weaponCategorySchema>;
  */
 export const weaponDamageSchema = z.object({
   formula: diceFormulaSchema,
-  type: z.enum(["sdc", "md"]),
+  type: damageTypeSchema,
   note: z.string().optional(),
 });
 export type WeaponDamage = z.infer<typeof weaponDamageSchema>;

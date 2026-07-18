@@ -30,10 +30,17 @@ describe("deriveSheet — a level-1 Ley Line Walker", () => {
   test("combat profile from P.P. 20 / P.S. 16, Basic H2H", () => {
     expect(sheet.combat).toEqual({
       attacksPerMelee: 4,
-      strike: 3, // P.P. 20 -> +3
+      handToHandBonuses: { pullPunch: 2, rollWithImpact: 2 },
+      strike: 3,
       parry: 3,
       dodge: 3,
-      damageBonus: 1, // P.S. 16 -> +1
+      damageBonus: 1,
+      initiative: 0,
+      autoDodge: 0,
+      strikeThrown: 3,
+      strikeGuns: 0,
+      saveVsHorrorFactor: 0,
+      criticalStrikeOn: 20,
     });
   });
 
@@ -57,6 +64,13 @@ describe("deriveSheet — a level-1 Ley Line Walker", () => {
     expect(sheet.saves.horrorFactor.bonus).toBe(4); // LLW flat +4
     expect(sheet.saves.curses).toEqual({ target: 15, bonus: 3 });
     expect(sheet.saves.possession.bonus).toBe(2);
+  });
+
+  test("Horror Factor saves combine Hand-to-Hand and O.C.C. bonuses", () => {
+    const commando = deriveSheet({ ...leyLineWalker, hthType: "commando", level: 15 });
+
+    expect(commando.combat.saveVsHorrorFactor).toBe(5);
+    expect(commando.saves.horrorFactor.bonus).toBe(9); // Commando +5, LLW +4
   });
 
   test("skills resolve with O.C.C. + I.Q.(18 -> +4) bonuses", () => {
