@@ -19,23 +19,29 @@ standalone, framework-agnostic package so they can be validated and tested in is
 packages/rules/
   src/content/   rules as page-stamped JSON (transcribed from the rulebook)
   src/schema/    Zod schemas that validate the content at load
-  src/engine/    pure TypeScript that derives every number (no backend, no UI)
+  src/engine/    pure TypeScript derivation, strike resolution, and spell damage
 packages/backend/
-  convex/        Convex backend: character storage, derived-sheet + roster queries,
-                 seeded dice rolls (rollVitals)
+  convex/        Convex storage, server-derived sheets, roster queries, mutations,
+                 and seeded dice rolls
 apps/web/
-  src/           SolidJS app: routing, hand-rolled Convex bindings, live sheet
+  src/           SolidJS routes, hand-rolled Convex bindings, builder, and live sheet
 ```
 
 The engine is isomorphic: the Convex backend derives sheets at query time, and the
 client imports the same package for ephemeral rolls. The runtime never parses the
-source book.
+source book. Combat APIs expose page-stamped strike constants and deterministic
+opposed-roll resolution; spell APIs expose load-validated structured damage,
+derivation, and injected-RNG rolling. Equipment-aware A.R. selection, armor-first
+routing, M.D.C. application, and hostile-target persistence remain follow-on work.
 
 ### Current status
 
-First vertical slice — the **Ley Line Walker** O.C.C. — runs end to end: attributes →
-O.C.C. → P.P.E. → combat/HP → skills → spells, stored in Convex and rendered live at
-`/characters/:id`. The guided builder and sheet visual design are next.
+The first vertical slice — the **Ley Line Walker** O.C.C. — runs end to end. The web
+app includes a landing page (`/`), character roster (`/characters`), guided builder
+(`/characters/new`), and live sheet (`/characters/:id`). Characters can manage
+inventory and worn armor, take and recover damage, rest, draw P.P.E. from a ley line,
+receive treatment, and cast spells through server-validated state changes, while
+ephemeral sheet rolls use the shared rules package client-side.
 
 ## Development
 

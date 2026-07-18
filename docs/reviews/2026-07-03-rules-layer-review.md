@@ -1,5 +1,11 @@
 # Rules Layer Quality & Correctness Review — 2026-07-03
 
+> **Historical snapshot.** This review describes the pre-app rules layer on
+> 2026-07-03. The post-PR #49 baseline is 309 tests across 19 files, 156 spells
+> covering levels 1–15, 45 skills, and complete Hand-to-Hand bonus projection. The
+> original findings and counts below are preserved as a dated record; remaining
+> rules-fidelity and test-quality work is tracked in issue #28.
+
 Multi-lens review of `packages/rules` before starting the app layer (issue #6).
 Method: 10 review lenses (5 code, 5 rulebook-fidelity vs the scanned RUE PDF) with
 adversarial verification. 7 of 10 lenses completed; findings below were verified

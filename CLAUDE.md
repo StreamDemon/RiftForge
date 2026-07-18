@@ -37,8 +37,10 @@ In QA mode, flag any code that doesn't match DESIGN.md.
 
 ## Definition of done
 
-- `vp check` and `vp test` clean from the root (root `vp test` runs every
-  package's Vitest project).
+- Run the affected package gates before pushing:
+  `vp run <pkg>#check` and `vp run <pkg>#test`. Root `vp check` is not a
+  substitute for the package-level CI task. Then run `vp check` and `vp test`
+  from the root (`vp test` runs every package's Vitest project).
 - Rules changes assert against printed book values, with the page cited in
   content JSON (`page` = printed page number) and exercised in tests.
 - User-visible changes are verified LIVE in the browser (roll vitals, deal
