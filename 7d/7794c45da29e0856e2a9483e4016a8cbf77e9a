@@ -1,0 +1,21 @@
+.codex/superpowers/plans/2026-07-18-docs-tracker-alignment.md
+  s_29ab400f373454::t_f57696a19ff2d0 21,99,122,164,178,228,257,274,309,328,357,362,368,394,425,457,486,508,526,563,629,646,682,690,705,712,721,741,757,778
+.codex/superpowers/specs/2026-07-18-docs-tracker-alignment-design.md
+  s_29ab400f373454::t_f57696a19ff2d0 168-183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7d7794c45da29e0856e2a9483e4016a8cbf77e9a",
+  "prompts": {},
+  "sessions": {
+    "s_29ab400f373454": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6f6f-e4b9-71a0-adb5-6a0cde12f7dd",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
