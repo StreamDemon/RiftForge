@@ -56,6 +56,13 @@ describe("spellDamageEffectSchema", () => {
     ["negative base damage", { selection: "single", variants: [{ ...fixed, base: "1D4-10" }] }],
     ["zero-capable base damage", { selection: "single", variants: [{ ...fixed, base: "1D4-1" }] }],
     [
+      "overflowing base damage",
+      {
+        selection: "single",
+        variants: [{ ...fixed, base: `${"9".repeat(400)}D6` }],
+      },
+    ],
+    [
       "negative scaling damage",
       {
         selection: "single",

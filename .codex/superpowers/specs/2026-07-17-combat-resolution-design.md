@@ -350,7 +350,9 @@ Content load rejects:
 Printed `damage` prose without a `damageEffect` remains legal for compound and
 special-only spells whose full mechanic is deliberately not structured.
 
-All formula strings pass the existing `diceFormulaSchema` at content load.
+All formula strings pass the existing `diceFormulaSchema` at content load,
+including its requirement that every parsed numeric component is a safe
+integer.
 
 Because the display `damage` sentence and `damageEffect` represent the same
 printed damage, table-driven tests assert both values together for every

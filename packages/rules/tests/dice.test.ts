@@ -47,6 +47,20 @@ describe("dice notation", () => {
     expect(() => parseDice("0D6")).toThrow();
   });
 
+  test.each([
+    ["constant", "9007199254740992"],
+    ["count", "9007199254740992D6"],
+    ["sides", "1D9007199254740992"],
+    ["multiplier", "1D6*9007199254740992"],
+    ["modifier", "1D6+9007199254740992"],
+  ])("rejects an unsafe integer %s", (_component, formula) => {
+    expect(() => parseDice(formula)).toThrow("safe integers");
+  });
+
+  test("rejects numeric literals that overflow to Infinity", () => {
+    expect(() => parseDice(`${"9".repeat(400)}D6`)).toThrow("safe integers");
+  });
+
   test("min / max / average", () => {
     expect(diceMin("3D6*10+20")).toBe(50);
     expect(diceMax("3D6*10+20")).toBe(200);
