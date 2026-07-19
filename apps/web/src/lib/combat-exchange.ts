@@ -80,13 +80,19 @@ export function formatExchangeSummary(exchange: ExchangeSummary): string {
   if (result.outcome === "defended") {
     return `${lead} :: ${result.response.kind.toUpperCase()} d20[${result.defenseRoll.die}]${signed(result.defenseRoll.bonus)} = ${result.defenseRoll.total} :: DEFENDED`;
   }
-  const damage = `[${result.damageRoll.dice.join("][")}]${signed(result.damageRoll.bonus)} = ${result.totalDamage} S.D.C.`;
-  const critical = result.critical ? " :: CRITICAL" : "";
+  const defense =
+    result.defenseRoll === undefined
+      ? ""
+      : ` :: ${result.response.kind.toUpperCase()} d20[${result.defenseRoll.die}]${signed(result.defenseRoll.bonus)} = ${result.defenseRoll.total}`;
+  const damage = `${exchange.attack.damageFormula} [${result.damageRoll.dice.join("][")}]${signed(result.damageRoll.bonus)} = ${result.damageRoll.total} RAW`;
+  const multiplier = result.critical
+    ? `CRITICAL ×${result.damageMultiplier}`
+    : `×${result.damageMultiplier}`;
   const remaining =
     result.route.kind === "armor"
       ? `ARMOR ${result.route.armor.after}`
       : `BODY S.D.C. ${result.route.body.after.sdc} / H.P. ${result.route.body.after.hitPoints}`;
-  return `${lead}${critical} :: ${damage} → ${remaining}`;
+  return `${lead}${defense} :: ${damage} :: ${multiplier} :: ${result.totalDamage} S.D.C. FINAL → ${remaining}`;
 }
 
 export function combatErrorMessage(error: unknown): string {

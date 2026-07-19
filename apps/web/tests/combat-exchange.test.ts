@@ -147,7 +147,7 @@ function bodyHitExchange(): Extract<ExchangeSummary, { status: "resolved" }> {
       },
       critical: true,
       damageMultiplier: 2,
-      damageRoll: { dice: [2, 3], bonus: 1, total: 6 },
+      damageRoll: { dice: [5], bonus: 1, total: 6 },
       totalDamage: 12,
       route: {
         kind: "body",
@@ -330,14 +330,14 @@ describe("combat exchange presentation", () => {
 
   test("includes critical, detailed damage, and the routed remaining body pools", () => {
     expect(formatExchangeSummary(bodyHitExchange())).toBe(
-      "Vesper → Deadboy :: Survival Knife :: d20[12]+3 = 15 :: CRITICAL :: [2][3]+1 = 12 S.D.C. → BODY S.D.C. 0 / H.P. 11",
+      "Vesper → Deadboy :: Survival Knife :: d20[12]+3 = 15 :: 1D6 [5]+1 = 6 RAW :: CRITICAL ×2 :: 12 S.D.C. FINAL → BODY S.D.C. 0 / H.P. 11",
     );
   });
 
-  test("includes the remaining armor pool without fabricating body damage", () => {
+  test("includes a failed defense and the remaining armor pool without fabricating body damage", () => {
     const summary = formatExchangeSummary(armorHitExchange());
     expect(summary).toBe(
-      "Vesper → Deadboy :: Survival Knife :: d20[12]+3 = 15 :: [4]+1 = 5 S.D.C. → ARMOR 15",
+      "Vesper → Deadboy :: Survival Knife :: d20[12]+3 = 15 :: PARRY d20[7]+2 = 9 :: 1D6 [4]+1 = 5 RAW :: ×1 :: 5 S.D.C. FINAL → ARMOR 15",
     );
     expect(summary).not.toContain("BODY S.D.C.");
     expect(summary).not.toContain("CRITICAL");
