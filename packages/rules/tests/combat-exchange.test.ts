@@ -1,14 +1,23 @@
 import { describe, expect, test } from "vite-plus/test";
 import {
+  armorSchema,
   authorizeCombatResponse,
   combatExchangeRules,
   deriveAttackProfile,
   deriveDefenseOptions,
+  deriveProtection,
   deriveSheet,
+  evaluateDeclaration,
+  resolveCombatExchange,
+  routeSdcHit,
   validateCombatContext,
   type AttackProfile,
   type CharacterInput,
   type CharacterSheet,
+  type D20Roll,
+  type DamageRoll,
+  type ProtectionState,
+  type ResolveCombatExchangeInput,
 } from "../src/index.ts";
 
 const combatant: CharacterInput = {
@@ -36,6 +45,17 @@ function requireSupported(profile: AttackProfile): Extract<AttackProfile, { supp
   expect(profile.supported).toBe(true);
   if (!profile.supported) throw new Error(`Expected a supported attack, got ${profile.reason}.`);
   return profile;
+}
+
+function d20(die: number, bonus = 0, overrides: Partial<D20Roll> = {}): D20Roll {
+  return {
+    die,
+    bonus,
+    total: die + bonus,
+    naturalTwenty: die === 20,
+    naturalOne: die === 1,
+    ...overrides,
+  };
 }
 
 describe("combat exchange constants", () => {
@@ -395,5 +415,407 @@ describe("combat response authorization", () => {
       /illegalDefense: autoDodge/,
     );
     expect(() => authorizeCombatResponse(options, {})).toThrow();
+  });
+});
+
+describe("declaration evaluation", () => {
+  test("applies the melee and ranged declaration minimums after bonuses", () => {
+    expect(evaluateDeclaration(d20(4), 5)).toEqual({
+      status: "miss",
+      reason: "belowMinimum",
+    });
+    expect(evaluateDeclaration(d20(5), 5)).toEqual({ status: "pendingDefense" });
+    expect(evaluateDeclaration(d20(7), 8)).toEqual({
+      status: "miss",
+      reason: "belowMinimum",
+    });
+    expect(evaluateDeclaration(d20(8), 8)).toEqual({ status: "pendingDefense" });
+  });
+
+  test("a natural 1 misses and malformed completed rolls use resolver validation", () => {
+    expect(evaluateDeclaration(d20(1, 100), 5)).toEqual({
+      status: "miss",
+      reason: "naturalOne",
+    });
+    expect(() => evaluateDeclaration(d20(5, 0, { total: 99 }), 5)).toThrow(/total.*die.*bonus/i);
+  });
+});
+
+describe("protection classification", () => {
+  test("derives no protection for an unarmored sheet", () => {
+    expect(deriveProtection(combatSheet({ items: [] }))).toEqual({ kind: "none" });
+  });
+
+  test("classifies fixed and unrolled dice-capacity M.D.C. suits without conversion", () => {
+    expect(deriveProtection(combatSheet({ items: [{ itemId: "gladiator", worn: true }] }))).toEqual(
+      {
+        kind: "mdcArmor",
+        itemId: "gladiator",
+        name: "Gladiator Full Environmental Body Armor",
+        max: 70,
+        current: 70,
+      },
+    );
+    expect(
+      deriveProtection(combatSheet({ items: [{ itemId: "llw-concealed-light", worn: true }] })),
+    ).toEqual({
+      kind: "mdcArmor",
+      itemId: "llw-concealed-light",
+      name: "Ley Line Walker Concealed Armor (Light)",
+    });
+  });
+});
+
+describe("S.D.C. hit routing", () => {
+  const fixture = armorSchema.parse({
+    kind: "armor",
+    id: "test-sdc-armor",
+    name: "Validated S.D.C. Armor Fixture",
+    ar: 12,
+    sdc: 30,
+    page: 287,
+  });
+  const armor: ProtectionState = {
+    kind: "sdcArmor",
+    itemId: fixture.id,
+    name: fixture.name,
+    ar: fixture.ar!,
+    max: fixture.sdc!,
+    current: 5,
+  };
+
+  test("a strike at A.R. ablates armor without spilling destruction damage", () => {
+    expect(
+      routeSdcHit({
+        strikeTotal: 12,
+        damage: 9,
+        protection: armor,
+        body: { sdc: 10, hitPoints: 20 },
+        comaDeathFloor: -10,
+      }),
+    ).toEqual({
+      kind: "armor",
+      armor: { before: 5, after: 0 },
+      body: {
+        before: { sdc: 10, hitPoints: 20 },
+        after: { sdc: 10, hitPoints: 20 },
+      },
+    });
+  });
+
+  test("a strike above A.R. routes the full hit to the body without changing armor", () => {
+    expect(
+      routeSdcHit({
+        strikeTotal: 13,
+        damage: 9,
+        protection: armor,
+        body: { sdc: 10, hitPoints: 20 },
+        comaDeathFloor: -10,
+      }),
+    ).toEqual({
+      kind: "body",
+      armor: { before: 5, after: 5 },
+      body: {
+        before: { sdc: 10, hitPoints: 20 },
+        after: { sdc: 1, hitPoints: 20 },
+      },
+    });
+  });
+
+  test("depleted armor routes future hits through body S.D.C. before Hit Points", () => {
+    expect(
+      routeSdcHit({
+        strikeTotal: 12,
+        damage: 5,
+        protection: { ...armor, current: 0 },
+        body: { sdc: 3, hitPoints: 20 },
+        comaDeathFloor: -10,
+      }),
+    ).toEqual({
+      kind: "body",
+      armor: { before: 0, after: 0 },
+      body: {
+        before: { sdc: 3, hitPoints: 20 },
+        after: { sdc: 0, hitPoints: 18 },
+      },
+    });
+  });
+
+  test("refuses M.D.C. protection instead of converting the hit", () => {
+    expect(
+      routeSdcHit({
+        strikeTotal: 20,
+        damage: 100,
+        protection: {
+          kind: "mdcArmor",
+          itemId: "gladiator",
+          name: "Gladiator Full Environmental Body Armor",
+          max: 70,
+          current: 70,
+        },
+        body: { sdc: 10, hitPoints: 20 },
+        comaDeathFloor: -10,
+      }),
+    ).toEqual({ kind: "unsupportedMdcProtection" });
+  });
+});
+
+describe("completed pure combat exchanges", () => {
+  const defender = combatSheet({ items: [], hthType: "basic" });
+  const meleeAttack = requireSupported(
+    deriveAttackProfile(combatSheet({ items: [{ itemId: "survival-knife" }] }), 0),
+  );
+  const meleeContext = {
+    kind: "melee",
+    defenderAware: true,
+    parryMode: "standard",
+  } as const;
+  const meleeOptions = deriveDefenseOptions(defender, meleeAttack, meleeContext);
+  const noneResponse = authorizeCombatResponse(meleeOptions, { kind: "none" });
+  const parryResponse = authorizeCombatResponse(meleeOptions, { kind: "parry" });
+  const dodgeResponse = authorizeCombatResponse(meleeOptions, { kind: "dodge" });
+  const damageRoll: DamageRoll = { dice: [4], bonus: 1, total: 5 };
+  const unopposedMelee = {
+    attack: meleeAttack,
+    context: meleeContext,
+    strikeRoll: d20(12, meleeAttack.strikeBonus),
+    response: noneResponse,
+    protection: { kind: "none" },
+    body: { sdc: 10, hitPoints: 20 },
+    comaDeathFloor: -10,
+  } satisfies Omit<ResolveCombatExchangeInput, "damageRoll">;
+
+  test("a declaration miss returns before defense or damage", () => {
+    expect(
+      resolveCombatExchange({
+        ...unopposedMelee,
+        context: {
+          ...meleeContext,
+          strikeModifier: -2,
+          strikeModifierReason: "poor footing",
+        },
+        strikeRoll: d20(3, 1),
+      }),
+    ).toEqual({
+      outcome: "miss",
+      reason: "belowMinimum",
+      critical: false,
+      damageMultiplier: 1,
+    });
+  });
+
+  test.each([
+    ["parry", parryResponse, "parried"],
+    ["dodge", dodgeResponse, "dodged"],
+  ] as const)("an equal-total %s favors the defender", (_kind, response, reason) => {
+    const defenseRoll = d20(12, response.totalBonus);
+    expect(
+      resolveCombatExchange({
+        ...unopposedMelee,
+        response,
+        defenseRoll,
+      }),
+    ).toEqual({
+      outcome: "defended",
+      reason,
+      response,
+      defenseRoll,
+      critical: false,
+      damageMultiplier: 1,
+    });
+  });
+
+  test("a natural-20 defense beats a natural-20 strike through resolveStrike", () => {
+    const strikeRoll = d20(20, meleeAttack.strikeBonus);
+    const defenseRoll = d20(20, dodgeResponse.totalBonus);
+    expect(
+      resolveCombatExchange({
+        ...unopposedMelee,
+        strikeRoll,
+        response: dodgeResponse,
+        defenseRoll,
+      }),
+    ).toMatchObject({
+      outcome: "defended",
+      reason: "dodged",
+      defenseRoll,
+      critical: false,
+      damageMultiplier: 1,
+    });
+  });
+
+  test("none resolves an ordinary unopposed hit and routes its damage", () => {
+    expect(resolveCombatExchange({ ...unopposedMelee, damageRoll })).toEqual({
+      outcome: "hit",
+      reason: "unopposed",
+      response: noneResponse,
+      critical: false,
+      damageMultiplier: 1,
+      damageRoll,
+      totalDamage: 5,
+      route: {
+        kind: "body",
+        body: {
+          before: { sdc: 10, hitPoints: 20 },
+          after: { sdc: 5, hitPoints: 20 },
+        },
+      },
+    });
+  });
+
+  test("melee damage applies its flat bonus before the critical multiplier", () => {
+    expect(
+      resolveCombatExchange({
+        ...unopposedMelee,
+        strikeRoll: d20(20, meleeAttack.strikeBonus),
+        damageRoll,
+      }),
+    ).toMatchObject({
+      outcome: "hit",
+      critical: true,
+      damageMultiplier: 2,
+      damageRoll: { dice: [4], bonus: 1, total: 5 },
+      totalDamage: 10,
+      route: {
+        kind: "body",
+        body: { after: { sdc: 0, hitPoints: 20 } },
+      },
+    });
+  });
+
+  test("firearm damage carries no P.S. or Hand-to-Hand flat bonus", () => {
+    const attack = requireSupported(
+      deriveAttackProfile(combatSheet({ items: [{ itemId: "automatic-pistol" }] }), 0),
+    );
+    const context = {
+      kind: "ranged",
+      defenderAware: false,
+      rangeBand: "normal",
+    } as const;
+    const response = authorizeCombatResponse(deriveDefenseOptions(defender, attack, context), {
+      kind: "none",
+    });
+    const firearmDamage: DamageRoll = { dice: [1, 2, 3, 4], bonus: 0, total: 10 };
+
+    expect(
+      resolveCombatExchange({
+        attack,
+        context,
+        strikeRoll: d20(10, attack.strikeBonus),
+        response,
+        damageRoll: firearmDamage,
+        protection: { kind: "none" },
+        body: { sdc: 20, hitPoints: 20 },
+        comaDeathFloor: -10,
+      }),
+    ).toMatchObject({
+      outcome: "hit",
+      damageRoll: { bonus: 0 },
+      totalDamage: 10,
+      route: { body: { after: { sdc: 10, hitPoints: 20 } } },
+    });
+  });
+
+  test("requires exactly the defense roll authorized by the response", () => {
+    expect(() => resolveCombatExchange({ ...unopposedMelee, response: parryResponse })).toThrow(
+      /parry requires a completed defense roll/i,
+    );
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        defenseRoll: d20(12, parryResponse.totalBonus),
+      }),
+    ).toThrow(/Take-the-hit cannot contain a defense roll/i);
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        response: parryResponse,
+        defenseRoll: d20(12, parryResponse.totalBonus + 1),
+      }),
+    ).toThrow(/Defense bonus must be 3/i);
+  });
+
+  test("requires the server-derived strike bonus", () => {
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        strikeRoll: d20(12, meleeAttack.strikeBonus + 1),
+        damageRoll,
+      }),
+    ).toThrow(/Strike bonus must be 3/i);
+  });
+
+  test("requires damage only for a hit", () => {
+    expect(() => resolveCombatExchange(unopposedMelee)).toThrow(
+      /hit requires a completed damage roll/i,
+    );
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        context: {
+          ...meleeContext,
+          strikeModifier: -2,
+          strikeModifierReason: "poor footing",
+        },
+        strikeRoll: d20(3, 1),
+        damageRoll,
+      }),
+    ).toThrow(/missed declaration cannot contain defense or damage rolls/i);
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        response: parryResponse,
+        defenseRoll: d20(12, parryResponse.totalBonus),
+        damageRoll,
+      }),
+    ).toThrow(/defended attack cannot contain damage/i);
+  });
+
+  test("validates the completed damage bonus, dice, faces, and total", () => {
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        damageRoll: { dice: [4], bonus: 0, total: 4 },
+      }),
+    ).toThrow(/Damage bonus must be 1/i);
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        damageRoll: { dice: [2, 3], bonus: 1, total: 6 },
+      }),
+    ).toThrow(/Damage roll requires 1 dice/i);
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        damageRoll: { dice: [7], bonus: 1, total: 8 },
+      }),
+    ).toThrow(/Damage dice must be integers from 1 to 6/i);
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        damageRoll: { dice: [2.5], bonus: 1, total: 3.5 },
+      }),
+    ).toThrow(/Damage dice must be integers from 1 to 6/i);
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        damageRoll: { dice: [4], bonus: 1, total: 99 },
+      }),
+    ).toThrow(/Damage total must be 5/i);
+  });
+
+  test("rejects M.D.C. protection before producing an S.D.C. route", () => {
+    expect(() =>
+      resolveCombatExchange({
+        ...unopposedMelee,
+        protection: {
+          kind: "mdcArmor",
+          itemId: "gladiator",
+          name: "Gladiator Full Environmental Body Armor",
+          max: 70,
+          current: 70,
+        },
+      }),
+    ).toThrow(/unsupportedMdcProtection.*out of scope/i);
   });
 });

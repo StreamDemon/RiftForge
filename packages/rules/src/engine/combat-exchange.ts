@@ -8,7 +8,13 @@ import {
   type CombatResponseKind,
 } from "../schema/combat-exchange.ts";
 import type { WeaponCategory } from "../schema/items.ts";
+import type { DefenseKind } from "../schema/strike-resolution.ts";
 import type { CharacterSheet, SheetEquipmentEntry } from "./character.ts";
+import { applyDamage, type VitalsPool } from "./combat.ts";
+import { parseDice } from "./dice.ts";
+import { damageArmor } from "./items.ts";
+import type { D20Roll, DamageRoll } from "./rolls.ts";
+import { resolveStrike } from "./strike-resolution.ts";
 
 export const combatExchangeRules = combatExchangeRulesSchema.parse(combatExchangeRaw);
 
@@ -56,6 +62,80 @@ export interface AuthorizedCombatResponse extends DefenseOption {
   defenseModifier: number;
   defenseModifierReason?: string;
   totalBonus: number;
+}
+
+export type ProtectionState =
+  | { kind: "none" }
+  | {
+      kind: "sdcArmor";
+      itemId: string;
+      name: string;
+      ar: number;
+      max: number;
+      current: number;
+    }
+  | {
+      kind: "mdcArmor";
+      itemId: string;
+      name: string;
+      max?: number;
+      current?: number;
+    };
+
+export type DeclarationResult =
+  | { status: "miss"; reason: "naturalOne" | "belowMinimum" }
+  | { status: "pendingDefense" };
+
+export type SdcDamageRoute =
+  | {
+      kind: "armor";
+      armor: { before: number; after: number };
+      body: { before: VitalsPool; after: VitalsPool };
+    }
+  | {
+      kind: "body";
+      armor?: { before: number; after: number };
+      body: { before: VitalsPool; after: VitalsPool };
+    }
+  | { kind: "unsupportedMdcProtection" };
+
+export type CombatExchangeResolution =
+  | {
+      outcome: "miss";
+      reason: "naturalOne" | "belowMinimum";
+      critical: false;
+      damageMultiplier: 1;
+    }
+  | {
+      outcome: "defended";
+      reason: "parried" | "dodged";
+      response: AuthorizedCombatResponse;
+      defenseRoll: D20Roll;
+      critical: false;
+      damageMultiplier: 1;
+    }
+  | {
+      outcome: "hit";
+      reason: "unopposed" | "strikeWon";
+      response: AuthorizedCombatResponse;
+      defenseRoll?: D20Roll;
+      critical: boolean;
+      damageMultiplier: 1 | 2;
+      damageRoll: DamageRoll;
+      totalDamage: number;
+      route: Exclude<SdcDamageRoute, { kind: "unsupportedMdcProtection" }>;
+    };
+
+export interface ResolveCombatExchangeInput {
+  attack: Extract<AttackProfile, { supported: true }>;
+  context: CombatContext;
+  strikeRoll: D20Roll;
+  response: AuthorizedCombatResponse;
+  defenseRoll?: D20Roll;
+  damageRoll?: DamageRoll;
+  protection: ProtectionState;
+  body: VitalsPool;
+  comaDeathFloor: number;
 }
 
 const meleeCategories = new Set<WeaponCategory>(["knife", "axe"]);
@@ -211,5 +291,191 @@ export function authorizeCombatResponse(
       ? {}
       : { defenseModifierReason: response.defenseModifierReason }),
     totalBonus: option.bonus + defenseModifier,
+  };
+}
+
+export function deriveProtection(sheet: CharacterSheet): ProtectionState {
+  const armor = sheet.armor;
+  if (armor === undefined) return { kind: "none" };
+  if (armor.item.mdc !== undefined) {
+    if (armor.current === 0) return { kind: "none" };
+    return {
+      kind: "mdcArmor",
+      itemId: armor.item.id,
+      name: armor.item.name,
+      ...(armor.max === undefined ? {} : { max: armor.max }),
+      ...(armor.current === undefined ? {} : { current: armor.current }),
+    };
+  }
+  const max = armor.item.sdc!;
+  const current = armor.current ?? max;
+  return current === 0
+    ? { kind: "none" }
+    : {
+        kind: "sdcArmor",
+        itemId: armor.item.id,
+        name: armor.item.name,
+        ar: armor.item.ar!,
+        max,
+        current,
+      };
+}
+
+export function evaluateDeclaration(
+  strike: D20Roll,
+  minimumStrikeTotal: number,
+): DeclarationResult {
+  const base = resolveStrike({ strike, allowedDefenses: [], damageType: "sdc" });
+  if (base.outcome === "miss") {
+    return { status: "miss", reason: base.reason as "naturalOne" | "belowMinimum" };
+  }
+  return strike.total < minimumStrikeTotal
+    ? { status: "miss", reason: "belowMinimum" }
+    : { status: "pendingDefense" };
+}
+
+export function routeSdcHit(input: {
+  strikeTotal: number;
+  damage: number;
+  protection: ProtectionState;
+  body: VitalsPool;
+  comaDeathFloor: number;
+}): SdcDamageRoute {
+  if (input.protection.kind === "mdcArmor") {
+    return { kind: "unsupportedMdcProtection" };
+  }
+  const before = { ...input.body };
+  if (
+    input.protection.kind === "sdcArmor" &&
+    input.protection.current > 0 &&
+    input.strikeTotal <= input.protection.ar
+  ) {
+    return {
+      kind: "armor",
+      armor: {
+        before: input.protection.current,
+        after: damageArmor(input.protection.current, input.damage),
+      },
+      body: { before, after: { ...before } },
+    };
+  }
+  const after = applyDamage(input.body, input.damage, input.comaDeathFloor);
+  return {
+    kind: "body",
+    ...(input.protection.kind === "sdcArmor"
+      ? { armor: { before: input.protection.current, after: input.protection.current } }
+      : {}),
+    body: { before, after },
+  };
+}
+
+function assertDamageRoll(
+  attack: Extract<AttackProfile, { supported: true }>,
+  roll: DamageRoll,
+): void {
+  const formula = parseDice(attack.damageFormula);
+  if (roll.bonus !== attack.damageBonus) {
+    throw new Error(`Damage bonus must be ${attack.damageBonus}.`);
+  }
+  if (roll.dice.length !== formula.count) {
+    throw new Error(`Damage roll requires ${formula.count} dice.`);
+  }
+  if (roll.dice.some((die) => !Number.isInteger(die) || die < 1 || die > formula.sides)) {
+    throw new Error(`Damage dice must be integers from 1 to ${formula.sides}.`);
+  }
+  const expected =
+    roll.dice.reduce((sum, die) => sum + die, 0) * formula.multiplier +
+    formula.modifier +
+    roll.bonus;
+  if (roll.total !== expected) {
+    throw new Error(`Damage total must be ${expected}.`);
+  }
+}
+
+export function resolveCombatExchange(input: ResolveCombatExchangeInput): CombatExchangeResolution {
+  validateCombatContext(input.attack, input.context);
+  if (input.protection.kind === "mdcArmor") {
+    throw new Error("unsupportedMdcProtection: full M.D.C. resolution is out of scope.");
+  }
+  const expectedStrikeBonus = input.attack.strikeBonus + (input.context.strikeModifier ?? 0);
+  if (input.strikeRoll.bonus !== expectedStrikeBonus) {
+    throw new Error(`Strike bonus must be ${expectedStrikeBonus}.`);
+  }
+  const declaration = evaluateDeclaration(input.strikeRoll, input.attack.minimumStrikeTotal);
+  if (declaration.status === "miss") {
+    if (input.defenseRoll !== undefined || input.damageRoll !== undefined) {
+      throw new Error("A missed declaration cannot contain defense or damage rolls.");
+    }
+    return {
+      outcome: "miss",
+      reason: declaration.reason,
+      critical: false,
+      damageMultiplier: 1,
+    };
+  }
+
+  const takesHit = input.response.kind === "none";
+  if (takesHit && input.defenseRoll !== undefined) {
+    throw new Error("Take-the-hit cannot contain a defense roll.");
+  }
+  if (!takesHit && input.defenseRoll === undefined) {
+    throw new Error(`${input.response.kind} requires a completed defense roll.`);
+  }
+  if (input.defenseRoll !== undefined && input.defenseRoll.bonus !== input.response.totalBonus) {
+    throw new Error(`Defense bonus must be ${input.response.totalBonus}.`);
+  }
+
+  const strike = resolveStrike({
+    strike: input.strikeRoll,
+    ...(takesHit
+      ? {}
+      : {
+          defense: {
+            kind: input.response.kind as DefenseKind,
+            roll: input.defenseRoll!,
+          },
+        }),
+    allowedDefenses: takesHit ? [] : [input.response.kind as DefenseKind],
+    damageType: "sdc",
+    criticalOn: input.attack.criticalOn,
+  });
+  if (strike.outcome !== "hit") {
+    if (input.damageRoll !== undefined) {
+      throw new Error("A defended attack cannot contain damage.");
+    }
+    return {
+      outcome: "defended",
+      reason: strike.reason as "parried" | "dodged",
+      response: input.response,
+      defenseRoll: input.defenseRoll!,
+      critical: false,
+      damageMultiplier: 1,
+    };
+  }
+  if (input.damageRoll === undefined) {
+    throw new Error("A hit requires a completed damage roll.");
+  }
+  assertDamageRoll(input.attack, input.damageRoll);
+  const totalDamage = input.damageRoll.total * strike.damageMultiplier;
+  const route = routeSdcHit({
+    strikeTotal: input.strikeRoll.total,
+    damage: totalDamage,
+    protection: input.protection,
+    body: input.body,
+    comaDeathFloor: input.comaDeathFloor,
+  });
+  if (route.kind === "unsupportedMdcProtection") {
+    throw new Error("unsupportedMdcProtection: full M.D.C. resolution is out of scope.");
+  }
+  return {
+    outcome: "hit",
+    reason: strike.reason as "unopposed" | "strikeWon",
+    response: input.response,
+    ...(input.defenseRoll === undefined ? {} : { defenseRoll: input.defenseRoll }),
+    critical: strike.critical,
+    damageMultiplier: strike.damageMultiplier,
+    damageRoll: input.damageRoll,
+    totalDamage,
+    route,
   };
 }
