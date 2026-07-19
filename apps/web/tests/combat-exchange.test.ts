@@ -413,10 +413,10 @@ describe("combat exchange component contract", () => {
 
   test("renders stored context before only the stored server response options", () => {
     expect(panelSource).toContain("STORED CONTEXT");
-    expect(panelSource).toContain("props.exchange.context.defenderAware");
-    expect(panelSource).toContain("props.exchange.defenseOptions");
+    expect(panelSource).toContain("exchange().context.defenderAware");
+    expect(panelSource).toContain("exchange().defenseOptions");
     expect(panelSource.indexOf("STORED CONTEXT")).toBeLessThan(
-      panelSource.indexOf("props.exchange.defenseOptions"),
+      panelSource.indexOf("exchange().defenseOptions"),
     );
     expect(panelSource).toContain('option.kind === "none" ? "> TAKE THE HIT"');
     expect(panelSource).toContain("option.actionCost} ACTION");
@@ -430,8 +430,42 @@ describe("combat exchange component contract", () => {
     );
     expect(panelSource).toContain("routeId: props.characterId");
     expect(panelSource).toContain("routeEpoch: props.routeEpoch()");
-    expect(panelSource).toContain("exchangeId: props.exchange._id");
+    expect(panelSource).toContain("exchangeId: props.exchangeId");
     expect(panelSource).toContain("ownsAsyncResult(owner, current)");
+  });
+
+  test("invalidates the component lifetime when cleanup runs", () => {
+    const cleanupStart = panelSource.indexOf("onCleanup(() => {");
+    const cleanupEnd = panelSource.indexOf("\n  });", cleanupStart);
+    expect(cleanupStart).toBeGreaterThanOrEqual(0);
+    expect(cleanupEnd).toBeGreaterThan(cleanupStart);
+    expect(panelSource.slice(cleanupStart, cleanupEnd)).toContain("routeEpoch += 1");
+  });
+
+  test("keys queue row state by stable exchange ids instead of refreshed object identity", () => {
+    expect(panelSource).toMatch(
+      /const incomingIds = createMemo\(\(\) =>\s*pendingIncoming\(\)\.map\(\(exchange\) => exchange\._id\)/,
+    );
+    expect(panelSource).toMatch(
+      /const outgoingIds = createMemo\(\(\) =>\s*pendingOutgoing\(\)\.map\(\(exchange\) => exchange\._id\)/,
+    );
+    expect(panelSource).toContain("<For each={incomingIds()}>");
+    expect(panelSource).toContain("<For each={outgoingIds()}>");
+    expect(panelSource).toContain("exchange={() => incomingById(exchangeId)}");
+    expect(panelSource).toContain("exchange={() => outgoingById(exchangeId)}");
+    expect(panelSource).not.toContain("<For each={pendingIncoming()}>");
+    expect(panelSource).not.toContain("<For each={outgoing.data()}>");
+  });
+
+  test("uses green for an immediate miss and amber for a pending defense", () => {
+    const declarationStart = panelSource.indexOf("const submitDeclaration = async () => {");
+    const noticeStart = panelSource.indexOf("setNotice(\n        result.status", declarationStart);
+    const noticeEnd = panelSource.indexOf("\n      );", noticeStart);
+    expect(noticeStart).toBeGreaterThanOrEqual(0);
+    expect(noticeEnd).toBeGreaterThan(noticeStart);
+    const notice = panelSource.slice(noticeStart, noticeEnd);
+    expect(notice).toMatch(/result\.status === "resolved"\s*\? \{ tone: "ok"/s);
+    expect(notice).toMatch(/: \{ tone: "warn".*AWAITING DEFENSE/s);
   });
 
   test("keeps persisted combat history bounded and uses no magic signal tone", () => {

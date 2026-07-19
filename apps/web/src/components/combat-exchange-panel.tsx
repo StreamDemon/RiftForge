@@ -45,7 +45,10 @@ type IncomingExchange = Extract<
   FunctionReturnType<typeof api.combat.incoming>[number],
   { status: "pendingDefense" }
 >;
-type OutgoingExchange = FunctionReturnType<typeof api.combat.outgoing>[number];
+type OutgoingExchange = Extract<
+  FunctionReturnType<typeof api.combat.outgoing>[number],
+  { status: "pendingDefense" }
+>;
 
 const toneClass = {
   dim: "border-dead text-muted",
@@ -69,8 +72,22 @@ function strikeSummary(exchange: {
   return `d20[${exchange.strikeRoll.die}]${signed(exchange.strikeRoll.bonus)} = ${exchange.strikeRoll.total}`;
 }
 
+function storedContextMode(context: IncomingExchange["context"]): string {
+  return context.kind === "melee"
+    ? `PARRY ${context.parryMode.toUpperCase()}`
+    : `RANGE ${context.rangeBand.toUpperCase()}`;
+}
+
+function storedStrikeModifier(context: IncomingExchange["context"]): string {
+  const modifier = context.strikeModifier;
+  return modifier === undefined
+    ? ""
+    : ` · STRIKE ${signed(modifier)} — ${context.strikeModifierReason}`;
+}
+
 function IncomingExchangeRow(props: {
-  exchange: IncomingExchange;
+  exchangeId: IncomingExchange["_id"];
+  exchange: Accessor<IncomingExchange | undefined>;
   characterId: Id<"characters">;
   routeEpoch: Accessor<number>;
   onTelemetry: (text: string, tone?: TelemetryTone) => void;
@@ -87,18 +104,19 @@ function IncomingExchangeRow(props: {
   });
 
   const submitResponse = async (kind: CombatResponseKind) => {
+    if (props.exchange() === undefined) return;
     const modifier = defenseModifierValue();
     if (modifier === undefined || (modifier !== 0 && defenseReason().trim() === "")) return;
     const owner = {
       routeId: props.characterId,
       routeEpoch: props.routeEpoch(),
-      exchangeId: props.exchange._id,
+      exchangeId: props.exchangeId,
     };
     setBusy(true);
     setError(undefined);
     try {
       const result = await respondToAttack({
-        exchangeId: props.exchange._id,
+        exchangeId: props.exchangeId,
         response: {
           kind,
           ...(modifier === 0 ? {} : { defenseModifier: modifier }),
@@ -110,7 +128,7 @@ function IncomingExchangeRow(props: {
       const current = {
         routeId: props.characterId,
         routeEpoch: props.routeEpoch(),
-        exchangeId: props.exchange._id,
+        exchangeId: props.exchangeId,
       };
       if (!ownsAsyncResult(owner, current)) return;
       props.onTelemetry(
@@ -121,7 +139,7 @@ function IncomingExchangeRow(props: {
       const current = {
         routeId: props.characterId,
         routeEpoch: props.routeEpoch(),
-        exchangeId: props.exchange._id,
+        exchangeId: props.exchangeId,
       };
       if (!ownsAsyncResult(owner, current)) return;
       const message = combatErrorMessage(caught);
@@ -131,76 +149,77 @@ function IncomingExchangeRow(props: {
       const current = {
         routeId: props.characterId,
         routeEpoch: props.routeEpoch(),
-        exchangeId: props.exchange._id,
+        exchangeId: props.exchangeId,
       };
       if (ownsAsyncResult(owner, current)) setBusy(false);
     }
   };
 
   return (
-    <li class="space-y-2 border-t border-line pt-2">
-      <div class="font-hud text-[12px] font-semibold tracking-[0.06em] text-fg uppercase">
-        {props.exchange.attackerName} · {props.exchange.weapon.name}
-      </div>
-      <div class="font-data text-[11.5px] text-amber">{strikeSummary(props.exchange)}</div>
-      <div class="space-y-1 border-l-2 border-dead pl-2 font-mono text-[10.5px] text-muted">
-        <span class="block text-dead">STORED CONTEXT</span>
-        <span class="block">
-          {props.exchange.context.kind.toUpperCase()} ·{" "}
-          {props.exchange.context.defenderAware ? "AWARE" : "UNAWARE"}
-        </span>
-        <span class="block">
-          {props.exchange.context.kind === "melee"
-            ? `PARRY ${props.exchange.context.parryMode.toUpperCase()}`
-            : `RANGE ${props.exchange.context.rangeBand.toUpperCase()}`}
-          {props.exchange.context.strikeModifier === undefined
-            ? ""
-            : ` · STRIKE ${signed(props.exchange.context.strikeModifier)} — ${props.exchange.context.strikeModifierReason}`}
-        </span>
-      </div>
-      <div class="grid grid-cols-[72px_minmax(0,1fr)] gap-2">
-        <label class="space-y-1">
-          <MonoLabel class="block">DEF MOD</MonoLabel>
-          <TextInput
-            aria-label="Defense modifier"
-            inputmode="numeric"
-            value={defenseModifier()}
-            onInput={(event) => setDefenseModifier(event.currentTarget.value)}
-          />
-        </label>
-        <label class="space-y-1">
-          <MonoLabel class="block">REASON</MonoLabel>
-          <TextInput
-            aria-label="Defense modifier reason"
-            class="w-full"
-            value={defenseReason()}
-            onInput={(event) => setDefenseReason(event.currentTarget.value)}
-          />
-        </label>
-      </div>
-      <div class="space-y-1">
-        <For each={props.exchange.defenseOptions}>
-          {(option) => (
-            <Button
-              class="w-full px-2 text-left text-[11.5px]"
-              disabled={busy() || !responseReady()}
-              title={option.explanation}
-              onClick={() => void submitResponse(option.kind)}
-            >
-              {option.kind === "none" ? "> TAKE THE HIT" : `> ${option.kind.toUpperCase()}`} ·
-              {option.bonus >= 0 ? "+" : ""}
-              {option.bonus} · {option.actionCost} ACTION
-            </Button>
-          )}
-        </For>
-      </div>
-      <Show when={error()}>{(message) => <Alert tone="danger">{message()}</Alert>}</Show>
-    </li>
+    <Show when={props.exchange()}>
+      {(exchange) => (
+        <li class="space-y-2 border-t border-line pt-2">
+          <div class="font-hud text-[12px] font-semibold tracking-[0.06em] text-fg uppercase">
+            {exchange().attackerName} · {exchange().weapon.name}
+          </div>
+          <div class="font-data text-[11.5px] text-amber">{strikeSummary(exchange())}</div>
+          <div class="space-y-1 border-l-2 border-dead pl-2 font-mono text-[10.5px] text-muted">
+            <span class="block text-dead">STORED CONTEXT</span>
+            <span class="block">
+              {exchange().context.kind.toUpperCase()} ·{" "}
+              {exchange().context.defenderAware ? "AWARE" : "UNAWARE"}
+            </span>
+            <span class="block">
+              {storedContextMode(exchange().context)}
+              {storedStrikeModifier(exchange().context)}
+            </span>
+          </div>
+          <div class="grid grid-cols-[72px_minmax(0,1fr)] gap-2">
+            <label class="space-y-1">
+              <MonoLabel class="block">DEF MOD</MonoLabel>
+              <TextInput
+                aria-label="Defense modifier"
+                inputmode="numeric"
+                value={defenseModifier()}
+                onInput={(event) => setDefenseModifier(event.currentTarget.value)}
+              />
+            </label>
+            <label class="space-y-1">
+              <MonoLabel class="block">REASON</MonoLabel>
+              <TextInput
+                aria-label="Defense modifier reason"
+                class="w-full"
+                value={defenseReason()}
+                onInput={(event) => setDefenseReason(event.currentTarget.value)}
+              />
+            </label>
+          </div>
+          <div class="space-y-1">
+            <For each={exchange().defenseOptions}>
+              {(option) => (
+                <Button
+                  class="w-full px-2 text-left text-[11.5px]"
+                  disabled={busy() || !responseReady()}
+                  title={option.explanation}
+                  onClick={() => void submitResponse(option.kind)}
+                >
+                  {option.kind === "none" ? "> TAKE THE HIT" : `> ${option.kind.toUpperCase()}`} ·
+                  {option.bonus >= 0 ? "+" : ""}
+                  {option.bonus} · {option.actionCost} ACTION
+                </Button>
+              )}
+            </For>
+          </div>
+          <Show when={error()}>{(message) => <Alert tone="danger">{message()}</Alert>}</Show>
+        </li>
+      )}
+    </Show>
   );
 }
 
 function OutgoingExchangeRow(props: {
-  exchange: OutgoingExchange;
+  exchangeId: OutgoingExchange["_id"];
+  exchange: Accessor<OutgoingExchange | undefined>;
   characterId: Id<"characters">;
   routeEpoch: Accessor<number>;
   onTelemetry: (text: string, tone?: TelemetryTone) => void;
@@ -210,19 +229,20 @@ function OutgoingExchangeRow(props: {
   const [error, setError] = createSignal<string>();
 
   const cancel = async () => {
+    if (props.exchange() === undefined) return;
     const owner = {
       routeId: props.characterId,
       routeEpoch: props.routeEpoch(),
-      exchangeId: props.exchange._id,
+      exchangeId: props.exchangeId,
     };
     setBusy(true);
     setError(undefined);
     try {
-      await cancelAttack({ exchangeId: props.exchange._id });
+      await cancelAttack({ exchangeId: props.exchangeId });
       const current = {
         routeId: props.characterId,
         routeEpoch: props.routeEpoch(),
-        exchangeId: props.exchange._id,
+        exchangeId: props.exchangeId,
       };
       if (!ownsAsyncResult(owner, current)) return;
       props.onTelemetry("> COMBAT :: ATTACK CANCELLED", "dim");
@@ -230,7 +250,7 @@ function OutgoingExchangeRow(props: {
       const current = {
         routeId: props.characterId,
         routeEpoch: props.routeEpoch(),
-        exchangeId: props.exchange._id,
+        exchangeId: props.exchangeId,
       };
       if (!ownsAsyncResult(owner, current)) return;
       const message = combatErrorMessage(caught);
@@ -240,27 +260,31 @@ function OutgoingExchangeRow(props: {
       const current = {
         routeId: props.characterId,
         routeEpoch: props.routeEpoch(),
-        exchangeId: props.exchange._id,
+        exchangeId: props.exchangeId,
       };
       if (ownsAsyncResult(owner, current)) setBusy(false);
     }
   };
 
   return (
-    <li class="space-y-2 border-t border-line pt-2">
-      <div class="font-hud text-[12px] font-semibold tracking-[0.06em] text-fg uppercase">
-        {props.exchange.defenderName} · {props.exchange.weapon.name}
-      </div>
-      <div class="font-data text-[11.5px] text-amber">{strikeSummary(props.exchange)}</div>
-      <Button
-        class="w-full px-2 text-left text-[11.5px]"
-        disabled={busy()}
-        onClick={() => void cancel()}
-      >
-        {busy() ? "> CANCELLING…" : "> CANCEL"}
-      </Button>
-      <Show when={error()}>{(message) => <Alert tone="danger">{message()}</Alert>}</Show>
-    </li>
+    <Show when={props.exchange()}>
+      {(exchange) => (
+        <li class="space-y-2 border-t border-line pt-2">
+          <div class="font-hud text-[12px] font-semibold tracking-[0.06em] text-fg uppercase">
+            {exchange().defenderName} · {exchange().weapon.name}
+          </div>
+          <div class="font-data text-[11.5px] text-amber">{strikeSummary(exchange())}</div>
+          <Button
+            class="w-full px-2 text-left text-[11.5px]"
+            disabled={busy()}
+            onClick={() => void cancel()}
+          >
+            {busy() ? "> CANCELLING…" : "> CANCEL"}
+          </Button>
+          <Show when={error()}>{(message) => <Alert tone="danger">{message()}</Alert>}</Show>
+        </li>
+      )}
+    </Show>
   );
 }
 
@@ -333,6 +357,20 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
           (exchange): exchange is IncomingExchange => exchange.status === "pendingDefense",
         ) ?? [],
   );
+  const pendingOutgoing = createMemo(
+    () =>
+      outgoing
+        .data()
+        ?.filter(
+          (exchange): exchange is OutgoingExchange => exchange.status === "pendingDefense",
+        ) ?? [],
+  );
+  const incomingIds = createMemo(() => pendingIncoming().map((exchange) => exchange._id));
+  const outgoingIds = createMemo(() => pendingOutgoing().map((exchange) => exchange._id));
+  const incomingById = (exchangeId: IncomingExchange["_id"]) =>
+    pendingIncoming().find((exchange) => exchange._id === exchangeId);
+  const outgoingById = (exchangeId: OutgoingExchange["_id"]) =>
+    pendingOutgoing().find((exchange) => exchange._id === exchangeId);
   const boundedRecent = createMemo(() => recent.data()?.slice(0, 20) ?? []);
   const visibleRecent = createMemo(() => boundedRecent().slice(0, historyExpanded() ? 20 : 5));
 
@@ -360,6 +398,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
   };
   createEffect(on(() => props.characterId, resetRouteState, { defer: true }));
   onCleanup(() => {
+    routeEpoch += 1;
     if (flashTimer !== undefined) clearTimeout(flashTimer);
   });
 
@@ -438,8 +477,8 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
       );
       setNotice(
         result.status === "resolved"
-          ? { tone: "warn", text: `${result.weapon.name.toUpperCase()} — MISS RECORDED` }
-          : { tone: "ok", text: `${result.weapon.name.toUpperCase()} — AWAITING DEFENSE` },
+          ? { tone: "ok", text: `${result.weapon.name.toUpperCase()} — MISS RECORDED` }
+          : { tone: "warn", text: `${result.weapon.name.toUpperCase()} — AWAITING DEFENSE` },
       );
       setStrikeModifier("");
       setStrikeReason("");
@@ -573,14 +612,15 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
           INCOMING
         </MonoLabel>
         <Show
-          when={pendingIncoming().length > 0}
+          when={incomingIds().length > 0}
           fallback={<p class="mt-1 font-mono text-[11.5px] text-dead">// NO PENDING STRIKES</p>}
         >
           <ol class="mt-2 space-y-2">
-            <For each={pendingIncoming()}>
-              {(exchange) => (
+            <For each={incomingIds()}>
+              {(exchangeId) => (
                 <IncomingExchangeRow
-                  exchange={exchange}
+                  exchangeId={exchangeId}
+                  exchange={() => incomingById(exchangeId)}
                   characterId={props.characterId}
                   routeEpoch={() => routeEpoch}
                   onTelemetry={props.onTelemetry}
@@ -601,14 +641,15 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
           OUTGOING
         </MonoLabel>
         <Show
-          when={(outgoing.data()?.length ?? 0) > 0}
+          when={outgoingIds().length > 0}
           fallback={<p class="mt-1 font-mono text-[11.5px] text-dead">// NO OPEN ATTACKS</p>}
         >
           <ol class="mt-2 space-y-2">
-            <For each={outgoing.data()}>
-              {(exchange) => (
+            <For each={outgoingIds()}>
+              {(exchangeId) => (
                 <OutgoingExchangeRow
-                  exchange={exchange}
+                  exchangeId={exchangeId}
+                  exchange={() => outgoingById(exchangeId)}
                   characterId={props.characterId}
                   routeEpoch={() => routeEpoch}
                   onTelemetry={props.onTelemetry}
