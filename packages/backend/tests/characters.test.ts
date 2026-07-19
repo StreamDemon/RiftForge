@@ -629,10 +629,26 @@ describe("living vitals — current vs. max (#38)", () => {
     await expect(t.mutation(api.characters.equipArmor, { id, index: 1 })).rejects.toThrow(
       /expected item snapshot/,
     );
-    // Nothing was written by the refused calls.
+    // A real manifest shift can leave the stale index valid but occupied by a
+    // different instance: removing slot 0 shifts the Gladiator to 0, then the
+    // pistol takes its old slot 1. The stale Gladiator click must not remove it.
+    await t.mutation(api.characters.removeItem, {
+      id,
+      index: 0,
+      expect: { itemId: "canteen" },
+    });
+    await t.mutation(api.characters.addItem, { id, itemId: "wilks-320-laser-pistol" });
+    await expect(
+      t.mutation(api.characters.removeItem, {
+        id,
+        index: 1,
+        expect: { itemId: "gladiator" },
+      }),
+    ).rejects.toThrow(/manifest changed/);
+    // Nothing was written by the refused stale click.
     expect((await t.query(api.characters.get, { id }))?.items).toEqual([
-      { itemId: "canteen" },
       { itemId: "gladiator" },
+      { itemId: "wilks-320-laser-pistol" },
     ]);
   });
 

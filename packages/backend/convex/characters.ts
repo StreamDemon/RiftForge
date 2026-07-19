@@ -2,7 +2,6 @@ import {
   applyDamage as damagePools,
   armorMaxPool,
   armorNeedsRoll,
-  characterSchema,
   comaDeathFloor,
   damageArmor,
   deriveSheet,
@@ -20,8 +19,14 @@ import {
   type Character,
 } from "@riftforge/rules";
 import { v } from "convex/values";
-import { mutation, query, type MutationCtx } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
+import {
+  expectedItemValidator,
+  loadCharacter,
+  patchCurrent,
+  requireItemAt,
+  validateCharacter,
+} from "./character-state";
 import { characterFields } from "./schema";
 
 /** A stored character document: the fields plus Convex's system columns. */
@@ -38,44 +43,6 @@ const characterInputFields = {
   skills: v.optional(characterFields.skills),
   spellIds: v.optional(characterFields.spellIds),
 };
-
-/**
- * Validate raw input through the rules layer before it can be stored.
- * `characterSchema.parse` rejects bad shapes/values and applies defaults
- * (psychicClass, skills, spellIds); the throwaway `deriveSheet` call then
- * proves the character actually derives — rejecting unknown O.C.C./skill/
- * spell/H2H ids and illegal duplicates — so every stored doc is a
- * fully-resolved `Character` that the sheet query cannot fail on.
- */
-function validateCharacter(input: unknown): Character {
-  const character = characterSchema.parse(input);
-  deriveSheet(character);
-  return character;
-}
-
-/** Load a stored character or throw; returns the parsed choices sans system columns. */
-async function loadCharacter(ctx: MutationCtx, id: Id<"characters">): Promise<Character> {
-  const doc = await ctx.db.get(id);
-  if (doc === null) throw new Error(`Character ${id} not found.`);
-  const { _id, _creationTime, ...stored } = doc;
-  return characterSchema.parse(stored);
-}
-
-/**
- * Write a new live-vitals state. Round-trips through the rules layer first
- * (like every write), so a `current` that exceeds its maximum or sinks below
- * the coma/death floor can never be stored — mutations compute legal values,
- * this is the backstop.
- */
-async function patchCurrent(
-  ctx: MutationCtx,
-  id: Id<"characters">,
-  character: Character,
-  current: Character["current"],
-): Promise<void> {
-  validateCharacter({ ...character, current });
-  await ctx.db.patch(id, { current });
-}
 
 export const create = mutation({
   args: characterInputFields,
@@ -313,37 +280,6 @@ function withoutArmorPool(current: Character["current"]): Character["current"] {
   if (current === undefined) return undefined;
   const { armor: _armor, ...rest } = current;
   return Object.keys(rest).length > 0 ? rest : undefined;
-}
-
-/** Client's snapshot of the item instance it targeted (index + this state). */
-const expectedItemValidator = v.object({
-  itemId: v.string(),
-  worn: v.optional(v.boolean()),
-  rolledMdc: v.optional(v.number()),
-});
-type ExpectedItem = { itemId: string; worn?: boolean; rolledMdc?: number };
-
-/**
- * Resolve the item instance an index-based inventory mutation targets. The
- * index alone can go stale — the manifest may have changed while the click
- * was in flight — so the client also names the instance state it saw, and a
- * mismatch is refused instead of landing on whatever now sits at that slot.
- */
-function requireItemAt(
-  character: Character,
-  index: number,
-  expect: ExpectedItem,
-): Character["items"][number] {
-  const entry = Number.isInteger(index) ? character.items[index] : undefined;
-  if (entry === undefined) throw new Error(`No item at index ${index}.`);
-  if (
-    entry.itemId !== expect.itemId ||
-    (entry.worn === true) !== (expect.worn === true) ||
-    entry.rolledMdc !== expect.rolledMdc
-  ) {
-    throw new Error("The manifest changed while the request was in flight — try again.");
-  }
-  return entry;
 }
 
 /**
