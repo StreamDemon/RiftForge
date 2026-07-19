@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vite-plus/test";
 import {
+  authorizeCombatResponse,
   combatExchangeRules,
   deriveAttackProfile,
+  deriveDefenseOptions,
   deriveSheet,
   validateCombatContext,
   type AttackProfile,
@@ -24,7 +26,9 @@ const combatant: CharacterInput = {
   rolled: { hitPoints: 18, sdc: 20 },
 };
 
-function combatSheet(overrides: Pick<CharacterInput, "items">): CharacterSheet {
+function combatSheet(
+  overrides: Partial<Pick<CharacterInput, "items" | "hthType" | "level">>,
+): CharacterSheet {
   return deriveSheet({ ...combatant, ...overrides });
 }
 
@@ -144,5 +148,252 @@ describe("combat context validation", () => {
         strikeModifierReason: "   ",
       }),
     ).toThrow(/string|reason/i);
+  });
+});
+
+describe("defense option derivation", () => {
+  const meleeAttack = requireSupported(
+    deriveAttackProfile(combatSheet({ items: [{ itemId: "survival-knife" }] }), 0),
+  );
+  const rangedAttack = requireSupported(
+    deriveAttackProfile(combatSheet({ items: [{ itemId: "automatic-pistol" }] }), 0),
+  );
+
+  test("offers aware trained melee defenders parry, dodge, then none", () => {
+    const defender = combatSheet({ items: [], hthType: "basic" });
+
+    expect(
+      deriveDefenseOptions(defender, meleeAttack, {
+        kind: "melee",
+        defenderAware: true,
+        parryMode: "standard",
+      }),
+    ).toEqual([
+      {
+        kind: "parry",
+        bonus: 3,
+        actionCost: 0,
+        explanation: "Parry the melee weapon.",
+      },
+      {
+        kind: "dodge",
+        bonus: 3,
+        actionCost: 1,
+        explanation: "Dodge; costs one action for table tracking.",
+      },
+      { kind: "none", bonus: 0, actionCost: 0, explanation: "Take the hit." },
+    ]);
+  });
+
+  test("charges an action for untrained standard parry but not trained standard parry", () => {
+    const context = {
+      kind: "melee",
+      defenderAware: true,
+      parryMode: "standard",
+    } as const;
+    const trained = combatSheet({ items: [], hthType: "basic" });
+    const untrained = combatSheet({ items: [], hthType: "none" });
+
+    expect(deriveDefenseOptions(trained, meleeAttack, context)[0]).toMatchObject({
+      kind: "parry",
+      actionCost: 0,
+    });
+    expect(deriveDefenseOptions(untrained, meleeAttack, context)[0]).toMatchObject({
+      kind: "parry",
+      actionCost: 1,
+    });
+  });
+
+  test("uses zero ordinary parry bonus for a bare-handed weapon parry", () => {
+    const defender = combatSheet({ items: [], hthType: "basic" });
+
+    expect(
+      deriveDefenseOptions(defender, meleeAttack, {
+        kind: "melee",
+        defenderAware: true,
+        parryMode: "bareHanded",
+      })[0],
+    ).toEqual({
+      kind: "parry",
+      bonus: 0,
+      actionCost: 0,
+      explanation: "Bare-handed weapon parry; no ordinary parry bonus.",
+    });
+  });
+
+  test("withholds ordinary defenses from unaware melee defenders but retains auto-dodge", () => {
+    const basic = combatSheet({ items: [], hthType: "basic" });
+    const commando = combatSheet({ items: [], hthType: "commando", level: 15 });
+    const context = {
+      kind: "melee",
+      defenderAware: false,
+      parryMode: "standard",
+    } as const;
+
+    expect(deriveDefenseOptions(basic, meleeAttack, context)).toEqual([
+      { kind: "none", bonus: 0, actionCost: 0, explanation: "Take the hit." },
+    ]);
+    expect(deriveDefenseOptions(commando, meleeAttack, context)).toEqual([
+      {
+        kind: "autoDodge",
+        bonus: 8,
+        actionCost: 0,
+        explanation: "Automatic dodge; no action cost.",
+      },
+      { kind: "none", bonus: 0, actionCost: 0, explanation: "Take the hit." },
+    ]);
+  });
+
+  test("offers aware ranged defenders only ranged dodge-family options and none", () => {
+    const basic = combatSheet({ items: [], hthType: "basic" });
+    const commando = combatSheet({ items: [], hthType: "commando", level: 15 });
+    const context = {
+      kind: "ranged",
+      defenderAware: true,
+      rangeBand: "normal",
+    } as const;
+
+    expect(deriveDefenseOptions(basic, rangedAttack, context)).toEqual([
+      {
+        kind: "dodge",
+        bonus: 3,
+        actionCost: 1,
+        explanation: "Ranged dodge (0 range-band modifier).",
+      },
+      { kind: "none", bonus: 0, actionCost: 0, explanation: "Take the hit." },
+    ]);
+    expect(deriveDefenseOptions(commando, rangedAttack, context)).toEqual([
+      {
+        kind: "dodge",
+        bonus: 3,
+        actionCost: 1,
+        explanation: "Ranged dodge (0 range-band modifier).",
+      },
+      {
+        kind: "autoDodge",
+        bonus: 3,
+        actionCost: 0,
+        explanation: "Automatic ranged dodge (0 range-band modifier).",
+      },
+      { kind: "none", bonus: 0, actionCost: 0, explanation: "Take the hit." },
+    ]);
+  });
+
+  test.each([
+    ["pointBlank", -10],
+    ["close", -5],
+    ["normal", 0],
+  ] as const)("applies the %s penalty to both ranged dodge families", (rangeBand, penalty) => {
+    const commando = combatSheet({ items: [], hthType: "commando", level: 15 });
+    const options = deriveDefenseOptions(commando, rangedAttack, {
+      kind: "ranged",
+      defenderAware: true,
+      rangeBand,
+    });
+
+    expect(options.slice(0, 2).map((option) => option.bonus)).toEqual([
+      commando.combat.rangedDodge + penalty,
+      commando.combat.rangedAutoDodge + penalty,
+    ]);
+  });
+
+  test("offers unaware ranged defenders none even when they have auto-dodge", () => {
+    const commando = combatSheet({ items: [], hthType: "commando", level: 15 });
+
+    expect(
+      deriveDefenseOptions(commando, rangedAttack, {
+        kind: "ranged",
+        defenderAware: false,
+        rangeBand: "normal",
+      }),
+    ).toEqual([{ kind: "none", bonus: 0, actionCost: 0, explanation: "Take the hit." }]);
+  });
+
+  test("rejects a context that does not match the attack kind", () => {
+    const defender = combatSheet({ items: [], hthType: "basic" });
+
+    expect(() =>
+      deriveDefenseOptions(defender, meleeAttack, {
+        kind: "ranged",
+        defenderAware: true,
+        rangeBand: "normal",
+      }),
+    ).toThrow(/invalidContext/);
+  });
+});
+
+describe("combat response authorization", () => {
+  const defender = combatSheet({ items: [], hthType: "basic" });
+  const meleeAttack = requireSupported(
+    deriveAttackProfile(combatSheet({ items: [{ itemId: "survival-knife" }] }), 0),
+  );
+  const options = deriveDefenseOptions(defender, meleeAttack, {
+    kind: "melee",
+    defenderAware: true,
+    parryMode: "standard",
+  });
+
+  test("uses server-derived option metadata and normalizes the situational modifier", () => {
+    expect(
+      authorizeCombatResponse(options, {
+        kind: "parry",
+        bonus: 99,
+        actionCost: 1,
+        defenseModifier: -2,
+        defenseModifierReason: "unstable footing",
+      }),
+    ).toEqual({
+      kind: "parry",
+      bonus: 3,
+      actionCost: 0,
+      explanation: "Parry the melee weapon.",
+      defenseModifier: -2,
+      defenseModifierReason: "unstable footing",
+      totalBonus: 1,
+    });
+    expect(authorizeCombatResponse(options, { kind: "none" })).toEqual({
+      kind: "none",
+      bonus: 0,
+      actionCost: 0,
+      explanation: "Take the hit.",
+      defenseModifier: 0,
+      totalBonus: 0,
+    });
+  });
+
+  test("requires a reason for every nonzero defense modifier", () => {
+    expect(() => authorizeCombatResponse(options, { kind: "dodge", defenseModifier: 1 })).toThrow(
+      /reason/i,
+    );
+    expect(() =>
+      authorizeCombatResponse(options, {
+        kind: "dodge",
+        defenseModifier: -1,
+        defenseModifierReason: "   ",
+      }),
+    ).toThrow(/string|reason/i);
+  });
+
+  test("rejects unsafe, fractional, and out-of-range defense modifiers", () => {
+    const response = {
+      kind: "dodge",
+      defenseModifierReason: "situational ruling",
+    } as const;
+
+    expect(() =>
+      authorizeCombatResponse(options, {
+        ...response,
+        defenseModifier: Number.MAX_SAFE_INTEGER + 1,
+      }),
+    ).toThrow();
+    expect(() => authorizeCombatResponse(options, { ...response, defenseModifier: 1.5 })).toThrow();
+    expect(() => authorizeCombatResponse(options, { ...response, defenseModifier: 101 })).toThrow();
+  });
+
+  test("rejects defenses outside the derived list and never defaults to none", () => {
+    expect(() => authorizeCombatResponse(options, { kind: "autoDodge" })).toThrow(
+      /illegalDefense: autoDodge/,
+    );
+    expect(() => authorizeCombatResponse(options, {})).toThrow();
   });
 });

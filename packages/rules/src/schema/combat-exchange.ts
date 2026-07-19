@@ -42,6 +42,24 @@ export type CombatContext = z.infer<typeof combatContextSchema>;
 export const combatResponseKindSchema = z.enum(["parry", "dodge", "autoDodge", "none"]);
 export type CombatResponseKind = z.infer<typeof combatResponseKindSchema>;
 
+const rawCombatResponseInputSchema = z.object({
+  kind: combatResponseKindSchema,
+  defenseModifier: safeModifierSchema,
+  defenseModifierReason: modifierReasonSchema,
+});
+export const combatResponseInputSchema = rawCombatResponseInputSchema.superRefine(
+  (response, check) => {
+    if ((response.defenseModifier ?? 0) !== 0 && response.defenseModifierReason === undefined) {
+      check.addIssue({
+        code: "custom",
+        path: ["defenseModifierReason"],
+        message: "A reason is required for a nonzero defense modifier.",
+      });
+    }
+  },
+);
+export type CombatResponseInput = z.infer<typeof combatResponseInputSchema>;
+
 export const combatExchangeErrorCodeSchema = z.enum([
   "selfTarget",
   "attackerNotReady",

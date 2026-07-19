@@ -2,8 +2,10 @@ import combatExchangeRaw from "../content/combat/combat-exchange.json" with { ty
 import {
   combatContextSchema,
   combatExchangeRulesSchema,
+  combatResponseInputSchema,
   type AttackKind,
   type CombatContext,
+  type CombatResponseKind,
 } from "../schema/combat-exchange.ts";
 import type { WeaponCategory } from "../schema/items.ts";
 import type { CharacterSheet, SheetEquipmentEntry } from "./character.ts";
@@ -42,6 +44,19 @@ export type AttackProfile =
       damageType: "sdc";
       weapon: WeaponInstanceSnapshot & { name: string; category: WeaponCategory };
     };
+
+export interface DefenseOption {
+  kind: CombatResponseKind;
+  bonus: number;
+  actionCost: 0 | 1;
+  explanation: string;
+}
+
+export interface AuthorizedCombatResponse extends DefenseOption {
+  defenseModifier: number;
+  defenseModifierReason?: string;
+  totalBonus: number;
+}
 
 const meleeCategories = new Set<WeaponCategory>(["knife", "axe"]);
 
@@ -114,4 +129,87 @@ export function validateCombatContext(
     );
   }
   return context;
+}
+
+export function deriveDefenseOptions(
+  defender: CharacterSheet,
+  attack: Extract<AttackProfile, { supported: true }>,
+  context: CombatContext,
+): DefenseOption[] {
+  const options: DefenseOption[] = [];
+  if (attack.kind === "melee") {
+    if (context.kind !== "melee") {
+      throw new Error("invalidContext: melee attack requires melee context.");
+    }
+    if (context.defenderAware && context.parryMode !== "unavailable") {
+      options.push({
+        kind: "parry",
+        bonus: context.parryMode === "bareHanded" ? 0 : defender.combat.parry,
+        actionCost: defender.combat.hasHandToHandTraining ? 0 : 1,
+        explanation:
+          context.parryMode === "bareHanded"
+            ? "Bare-handed weapon parry; no ordinary parry bonus."
+            : "Parry the melee weapon.",
+      });
+    }
+    if (context.defenderAware) {
+      options.push({
+        kind: "dodge",
+        bonus: defender.combat.dodge,
+        actionCost: 1,
+        explanation: "Dodge; costs one action for table tracking.",
+      });
+    }
+    if (defender.combat.hasAutoDodge) {
+      options.push({
+        kind: "autoDodge",
+        bonus: defender.combat.autoDodge,
+        actionCost: 0,
+        explanation: "Automatic dodge; no action cost.",
+      });
+    }
+  } else {
+    if (context.kind !== "ranged") {
+      throw new Error("invalidContext: ranged attack requires ranged context.");
+    }
+    if (context.defenderAware) {
+      const rangeModifier = combatExchangeRules.rangedDodgeModifier[context.rangeBand];
+      options.push({
+        kind: "dodge",
+        bonus: defender.combat.rangedDodge + rangeModifier,
+        actionCost: 1,
+        explanation: `Ranged dodge (${rangeModifier} range-band modifier).`,
+      });
+      if (defender.combat.hasAutoDodge) {
+        options.push({
+          kind: "autoDodge",
+          bonus: defender.combat.rangedAutoDodge + rangeModifier,
+          actionCost: 0,
+          explanation: `Automatic ranged dodge (${rangeModifier} range-band modifier).`,
+        });
+      }
+    }
+  }
+  options.push({ kind: "none", bonus: 0, actionCost: 0, explanation: "Take the hit." });
+  return options;
+}
+
+export function authorizeCombatResponse(
+  options: readonly DefenseOption[],
+  input: unknown,
+): AuthorizedCombatResponse {
+  const response = combatResponseInputSchema.parse(input);
+  const option = options.find((candidate) => candidate.kind === response.kind);
+  if (option === undefined) {
+    throw new Error(`illegalDefense: ${response.kind} is not authorized.`);
+  }
+  const defenseModifier = response.defenseModifier ?? 0;
+  return {
+    ...option,
+    defenseModifier,
+    ...(response.defenseModifierReason === undefined
+      ? {}
+      : { defenseModifierReason: response.defenseModifierReason }),
+    totalBonus: option.bonus + defenseModifier,
+  };
 }
