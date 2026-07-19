@@ -1,0 +1,33 @@
+packages/rules/tests/combat-exchange.test.ts
+  s_816bafeabb951b::t_b807ec0ba1f39f 1-21
+packages/rules/tests/combat.test.ts
+  s_816bafeabb951b::t_b807ec0ba1f39f 322-343
+packages/rules/tests/character.test.ts
+  s_816bafeabb951b::t_b807ec0ba1f39f 34-36,40-41
+packages/rules/src/schema/combat-exchange.ts
+  s_816bafeabb951b::t_cd9069f5b17578 1-50
+packages/rules/src/engine/combat-exchange.ts
+  s_816bafeabb951b::t_cd9069f5b17578 1-4
+packages/rules/src/index.ts
+  s_816bafeabb951b::t_cd9069f5b17578 11,23
+packages/rules/src/content/combat/combat-exchange.json
+  s_816bafeabb951b::t_cd9069f5b17578 1-14
+packages/rules/src/engine/combat.ts
+  s_816bafeabb951b::t_cd9069f5b17578 149-151,155-156,194-195,199-201,205-206
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "57b2c649d55943c45464d7b6adc7155a7fb42b39",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
