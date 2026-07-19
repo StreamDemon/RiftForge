@@ -1,0 +1,25 @@
+packages/rules/src/schema/combat-exchange.ts
+  s_816bafeabb951b::t_d9de50f8c0ce54 45-51,53-62
+  s_816bafeabb951b::t_1bc33452f9373d 52
+packages/rules/tests/combat-exchange.test.ts
+  s_816bafeabb951b::t_7c57d4b1c8ec81 3,6,29-31,153-364,368-399
+  s_816bafeabb951b::t_1bc33452f9373d 365-367
+packages/rules/src/engine/combat-exchange.ts
+  s_816bafeabb951b::t_d9de50f8c0ce54 5,8,48-60,133-215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "56a68a94e6bfec1aca18b1c2abf07e6a58ced04a",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
