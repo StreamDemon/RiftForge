@@ -62,6 +62,43 @@ export function TextInput(props: ComponentProps<"input">) {
   );
 }
 
+export function SelectInput(props: ComponentProps<"select">) {
+  const [own, rest] = splitProps(props, ["class", "children"]);
+  return (
+    <select
+      class={`notch-8 border border-line bg-noir px-3 py-2 font-mono text-[13px] text-fg focus:border-amber disabled:text-dead ${own.class ?? ""}`}
+      {...rest}
+    >
+      {own.children}
+    </select>
+  );
+}
+
+/** A pressed/unpressed mode chip. Ley tone is reserved for arcane context. */
+export function ToggleChip(props: {
+  pressed: boolean;
+  onToggle: () => void;
+  tone?: "ley" | "amber";
+  children: JSX.Element;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={props.pressed}
+      class={`notch-6 cursor-pointer border bg-inset px-2 font-hud text-[11.5px] font-semibold tracking-[0.08em] uppercase ${
+        props.pressed
+          ? props.tone === "ley"
+            ? "border-ley/60 text-ley [text-shadow:0_0_8px_rgb(79_216_255/0.5)]"
+            : "border-amber/60 text-amber"
+          : "border-line text-dead hover:border-muted"
+      }`}
+      onClick={() => props.onToggle()}
+    >
+      {props.children}
+    </button>
+  );
+}
+
 type AlertTone = "ok" | "warn" | "danger" | "info";
 
 const alertClass: Record<AlertTone, string> = {
@@ -111,12 +148,14 @@ export function Chip(props: ParentProps<{ tone?: "default" | "ley" | "warn"; cla
 }
 
 /** Mono machine-voice caption (labels, kickers, file numbers). */
-export function MonoLabel(props: ParentProps<{ class?: string }>) {
+export function MonoLabel(props: ComponentProps<"span">) {
+  const [own, rest] = splitProps(props, ["class", "children"]);
   return (
     <span
-      class={`font-mono text-[11.5px] tracking-[0.14em] text-muted uppercase ${props.class ?? ""}`}
+      class={`font-mono text-[11.5px] tracking-[0.14em] text-muted uppercase ${own.class ?? ""}`}
+      {...rest}
     >
-      {props.children}
+      {own.children}
     </span>
   );
 }

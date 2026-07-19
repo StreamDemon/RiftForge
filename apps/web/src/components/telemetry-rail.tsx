@@ -26,7 +26,7 @@ export function TelemetryRail(props: { entries: TelemetryEntry[]; actions?: JSX.
   );
 
   return (
-    <aside class="flex min-h-0 flex-col gap-2.5" aria-label="Field telemetry">
+    <section class="flex min-h-0 flex-col gap-2.5" aria-label="Field telemetry">
       <h2 class="font-display text-[15px] tracking-[0.12em] text-muted">
         <span class="text-dead">// </span>FIELD TELEMETRY
       </h2>
@@ -43,6 +43,6 @@ export function TelemetryRail(props: { entries: TelemetryEntry[]; actions?: JSX.
         </div>
       </div>
       {props.actions}
-    </aside>
+    </section>
   );
 }

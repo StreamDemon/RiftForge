@@ -1,5 +1,8 @@
+/// <reference types="node" />
+
 import { deriveSheet, type CharacterInput } from "@riftforge/rules";
 import { ConvexError } from "convex/values";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, test } from "vite-plus/test";
 import {
   combatErrorMessage,
@@ -11,6 +14,16 @@ import {
   type CombatTargetSummary,
   type ExchangeSummary,
 } from "../src/lib/combat-exchange.ts";
+
+function source(relative: string): string {
+  const url = new URL(relative, import.meta.url);
+  return existsSync(url) ? readFileSync(url, "utf8") : "";
+}
+
+const panelSource = source("../src/components/combat-exchange-panel.tsx");
+const uiSource = source("../src/components/ui.tsx");
+const telemetryRailSource = source("../src/components/telemetry-rail.tsx");
+const characterSheetSource = source("../src/pages/character-sheet.tsx");
 
 const combatant: CharacterInput = {
   name: "Vesper",
@@ -368,5 +381,81 @@ describe("combat errors", () => {
     );
     expect(combatErrorMessage(new Error("Network unavailable."))).toBe("Network unavailable.");
     expect(combatErrorMessage("Unknown combat error.")).toBe("Unknown combat error.");
+  });
+});
+
+describe("combat exchange component contract", () => {
+  test("shares native select and toggle primitives without rounded or decorative styling", () => {
+    expect(uiSource).toContain('export function SelectInput(props: ComponentProps<"select">)');
+    expect(uiSource).toContain("notch-8 border border-line bg-noir");
+    expect(uiSource).toContain("focus:border-amber disabled:text-dead");
+    expect(uiSource).toContain("export function ToggleChip");
+    expect(characterSheetSource).not.toContain("function ToggleChip(");
+  });
+
+  test("subscribes every queue reactively and keeps strike, damage, and routing server-owned", () => {
+    expect(panelSource).toContain("api.combat.targets");
+    expect(panelSource).toContain("api.combat.incoming");
+    expect(panelSource).toContain("api.combat.outgoing");
+    expect(panelSource).toContain("api.combat.recent");
+    expect(panelSource).toContain("api.combat.declareAttack");
+    expect(panelSource).toContain("api.combat.respondToAttack");
+    expect(panelSource).toContain("api.combat.cancelAttack");
+    expect(panelSource).not.toMatch(/\brollD20\b|\brollDamage\b|\bresolveCombatExchange\b/);
+    const declarationStart = panelSource.indexOf("const result = await declareAttack({");
+    const declarationEnd = panelSource.indexOf("\n      });", declarationStart);
+    expect(declarationStart).toBeGreaterThanOrEqual(0);
+    expect(declarationEnd).toBeGreaterThan(declarationStart);
+    expect(panelSource.slice(declarationStart, declarationEnd)).not.toMatch(
+      /strikeRoll\s*:|damageRoll\s*:|route\s*:/,
+    );
+  });
+
+  test("renders stored context before only the stored server response options", () => {
+    expect(panelSource).toContain("STORED CONTEXT");
+    expect(panelSource).toContain("props.exchange.context.defenderAware");
+    expect(panelSource).toContain("props.exchange.defenseOptions");
+    expect(panelSource.indexOf("STORED CONTEXT")).toBeLessThan(
+      panelSource.indexOf("props.exchange.defenseOptions"),
+    );
+    expect(panelSource).toContain('option.kind === "none" ? "> TAKE THE HIT"');
+    expect(panelSource).toContain("option.actionCost} ACTION");
+  });
+
+  test("resets route state and gates declaration, response, and cancellation by ownership", () => {
+    expect(panelSource).toContain("const resetRouteState = () => {");
+    expect(panelSource).toContain("routeEpoch += 1");
+    expect(panelSource).toContain(
+      "createEffect(on(() => props.characterId, resetRouteState, { defer: true }))",
+    );
+    expect(panelSource).toContain("routeId: props.characterId");
+    expect(panelSource).toContain("routeEpoch: props.routeEpoch()");
+    expect(panelSource).toContain("exchangeId: props.exchange._id");
+    expect(panelSource).toContain("ownsAsyncResult(owner, current)");
+  });
+
+  test("keeps persisted combat history bounded and uses no magic signal tone", () => {
+    expect(panelSource).toContain("formatExchangeSummary(exchange)");
+    expect(panelSource).toContain("exchangeTone(exchange)");
+    expect(panelSource).toContain("recent.data()?.slice(0, 20)");
+    expect(panelSource).toContain('dim: "border-dead text-muted"');
+    expect(panelSource).toContain('warn: "border-amber text-amber"');
+    expect(panelSource).toContain('bad: "border-blood text-blood-text"');
+    expect(panelSource).toContain('good: "border-ok text-ok"');
+    expect(panelSource).not.toMatch(/border-ley|text-ley/);
+  });
+
+  test("mounts combat above telemetry under one complementary rail landmark", () => {
+    expect(characterSheetSource).toContain('aria-label="Dossier command rail"');
+    expect(characterSheetSource).toContain("<CombatExchangePanel");
+    expect(characterSheetSource.indexOf("<CombatExchangePanel")).toBeLessThan(
+      characterSheetSource.indexOf("<TelemetryRail"),
+    );
+    expect(telemetryRailSource).toContain(
+      '<section class="flex min-h-0 flex-col gap-2.5" aria-label="Field telemetry">',
+    );
+    expect(telemetryRailSource).not.toContain(
+      '<aside class="flex min-h-0 flex-col gap-2.5" aria-label="Field telemetry">',
+    );
   });
 });

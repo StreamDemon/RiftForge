@@ -13,21 +13,13 @@ import {
   type Weapon,
 } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
-import {
-  createEffect,
-  createSignal,
-  Match,
-  on,
-  Show,
-  Switch,
-  type Accessor,
-  type JSX,
-} from "solid-js";
+import { createEffect, createSignal, Match, on, Show, Switch, type Accessor } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
+import { CombatExchangePanel } from "../components/combat-exchange-panel.tsx";
 import { NarrativeFields } from "../components/narrative-fields.tsx";
 import { SheetView, type SheetActions } from "../components/sheet-view.tsx";
 import { TelemetryRail } from "../components/telemetry-rail.tsx";
-import { Alert, Button, MonoLabel, Panel, TextInput } from "../components/ui.tsx";
+import { Alert, Button, MonoLabel, Panel, TextInput, ToggleChip } from "../components/ui.tsx";
 import { convex } from "../lib/client.ts";
 import { createMutation, createQuery } from "../lib/convex.ts";
 import { fromNarrative, toNarrative } from "../lib/narrative.ts";
@@ -103,37 +95,11 @@ function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | u
   );
 }
 
-/** A pressed/unpressed mode chip (nexus, professional care). Cyan tone is
- * for arcane context only, per the color rules. */
-function ToggleChip(props: {
-  pressed: boolean;
-  onToggle: () => void;
-  tone?: "ley" | "amber";
-  children: JSX.Element;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={props.pressed}
-      class={`notch-6 cursor-pointer border bg-inset px-2 font-hud text-[11.5px] font-semibold tracking-[0.08em] uppercase ${
-        props.pressed
-          ? props.tone === "ley"
-            ? "border-ley/60 text-ley [text-shadow:0_0_8px_rgb(79_216_255/0.5)]"
-            : "border-amber/60 text-amber"
-          : "border-line text-dead hover:border-muted"
-      }`}
-      onClick={() => props.onToggle()}
-    >
-      {props.children}
-    </button>
-  );
-}
-
 /**
  * The dossier: the live sheet plus the field-telemetry rail. Gameplay rolls
- * (saves, skills, strikes, casts) run CLIENT-SIDE through the isomorphic
- * engine and print to the log — moments at the table, not records. Only
- * `rollVitals` persists, via its mutation.
+ * (saves, skills, manual strikes, and weapon damage) are ephemeral client-side
+ * utility telemetry. Hostile combat exchanges are server-owned and persisted;
+ * resource and inventory commands also write through their mutations.
  */
 export function CharacterSheetPage() {
   const params = useParams<{ id: string }>();
@@ -507,105 +473,112 @@ export function CharacterSheetPage() {
               <SheetView sheet={sheet()!} actions={actions} />
               <NarrativeEditor id={id()} narrative={sheet()?.narrative} />
             </div>
-            <TelemetryRail
-              entries={telemetry.entries()}
-              actions={
-                <div class="space-y-2">
-                  <Button variant="primary" class="w-full text-left" onClick={() => void roll()}>
-                    {"> Roll Vitals"}
-                  </Button>
-                  <Show when={rollError()}>
-                    {(err) => <Alert tone="danger">ROLL FAILED — {err().message}</Alert>}
-                  </Show>
-                  <div class="flex gap-2">
-                    <TextInput
-                      aria-label="Damage amount"
-                      inputmode="numeric"
-                      placeholder="DMG"
-                      class="w-16 min-w-0 px-2 py-1.5 text-center"
-                      value={damageInput()}
-                      onInput={(e) => setDamageInput(e.currentTarget.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") void damage();
-                      }}
-                    />
-                    <Button class="flex-1 px-2 text-left" onClick={() => void damage()}>
-                      {"> Damage"}
+            <aside class="min-w-0 space-y-3" aria-label="Dossier command rail">
+              <CombatExchangePanel
+                characterId={id()}
+                sheet={sheet()!}
+                onTelemetry={telemetry.log}
+              />
+              <TelemetryRail
+                entries={telemetry.entries()}
+                actions={
+                  <div class="space-y-2">
+                    <Button variant="primary" class="w-full text-left" onClick={() => void roll()}>
+                      {"> Roll Vitals"}
                     </Button>
-                    <ToggleChip pressed={toArmor()} onToggle={() => setToArmor((v) => !v)}>
-                      Armor
-                    </ToggleChip>
-                  </div>
-                  <Button class="w-full text-left" onClick={() => void restore()}>
-                    {"> Full Restore"}
-                  </Button>
-                  <div class="space-y-2 border-t border-line pt-2">
-                    <MonoLabel class="block text-dead">RECOVERY</MonoLabel>
-                    <Show when={sheet()?.ppe}>
-                      <div class="flex gap-2">
-                        <TextInput
-                          aria-label="Hours of rest"
-                          inputmode="numeric"
-                          placeholder="HRS"
-                          class="w-14 min-w-0 px-2 py-1.5 text-center"
-                          value={restHours()}
-                          onInput={(e) => setRestHours(e.currentTarget.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") void rest("rest");
-                          }}
-                        />
-                        <Button class="flex-1 px-2 text-left" onClick={() => void rest("rest")}>
-                          {"> Rest"}
-                        </Button>
-                        <Button
-                          class="shrink-0 px-2 text-left whitespace-nowrap"
-                          onClick={() => void rest("meditation")}
-                        >
-                          {"> Meditate"}
-                        </Button>
-                      </div>
-                      <div class="flex gap-2">
-                        <Button class="flex-1 px-2 text-left" onClick={() => void leyDraw()}>
-                          {"> Ley Draw"}
-                        </Button>
-                        <ToggleChip
-                          pressed={atNexus()}
-                          onToggle={() => setAtNexus((v) => !v)}
-                          tone="ley"
-                        >
-                          Nexus
-                        </ToggleChip>
-                      </div>
+                    <Show when={rollError()}>
+                      {(err) => <Alert tone="danger">ROLL FAILED — {err().message}</Alert>}
                     </Show>
                     <div class="flex gap-2">
                       <TextInput
-                        aria-label="Treatment day"
+                        aria-label="Damage amount"
                         inputmode="numeric"
-                        class="w-14 min-w-0 px-2 py-1.5 text-center"
-                        value={
-                          dayInput() !== ""
-                            ? dayInput()
-                            : String((sheet()?.vitals.treatmentDays ?? 0) + 1)
-                        }
-                        onInput={(e) => setDayInput(e.currentTarget.value)}
+                        placeholder="DMG"
+                        class="w-16 min-w-0 px-2 py-1.5 text-center"
+                        value={damageInput()}
+                        onInput={(e) => setDamageInput(e.currentTarget.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") void treatDay();
+                          if (e.key === "Enter") void damage();
                         }}
                       />
-                      <Button class="flex-1 px-2 text-left" onClick={() => void treatDay()}>
-                        {"> Treatment Day"}
+                      <Button class="flex-1 px-2 text-left" onClick={() => void damage()}>
+                        {"> Damage"}
                       </Button>
-                      <ToggleChip
-                        pressed={professional()}
-                        onToggle={() => setProfessional((v) => !v)}
-                      >
-                        Pro
+                      <ToggleChip pressed={toArmor()} onToggle={() => setToArmor((v) => !v)}>
+                        Armor
                       </ToggleChip>
                     </div>
+                    <Button class="w-full text-left" onClick={() => void restore()}>
+                      {"> Full Restore"}
+                    </Button>
+                    <div class="space-y-2 border-t border-line pt-2">
+                      <MonoLabel class="block text-dead">RECOVERY</MonoLabel>
+                      <Show when={sheet()?.ppe}>
+                        <div class="flex gap-2">
+                          <TextInput
+                            aria-label="Hours of rest"
+                            inputmode="numeric"
+                            placeholder="HRS"
+                            class="w-14 min-w-0 px-2 py-1.5 text-center"
+                            value={restHours()}
+                            onInput={(e) => setRestHours(e.currentTarget.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") void rest("rest");
+                            }}
+                          />
+                          <Button class="flex-1 px-2 text-left" onClick={() => void rest("rest")}>
+                            {"> Rest"}
+                          </Button>
+                          <Button
+                            class="shrink-0 px-2 text-left whitespace-nowrap"
+                            onClick={() => void rest("meditation")}
+                          >
+                            {"> Meditate"}
+                          </Button>
+                        </div>
+                        <div class="flex gap-2">
+                          <Button class="flex-1 px-2 text-left" onClick={() => void leyDraw()}>
+                            {"> Ley Draw"}
+                          </Button>
+                          <ToggleChip
+                            pressed={atNexus()}
+                            onToggle={() => setAtNexus((v) => !v)}
+                            tone="ley"
+                          >
+                            Nexus
+                          </ToggleChip>
+                        </div>
+                      </Show>
+                      <div class="flex gap-2">
+                        <TextInput
+                          aria-label="Treatment day"
+                          inputmode="numeric"
+                          class="w-14 min-w-0 px-2 py-1.5 text-center"
+                          value={
+                            dayInput() !== ""
+                              ? dayInput()
+                              : String((sheet()?.vitals.treatmentDays ?? 0) + 1)
+                          }
+                          onInput={(e) => setDayInput(e.currentTarget.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") void treatDay();
+                          }}
+                        />
+                        <Button class="flex-1 px-2 text-left" onClick={() => void treatDay()}>
+                          {"> Treatment Day"}
+                        </Button>
+                        <ToggleChip
+                          pressed={professional()}
+                          onToggle={() => setProfessional((v) => !v)}
+                        >
+                          Pro
+                        </ToggleChip>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              }
-            />
+                }
+              />
+            </aside>
           </div>
         </Match>
       </Switch>
