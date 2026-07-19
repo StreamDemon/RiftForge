@@ -26,7 +26,7 @@ import {
   patchCurrent,
   requireItemAt,
   validateCharacter,
-} from "./character-state";
+} from "./character_state";
 import { characterFields } from "./schema";
 
 /** A stored character document: the fields plus Convex's system columns. */

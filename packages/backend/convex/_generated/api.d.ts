@@ -8,7 +8,10 @@
  * @module
  */
 
+import type * as character_state from "../character_state.js";
 import type * as characters from "../characters.js";
+import type * as combat from "../combat.js";
+import type * as combat_values from "../combat_values.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +20,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  character_state: typeof character_state;
   characters: typeof characters;
+  combat: typeof combat;
+  combat_values: typeof combat_values;
 }>;
 
 /**
