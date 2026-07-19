@@ -146,9 +146,14 @@ export interface CombatProfileInput {
 export interface CombatProfile {
   attacksPerMelee: number;
   handToHandBonuses: CombatBonuses;
+  handToHandType: string;
+  hasHandToHandTraining: boolean;
+  hasAutoDodge: boolean;
   strike: number;
   parry: number;
   dodge: number;
+  rangedDodge: number;
+  rangedAutoDodge: number;
   damageBonus: number;
   initiative: number;
   autoDodge: number;
@@ -186,12 +191,19 @@ export function combatProfile(input: CombatProfileInput): CombatProfile {
   const hth = hthBonuses(input.hthType, input.level);
   const sum = (a: number | undefined, b: number | undefined): number => (a ?? 0) + (b ?? 0);
   const strike = sum(attr.strike, hth.strike);
+  const hasAutoDodge = hth.autoDodge !== undefined;
+  const rangedDodge = attr.dodge ?? 0;
   return {
     attacksPerMelee: attacksPerMelee(input.hthType, input.level),
     handToHandBonuses: hth,
+    handToHandType: input.hthType,
+    hasHandToHandTraining: input.hthType !== "none",
+    hasAutoDodge,
     strike,
     parry: sum(attr.parry, hth.parry),
     dodge: sum(attr.dodge, hth.dodge),
+    rangedDodge,
+    rangedAutoDodge: hasAutoDodge ? rangedDodge : 0,
     damageBonus: sum(attr.hthDamage, hth.damage),
     initiative: hth.initiative ?? 0,
     autoDodge: hth.autoDodge === undefined ? 0 : sum(attr.dodge, hth.autoDodge),
