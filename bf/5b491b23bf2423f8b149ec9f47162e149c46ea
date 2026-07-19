@@ -1,0 +1,31 @@
+packages/backend/convex/combat.ts
+  s_816bafeabb951b::t_e4da2082162cec 1-77
+packages/backend/convex/schema.ts
+  s_816bafeabb951b::t_e4da2082162cec 94-98
+  s_816bafeabb951b::t_01be953432f1db 3
+packages/backend/convex/characters.ts
+  s_816bafeabb951b::t_33a497022446cc 29
+packages/backend/convex/_generated/api.d.ts
+  s_816bafeabb951b::t_748e66b8f0234e 11,13-14,23,25-26
+packages/backend/convex/combat_values.ts
+  s_816bafeabb951b::t_72630659d28c20 1-173
+packages/backend/tests/combat.test.ts
+  s_816bafeabb951b::t_1b4b6928e38afe 1-22,24-38,40-142,144-168
+  s_816bafeabb951b::t_72630659d28c20 23,39,143
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "bf5b491b23bf2423f8b149ec9f47162e149c46ea",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
