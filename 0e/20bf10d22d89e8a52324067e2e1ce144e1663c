@@ -1,0 +1,27 @@
+packages/backend/tests/combat.test.ts
+  s_816bafeabb951b::t_4ec8ef15dc113f 52-59,65-82,98-109
+  s_816bafeabb951b::t_042a6851fafbbc 60-64,1100
+  s_816bafeabb951b::t_e2cf697cedc017 917-919,924-991,1010,1017-1099,1101-1193,1195-1197
+  s_816bafeabb951b::t_dc2eb1f37dad34 680,920-923,992-1009,1011-1016,1194
+  s_816bafeabb951b::t_d947ad23a0bb8b 642-679,681-916
+  s_816bafeabb951b::t_36fac86fca239e 110
+packages/backend/convex/combat.ts
+  s_816bafeabb951b::t_653e9deeeeef02 3,5,13-16,18,23-24,27,29-35,75-80,82-104,197-310,314-316,342-346,352-353,358-362,368-369,375-377
+  s_816bafeabb951b::t_dc2eb1f37dad34 81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0e20bf10d22d89e8a52324067e2e1ce144e1663c",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
