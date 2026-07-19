@@ -6,8 +6,9 @@ Source: `Rifts-Ultimate-Edition-Main-Book.pdf` (382 pages, scanned images — no
 **Page offset:** `PDF page index (0-based) = printed page number + 2`.
 (e.g. printed p.113 → PDF index 115. Verified against front matter.)
 
-The PDF has no extractable text; all content is transcribed from page images via
-vision extraction (`scratchpad/extract_pages.py` renders a page to PNG for reading).
+The PDF has no extractable text; all content is transcribed from rendered page
+images using the maintained inline rendering and vision workflow in
+[`TRANSCRIPTION.md`](./TRANSCRIPTION.md).
 
 ---
 
@@ -101,7 +102,11 @@ Full O.C.C. roster spans printed 45–99 (men-at-arms, adventurers/scholars) and
 
 ---
 
-## Slice #1 target — Ley Line Walker (pages to extract)
+## Historical Slice #1 extraction target — Ley Line Walker
+
+This list records the initial vertical-slice extraction target. The committed spell
+catalog has since expanded through levels 1–15 (156 entries); use the section tables
+above and the transcription runbook for current page coverage.
 
 Foundation (needed by every character):
 
@@ -118,4 +123,5 @@ Ley Line Walker specifics:
 Magic subsystem:
 
 - Principles of Magic / P.P.E. / Saving Throw vs Magic — printed 185–190 (PDF 187–192)
-- A handful of low-level spells for the sheet — printed 198–202 (PDF 200–204)
+- Initial low-level spell subset — printed 198–202 (PDF 200–204); the catalog now
+  covers spell levels 1–15, printed 197–225 (PDF 199–227)

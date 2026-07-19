@@ -1,5 +1,12 @@
 # Combat Resolution and Structured Spell Damage Implementation Plan
 
+> **Historical execution plan — completed and merged.** This plan was executed on
+> `feat/combat-resolution`, reviewed in PR #49, and merged to `main` as `8f58a48`
+> on 2026-07-18. Its unchecked boxes and branch, issue, milestone, and expected-output
+> passages preserve the original execution instructions; they are not current work
+> items. Final state: 260 rules tests and 309 workspace tests. Review hardening landed
+> in `eb163f7`, `1a10731`, and `7d23370`; issues #16 and #20 are closed.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the page-stamped, deterministic rules-layer APIs for resolving strikes, preserving complete Hand-to-Hand combat bonuses, and deriving and rolling finite structured spell damage for issue #16.

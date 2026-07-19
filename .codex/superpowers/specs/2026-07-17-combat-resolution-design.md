@@ -7,9 +7,10 @@
 
 ## Status
 
-Approved in conversation on 2026-07-17. This document records the approved
-architecture, data contract, integration boundary, and verification strategy
-before production implementation begins.
+Approved in conversation on 2026-07-17, implemented on `feat/combat-resolution`,
+reviewed in PR #49, and merged to `main` as `8f58a48` on 2026-07-18. This document
+preserves the approved architecture, data contract, integration boundary, and
+verification strategy.
 
 ## Goal
 
@@ -574,3 +575,24 @@ Final verification passed the package-equivalent CI gates and the repository
 gates listed below. No frontend/backend behavior changed, so browser verification
 was not applicable to this slice. Equipment-aware A.R., armor routing, and
 persisted hostile damage remain in #44.
+
+### Post-review and merge outcome
+
+PR #49 delivered the approved rules-layer boundary and closed issues #16 and #20.
+The final implementation exposes page-stamped p.346 combat constants,
+`resolveStrike(input)`, complete Hand-to-Hand bonus projection, and structured finite
+spell-damage derivation and rolling. Equipment-aware defense selection, A.R.
+penetration, armor-first routing, M.D.C. application, hostile persistence, and combat
+UI remain issue #44 scope.
+
+Cubic review produced four accepted fixes and one rejected finding. The accepted
+hardening covered Horror Factor bonus aggregation and blank damage prose (`eb163f7`),
+strictly positive structured damage (`1a10731`), and safe-integer dice validation
+(`7d23370`), in addition to the earlier contradiction fix. The rejected finding
+proposed adding P.P. and general Hand-to-Hand strike bonuses to `strikeGuns`. It was
+closed with tests and rendered RUE p.360 evidence because those general bonuses do
+not apply to modern weapons; `strikeGuns` exposes only the specifically named gun
+bonus.
+
+Final verification passed the rules package gates and root gates with 260 rules tests
+and 309 workspace tests across 19 files.
