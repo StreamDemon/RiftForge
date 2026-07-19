@@ -1,0 +1,25 @@
+packages/backend/tests/characters.test.ts
+  s_816bafeabb951b::t_221693393f12c9 632-648,651
+packages/backend/convex/character-state.ts
+  s_816bafeabb951b::t_f398706217a3e5 12
+  s_816bafeabb951b::t_ab1156cec9205e 34-38
+  s_816bafeabb951b::t_c6967f1ee21e64 1-11,13-33,39-55
+packages/backend/convex/characters.ts
+  s_816bafeabb951b::t_c6967f1ee21e64 22-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "3737f33289f4d258da3a9a6383b3e3db224fdf67",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
