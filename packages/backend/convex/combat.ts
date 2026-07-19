@@ -1,6 +1,8 @@
 import {
   attackerCombatStateToken,
+  authorizeCombatResponse,
   combatContextSchema,
+  combatResponseInputSchema,
   defenderCombatStateToken,
   deriveAttackProfile,
   deriveDefenseOptions,
@@ -8,16 +10,29 @@ import {
   deriveSheet,
   evaluateDeclaration,
   rollD20,
+  rollDamage,
+  resolveCombatExchange,
+  resolveStrike,
+  validateCombatContext,
   type AttackProfile,
+  type AuthorizedCombatResponse,
   type Character,
   type CharacterSheet,
   type CombatContext,
   type CombatExchangeErrorCode,
+  type CombatResponseInput,
+  type DefenseKind,
 } from "@riftforge/rules";
 import { ConvexError, v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
-import { expectedItemValidator, loadCharacter, requireItemAt } from "./character_state";
-import { combatContextValidator } from "./combat_values";
+import {
+  expectedItemValidator,
+  loadCharacter,
+  patchCurrent,
+  requireItemAt,
+} from "./character_state";
+import { combatContextValidator, combatResponseInputValidator } from "./combat_values";
 
 const TARGET_LIMIT = 50;
 const FEED_LIMIT = 20;
@@ -53,6 +68,36 @@ function parseDeclaredContext(
   }
   if (parsed.data.kind !== attack.kind) {
     combatFailure("invalidContext", "The declared context does not match the weapon mode.");
+  }
+  return parsed.data;
+}
+
+function pendingBase(exchange: Doc<"combatExchanges">) {
+  if (exchange.status !== "pendingDefense") {
+    combatFailure("exchangeNotPending", "The combat exchange is no longer pending.");
+  }
+  const {
+    _id,
+    _creationTime,
+    status: _status,
+    defenseOptions: _defenseOptions,
+    ...base
+  } = exchange;
+  return { id: _id, base };
+}
+
+function parseResponse(input: unknown): CombatResponseInput {
+  const parsed = combatResponseInputSchema.safeParse(input);
+  if (!parsed.success) {
+    const missingReason = parsed.error.issues.some((issue) =>
+      issue.path.includes("defenseModifierReason"),
+    );
+    combatFailure(
+      missingReason ? "modifierReasonRequired" : "illegalDefense",
+      missingReason
+        ? "A reason is required for a nonzero defense modifier."
+        : "The combat response is invalid.",
+    );
   }
   return parsed.data;
 }
@@ -149,9 +194,126 @@ export const declareAttack = mutation({
   },
 });
 
+export const respondToAttack = mutation({
+  args: {
+    exchangeId: v.id("combatExchanges"),
+    response: combatResponseInputValidator,
+  },
+  handler: async (ctx, args) => {
+    const stored = await ctx.db.get(args.exchangeId);
+    if (stored === null) {
+      combatFailure("exchangeNotPending", "The combat exchange no longer exists.");
+    }
+    const { id, base } = pendingBase(stored);
+
+    let attacker: Character;
+    let defender: Character;
+    try {
+      [attacker, defender] = await Promise.all([
+        loadCharacter(ctx, stored.attackerId),
+        loadCharacter(ctx, stored.defenderId),
+      ]);
+    } catch {
+      combatFailure("characterMissing", "The attacker or defender no longer exists.");
+    }
+
+    const attackerSheet = deriveSheet(attacker);
+    const defenderSheet = deriveSheet(defender);
+    const tokensMatch =
+      attackerCombatStateToken(attackerSheet, stored.weapon.index) === stored.attackerStateToken &&
+      defenderCombatStateToken(defenderSheet) === stored.defenderStateToken;
+    if (!tokensMatch) {
+      await ctx.db.replace(id, {
+        ...base,
+        status: "stale",
+        staleAt: Date.now(),
+        reason: "combatStateChanged",
+      });
+      return (await ctx.db.get(id))!;
+    }
+
+    const attack = deriveAttackProfile(attackerSheet, stored.weapon.index);
+    if (!attack.supported) {
+      combatFailure("combatStateChanged", "The stored attack profile can no longer be derived.");
+    }
+    const context = validateCombatContext(attack, stored.context);
+    const protection = deriveProtection(defenderSheet);
+    if (protection.kind === "mdcArmor") {
+      combatFailure("combatStateChanged", "The defender's protection changed.");
+    }
+    const options = deriveDefenseOptions(defenderSheet, attack, context);
+    const responseInput = parseResponse(args.response);
+    let response: AuthorizedCombatResponse;
+    try {
+      response = authorizeCombatResponse(options, responseInput);
+    } catch {
+      combatFailure("illegalDefense", "That defense is not legal for this exchange.");
+    }
+
+    const defenseRoll =
+      response.kind === "none" ? undefined : rollD20(response.totalBonus, stored.strikeRoll.total);
+    const opposed = resolveStrike({
+      strike: stored.strikeRoll,
+      ...(defenseRoll === undefined
+        ? {}
+        : { defense: { kind: response.kind as DefenseKind, roll: defenseRoll } }),
+      allowedDefenses: defenseRoll === undefined ? [] : [response.kind as DefenseKind],
+      damageType: "sdc",
+      criticalOn: attack.criticalOn,
+    });
+    const damageRoll =
+      opposed.outcome === "hit" ? rollDamage(attack.damageFormula, attack.damageBonus) : undefined;
+    const resolution = resolveCombatExchange({
+      attack,
+      context,
+      strikeRoll: stored.strikeRoll,
+      response,
+      ...(defenseRoll === undefined ? {} : { defenseRoll }),
+      ...(damageRoll === undefined ? {} : { damageRoll }),
+      protection,
+      body: {
+        sdc: defenderSheet.vitals.sdc.current!,
+        hitPoints: defenderSheet.vitals.hitPoints.current!,
+      },
+      comaDeathFloor: defenderSheet.vitals.comaDeathFloor,
+    });
+
+    if (resolution.outcome === "hit") {
+      const current =
+        resolution.route.kind === "armor"
+          ? { ...defender.current, armor: resolution.route.armor.after }
+          : {
+              ...defender.current,
+              sdc: resolution.route.body.after.sdc,
+              hitPoints: resolution.route.body.after.hitPoints,
+            };
+      await patchCurrent(ctx, stored.defenderId, defender, current);
+    }
+    await ctx.db.replace(id, { ...base, status: "resolved", resolution });
+    return (await ctx.db.get(id))!;
+  },
+});
+
+export const cancelAttack = mutation({
+  args: { exchangeId: v.id("combatExchanges") },
+  handler: async (ctx, { exchangeId }) => {
+    const stored = await ctx.db.get(exchangeId);
+    if (stored === null) {
+      combatFailure("exchangeNotPending", "The combat exchange no longer exists.");
+    }
+    const { id, base } = pendingBase(stored);
+    // Accounts/roles are not modeled yet; do not pretend an actor ID is authorization.
+    await ctx.db.replace(id, { ...base, status: "cancelled", cancelledAt: Date.now() });
+    return (await ctx.db.get(id))!;
+  },
+});
+
 export const targets = query({
   args: { attackerId: v.id("characters") },
   handler: async (ctx, { attackerId }) => {
+    if ((await ctx.db.get(attackerId)) === null) {
+      combatFailure("characterMissing", "The character no longer exists.");
+    }
     const docs = await ctx.db.query("characters").order("desc").take(TARGET_LIMIT);
     return docs
       .filter((doc) => doc._id !== attackerId)
@@ -177,31 +339,42 @@ export const targets = query({
 
 export const incoming = query({
   args: { defenderId: v.id("characters") },
-  handler: (ctx, { defenderId }) =>
-    ctx.db
+  handler: async (ctx, { defenderId }) => {
+    if ((await ctx.db.get(defenderId)) === null) {
+      combatFailure("characterMissing", "The character no longer exists.");
+    }
+    return ctx.db
       .query("combatExchanges")
       .withIndex("by_defender_and_status", (q) =>
         q.eq("defenderId", defenderId).eq("status", "pendingDefense"),
       )
       .order("desc")
-      .take(FEED_LIMIT),
+      .take(FEED_LIMIT);
+  },
 });
 
 export const outgoing = query({
   args: { attackerId: v.id("characters") },
-  handler: (ctx, { attackerId }) =>
-    ctx.db
+  handler: async (ctx, { attackerId }) => {
+    if ((await ctx.db.get(attackerId)) === null) {
+      combatFailure("characterMissing", "The character no longer exists.");
+    }
+    return ctx.db
       .query("combatExchanges")
       .withIndex("by_attacker_and_status", (q) =>
         q.eq("attackerId", attackerId).eq("status", "pendingDefense"),
       )
       .order("desc")
-      .take(FEED_LIMIT),
+      .take(FEED_LIMIT);
+  },
 });
 
 export const recent = query({
   args: { characterId: v.id("characters") },
   handler: async (ctx, { characterId }) => {
+    if ((await ctx.db.get(characterId)) === null) {
+      combatFailure("characterMissing", "The character no longer exists.");
+    }
     const [attacks, defenses] = await Promise.all([
       ctx.db
         .query("combatExchanges")
