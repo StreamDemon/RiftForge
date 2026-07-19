@@ -18,6 +18,62 @@ import { resolveStrike } from "./strike-resolution.ts";
 
 export const combatExchangeRules = combatExchangeRulesSchema.parse(combatExchangeRaw);
 
+const attributeOrder = ["IQ", "ME", "MA", "PS", "PP", "PE", "PB", "Spd"] as const;
+const orderedAttributes = (sheet: CharacterSheet) =>
+  attributeOrder.map((code) => sheet.attributes[code]);
+
+export function attackerCombatStateToken(sheet: CharacterSheet, weaponIndex: number): string {
+  const entry = sheet.equipment[weaponIndex];
+  return JSON.stringify([
+    "attacker-v1",
+    sheet.level,
+    orderedAttributes(sheet),
+    [
+      sheet.combat.handToHandType,
+      sheet.combat.strike,
+      sheet.combat.damageBonus,
+      sheet.combat.strikeGuns,
+      sheet.combat.criticalStrikeOn,
+    ],
+    weaponIndex,
+    entry === undefined ? null : [entry.item.id, entry.worn === true, entry.rolledMdc ?? null],
+  ]);
+}
+
+export function defenderCombatStateToken(sheet: CharacterSheet): string {
+  return JSON.stringify([
+    "defender-v1",
+    sheet.level,
+    orderedAttributes(sheet),
+    [
+      sheet.combat.handToHandType,
+      sheet.combat.hasHandToHandTraining,
+      sheet.combat.hasAutoDodge,
+      sheet.combat.parry,
+      sheet.combat.dodge,
+      sheet.combat.autoDodge,
+      sheet.combat.rangedDodge,
+      sheet.combat.rangedAutoDodge,
+    ],
+    [
+      sheet.vitals.sdc.rolled ?? null,
+      sheet.vitals.sdc.current ?? null,
+      sheet.vitals.hitPoints.rolled ?? null,
+      sheet.vitals.hitPoints.current ?? null,
+      sheet.vitals.comaDeathFloor,
+    ],
+    sheet.armor === undefined
+      ? null
+      : [
+          sheet.armor.item.id,
+          sheet.armor.item.mdc === undefined ? "sdc" : "mdc",
+          sheet.armor.item.ar ?? null,
+          sheet.armor.max ?? null,
+          sheet.armor.current ?? null,
+        ],
+  ]);
+}
+
 export interface ModifierSource {
   source: "attribute" | "handToHand" | "proficiency";
   label: string;

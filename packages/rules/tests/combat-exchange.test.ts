@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vite-plus/test";
 import {
+  attackerCombatStateToken,
   armorSchema,
   authorizeCombatResponse,
   combatExchangeRules,
+  defenderCombatStateToken,
   deriveAttackProfile,
   deriveDefenseOptions,
   deriveProtection,
@@ -34,6 +36,24 @@ const combatant: CharacterInput = {
   spellIds: ["globe-of-daylight", "energy-bolt", "armor-of-ithan"],
   rolled: { hitPoints: 18, sdc: 20 },
 };
+
+const tokenBackstory = "TOKEN-SCOPE-SENTINEL: Vesper escaped the Ashwood rift.";
+const tokenItems = [
+  { itemId: "survival-knife" },
+  { itemId: "llw-concealed-light", worn: true, rolledMdc: 40 },
+] as const;
+const tokenCurrent = { hitPoints: 16, sdc: 18, ppe: 70, armor: 36 } as const;
+const tokenCombatant: CharacterInput = {
+  ...combatant,
+  narrative: { backstory: tokenBackstory },
+  items: [...tokenItems],
+  rolled: { hitPoints: 18, sdc: 20, ppe: 84 },
+  current: tokenCurrent,
+};
+
+function tokenSheet(overrides: Partial<CharacterInput> = {}): CharacterSheet {
+  return deriveSheet({ ...tokenCombatant, ...overrides });
+}
 
 function combatSheet(
   overrides: Partial<Pick<CharacterInput, "items" | "hthType" | "level">>,
@@ -74,6 +94,247 @@ describe("combat exchange constants", () => {
       minimumStrikeTotal: { melee: 5, ranged: 8 },
       rangedDodgeModifier: { pointBlank: -10, close: -5, normal: 0 },
     });
+  });
+});
+
+describe("combat-state tokens", () => {
+  test("uses stable, explicitly ordered tuples for independently derived equivalent sheets", () => {
+    const first = tokenSheet();
+    const second = tokenSheet();
+    const entry = first.equipment[0]!;
+    const armor = first.armor!;
+
+    expect(first).not.toBe(second);
+    expect(attackerCombatStateToken(first, 0)).toBe(attackerCombatStateToken(second, 0));
+    expect(defenderCombatStateToken(first)).toBe(defenderCombatStateToken(second));
+    expect(JSON.parse(attackerCombatStateToken(first, 0))).toEqual([
+      "attacker-v1",
+      first.level,
+      [
+        first.attributes.IQ,
+        first.attributes.ME,
+        first.attributes.MA,
+        first.attributes.PS,
+        first.attributes.PP,
+        first.attributes.PE,
+        first.attributes.PB,
+        first.attributes.Spd,
+      ],
+      [
+        first.combat.handToHandType,
+        first.combat.strike,
+        first.combat.damageBonus,
+        first.combat.strikeGuns,
+        first.combat.criticalStrikeOn,
+      ],
+      0,
+      [entry.item.id, false, null],
+    ]);
+    expect(JSON.parse(defenderCombatStateToken(first))).toEqual([
+      "defender-v1",
+      first.level,
+      [
+        first.attributes.IQ,
+        first.attributes.ME,
+        first.attributes.MA,
+        first.attributes.PS,
+        first.attributes.PP,
+        first.attributes.PE,
+        first.attributes.PB,
+        first.attributes.Spd,
+      ],
+      [
+        first.combat.handToHandType,
+        first.combat.hasHandToHandTraining,
+        first.combat.hasAutoDodge,
+        first.combat.parry,
+        first.combat.dodge,
+        first.combat.autoDodge,
+        first.combat.rangedDodge,
+        first.combat.rangedAutoDodge,
+      ],
+      [
+        first.vitals.sdc.rolled,
+        first.vitals.sdc.current,
+        first.vitals.hitPoints.rolled,
+        first.vitals.hitPoints.current,
+        first.vitals.comaDeathFloor,
+      ],
+      [armor.item.id, "mdc", null, armor.max, armor.current],
+    ]);
+  });
+
+  test("ignores narrative, P.P.E., and unrelated inventory without leaking backstory", () => {
+    const base = tokenSheet();
+    const baseAttacker = attackerCombatStateToken(base, 0);
+    const baseDefender = defenderCombatStateToken(base);
+    const irrelevantVariants = [
+      tokenSheet({ narrative: { backstory: "A completely different history." } }),
+      tokenSheet({ current: { ...tokenCurrent, ppe: 69 } }),
+      tokenSheet({ items: [...tokenItems, { itemId: "canteen" }] }),
+    ];
+
+    for (const variant of irrelevantVariants) {
+      expect(attackerCombatStateToken(variant, 0)).toBe(baseAttacker);
+      expect(defenderCombatStateToken(variant)).toBe(baseDefender);
+    }
+    expect(baseAttacker).not.toContain(tokenBackstory);
+    expect(baseDefender).not.toContain(tokenBackstory);
+  });
+
+  test("stales attacks for every attacker-derived dimension and selected weapon change", () => {
+    const base = tokenSheet();
+    const baseToken = attackerCombatStateToken(base, 0);
+    const attributeOrder = ["IQ", "ME", "MA", "PS", "PP", "PE", "PB", "Spd"] as const;
+
+    expect(attackerCombatStateToken(tokenSheet({ level: 2 }), 0)).not.toBe(baseToken);
+    for (const code of attributeOrder) {
+      const changed = tokenSheet({
+        attributes: { ...tokenCombatant.attributes, [code]: tokenCombatant.attributes[code] + 1 },
+      });
+      expect(attackerCombatStateToken(changed, 0)).not.toBe(baseToken);
+    }
+
+    expect(attackerCombatStateToken(tokenSheet({ hthType: "none" }), 0)).not.toBe(baseToken);
+    const changedCombatProfiles = [
+      { handToHandType: "none" },
+      { strike: base.combat.strike + 1 },
+      { damageBonus: base.combat.damageBonus + 1 },
+      { strikeGuns: base.combat.strikeGuns + 1 },
+      { criticalStrikeOn: base.combat.criticalStrikeOn - 1 },
+    ];
+    for (const combatChange of changedCombatProfiles) {
+      const changed = { ...base, combat: { ...base.combat, ...combatChange } };
+      expect(attackerCombatStateToken(changed, 0)).not.toBe(baseToken);
+    }
+
+    expect(attackerCombatStateToken(base, 1)).not.toBe(baseToken);
+    const changedWeapon = tokenSheet({
+      items: [{ itemId: "hand-axe" }, tokenItems[1]],
+    });
+    expect(attackerCombatStateToken(changedWeapon, 0)).not.toBe(baseToken);
+  });
+
+  test("stales attacks for selected instance state but not appended inventory", () => {
+    const bodyCurrent = { hitPoints: 16, sdc: 18, ppe: 70 } as const;
+    const selectedWorn = tokenSheet();
+    const selectedUnworn = tokenSheet({
+      items: [tokenItems[0], { itemId: "llw-concealed-light", rolledMdc: 40 }],
+      current: bodyCurrent,
+    });
+    const changedRoll = tokenSheet({
+      items: [tokenItems[0], { itemId: "llw-concealed-light", rolledMdc: 41 }],
+      current: bodyCurrent,
+    });
+    const appendedInventory = tokenSheet({ items: [...tokenItems, { itemId: "canteen" }] });
+
+    expect(attackerCombatStateToken(selectedWorn, 1)).not.toBe(
+      attackerCombatStateToken(selectedUnworn, 1),
+    );
+    expect(attackerCombatStateToken(selectedUnworn, 1)).not.toBe(
+      attackerCombatStateToken(changedRoll, 1),
+    );
+    expect(attackerCombatStateToken(appendedInventory, 0)).toBe(
+      attackerCombatStateToken(selectedWorn, 0),
+    );
+  });
+
+  test("stales defenses for level, every attribute, and every defense-profile dimension", () => {
+    const base = tokenSheet();
+    const baseToken = defenderCombatStateToken(base);
+    const attributeOrder = ["IQ", "ME", "MA", "PS", "PP", "PE", "PB", "Spd"] as const;
+
+    expect(defenderCombatStateToken(tokenSheet({ level: 2 }))).not.toBe(baseToken);
+    for (const code of attributeOrder) {
+      const changed = tokenSheet({
+        attributes: { ...tokenCombatant.attributes, [code]: tokenCombatant.attributes[code] + 1 },
+      });
+      expect(defenderCombatStateToken(changed)).not.toBe(baseToken);
+    }
+
+    expect(defenderCombatStateToken(tokenSheet({ hthType: "none" }))).not.toBe(baseToken);
+    const changedCombatProfiles = [
+      { handToHandType: "none" },
+      { hasHandToHandTraining: !base.combat.hasHandToHandTraining },
+      { hasAutoDodge: !base.combat.hasAutoDodge },
+      { parry: base.combat.parry + 1 },
+      { dodge: base.combat.dodge + 1 },
+      { autoDodge: base.combat.autoDodge + 1 },
+      { rangedDodge: base.combat.rangedDodge + 1 },
+      { rangedAutoDodge: base.combat.rangedAutoDodge + 1 },
+    ];
+    for (const combatChange of changedCombatProfiles) {
+      const changed = { ...base, combat: { ...base.combat, ...combatChange } };
+      expect(defenderCombatStateToken(changed)).not.toBe(baseToken);
+    }
+  });
+
+  test("stales defenses for every rolled/current body pool and the coma floor", () => {
+    const base = tokenSheet();
+    const baseToken = defenderCombatStateToken(base);
+    const changedVitals = [
+      { ...base.vitals, sdc: { ...base.vitals.sdc, rolled: base.vitals.sdc.rolled! + 1 } },
+      { ...base.vitals, sdc: { ...base.vitals.sdc, current: base.vitals.sdc.current! - 1 } },
+      {
+        ...base.vitals,
+        hitPoints: { ...base.vitals.hitPoints, rolled: base.vitals.hitPoints.rolled! + 1 },
+      },
+      {
+        ...base.vitals,
+        hitPoints: { ...base.vitals.hitPoints, current: base.vitals.hitPoints.current! - 1 },
+      },
+      { ...base.vitals, comaDeathFloor: base.vitals.comaDeathFloor - 1 },
+    ];
+
+    for (const vitals of changedVitals) {
+      expect(defenderCombatStateToken({ ...base, vitals })).not.toBe(baseToken);
+    }
+  });
+
+  test("stales defenses for complete worn-protection identity, tier, rating, and pools", () => {
+    const base = tokenSheet();
+    const sdcArmor = armorSchema.parse({
+      kind: "armor",
+      id: "token-sdc-armor",
+      name: "Token S.D.C. Armor",
+      ar: 12,
+      sdc: 30,
+      page: 287,
+    });
+    const baseArmor = { item: sdcArmor, max: 30, current: 25 };
+    const armored = { ...base, armor: baseArmor };
+    const baseToken = defenderCombatStateToken(armored);
+    const changedArmorStates: NonNullable<CharacterSheet["armor"]>[] = [
+      {
+        ...baseArmor,
+        item: armorSchema.parse({ ...sdcArmor, id: "token-sdc-armor-2" }),
+      },
+      {
+        item: armorSchema.parse({ ...sdcArmor, sdc: 31 }),
+        max: 31,
+        current: 25,
+      },
+      { ...baseArmor, current: 24 },
+      {
+        item: armorSchema.parse({
+          kind: "armor",
+          id: sdcArmor.id,
+          name: sdcArmor.name,
+          mdc: { mainBody: "30" },
+          page: 287,
+        }),
+        max: 30,
+        current: 25,
+      },
+      {
+        ...baseArmor,
+        item: armorSchema.parse({ ...sdcArmor, ar: 13 }),
+      },
+    ];
+
+    for (const armor of changedArmorStates) {
+      expect(defenderCombatStateToken({ ...armored, armor })).not.toBe(baseToken);
+    }
   });
 });
 
