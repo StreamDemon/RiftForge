@@ -1,0 +1,38 @@
+apps/web/tests/combat-exchange.test.ts
+  s_816bafeabb951b::t_e9bf8808ab86b9 5,18-27,386-404,412-460
+  s_816bafeabb951b::t_51e8ff4bb65ce9 405-411
+  s_816bafeabb951b::t_d6ac5a01dd71ef 1-2
+  s_816bafeabb951b::t_d69cfaf2b5a353 461
+apps/web/src/components/telemetry-rail.tsx
+  s_816bafeabb951b::t_aa5f89b5faa073 29,46
+apps/web/src/pages/character-sheet.tsx
+  s_816bafeabb951b::t_5a4c2cb565e640 16,483-487,489-551,554,557-562,564,567-568,571-572,574,579
+  s_816bafeabb951b::t_aa5f89b5faa073 18,22,100-102,476-482,580-581
+apps/web/src/components/combat-exchange-panel.tsx
+  s_816bafeabb951b::t_f855ff0088bfa8 66-68,328-335,576,580
+  s_816bafeabb951b::t_5a4c2cb565e640 33-42,149-150,255-259,337,593-595,621-623,664-666
+  s_816bafeabb951b::t_85334c88b9b922 1-32,43,48-65,69-148,151-254,260-309,314-316,318-322,324-327,336,338-355,357-384,386-391,393-395,397-504,506-518,520-575,577-579,581-592,596-620,624-663,667-671
+  s_816bafeabb951b::t_375d16e484a63d 44-47
+  s_816bafeabb951b::t_a44b7435645b36 310-313,317,323,392,505,519
+  s_816bafeabb951b::t_5fddc232cd27aa 356,385
+  s_816bafeabb951b::t_957ef0e2216329 396
+apps/web/src/components/ui.tsx
+  s_816bafeabb951b::t_2ba5e7d25730f2 151-152,155-156,158
+  s_816bafeabb951b::t_aa5f89b5faa073 65-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "55d48d081f6ac9a832e4af5b26f2f46db734ccbc",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
