@@ -22,10 +22,90 @@ const attributeOrder = ["IQ", "ME", "MA", "PS", "PP", "PE", "PB", "Spd"] as cons
 const orderedAttributes = (sheet: CharacterSheet) =>
   attributeOrder.map((code) => sheet.attributes[code]);
 
-export function attackerCombatStateToken(sheet: CharacterSheet, weaponIndex: number): string {
+function orderedCombatExchangeRules(rules: typeof combatExchangeRules) {
+  return [
+    rules.book,
+    [
+      rules.pages.armorAndVitals,
+      rules.pages.sdcCombat,
+      rules.pages.defense,
+      rules.pages.damage,
+      rules.pages.automaticDodge,
+      rules.pages.modernWeapons,
+      rules.pages.rangedDodging,
+    ],
+    [rules.minimumStrikeTotal.melee, rules.minimumStrikeTotal.ranged],
+    [
+      rules.rangedDodgeModifier.pointBlank,
+      rules.rangedDodgeModifier.close,
+      rules.rangedDodgeModifier.normal,
+    ],
+  ];
+}
+
+function orderedSelectedItem(sheet: CharacterSheet, weaponIndex: number) {
   const entry = sheet.equipment[weaponIndex];
+  if (entry === undefined) return null;
+  const instance = [entry.worn === true, entry.rolledMdc ?? null];
+  return entry.item.kind === "weapon"
+    ? [
+        "weapon",
+        entry.item.id,
+        entry.item.category,
+        entry.item.damage.formula,
+        entry.item.damage.type,
+        entry.item.page,
+        instance,
+      ]
+    : ["nonWeapon", entry.item.id, entry.item.kind, entry.item.page, instance];
+}
+
+function orderedAttackProfile(profile: AttackProfile) {
+  if (!profile.supported) {
+    return [
+      "refused",
+      profile.reason,
+      profile.weapon === undefined
+        ? null
+        : [
+            profile.weapon.index,
+            profile.weapon.itemId,
+            profile.weapon.name,
+            profile.weapon.worn === true,
+            profile.weapon.rolledMdc ?? null,
+          ],
+    ];
+  }
+  return [
+    "supported",
+    profile.kind,
+    profile.minimumStrikeTotal,
+    profile.strikeBonus,
+    profile.strikeBonusSources.map((source) => [source.source, source.label, source.value]),
+    profile.proficiencyBonus,
+    profile.damageFormula,
+    profile.damageBonus,
+    profile.criticalOn,
+    profile.damageType,
+    [
+      profile.weapon.index,
+      profile.weapon.itemId,
+      profile.weapon.name,
+      profile.weapon.category,
+      profile.weapon.worn === true,
+      profile.weapon.rolledMdc ?? null,
+    ],
+  ];
+}
+
+export function attackerCombatStateToken(
+  sheet: CharacterSheet,
+  weaponIndex: number,
+  rules: typeof combatExchangeRules = combatExchangeRules,
+): string {
+  const attack = deriveAttackProfile(sheet, weaponIndex);
   return JSON.stringify([
-    "attacker-v1",
+    "attacker-v2",
     sheet.level,
     orderedAttributes(sheet),
     [
@@ -35,8 +115,10 @@ export function attackerCombatStateToken(sheet: CharacterSheet, weaponIndex: num
       sheet.combat.strikeGuns,
       sheet.combat.criticalStrikeOn,
     ],
+    orderedCombatExchangeRules(rules),
     weaponIndex,
-    entry === undefined ? null : [entry.item.id, entry.worn === true, entry.rolledMdc ?? null],
+    orderedSelectedItem(sheet, weaponIndex),
+    orderedAttackProfile(attack),
   ]);
 }
 

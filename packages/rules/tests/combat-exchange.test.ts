@@ -103,12 +103,14 @@ describe("combat-state tokens", () => {
     const second = tokenSheet();
     const entry = first.equipment[0]!;
     const armor = first.armor!;
+    const attack = requireSupported(deriveAttackProfile(first, 0));
+    if (entry.item.kind !== "weapon") throw new Error("Expected the selected item to be a weapon.");
 
     expect(first).not.toBe(second);
     expect(attackerCombatStateToken(first, 0)).toBe(attackerCombatStateToken(second, 0));
     expect(defenderCombatStateToken(first)).toBe(defenderCombatStateToken(second));
     expect(JSON.parse(attackerCombatStateToken(first, 0))).toEqual([
-      "attacker-v1",
+      "attacker-v2",
       first.level,
       [
         first.attributes.IQ,
@@ -127,8 +129,37 @@ describe("combat-state tokens", () => {
         first.combat.strikeGuns,
         first.combat.criticalStrikeOn,
       ],
+      [combatExchangeRules.book, [287, 339, 340, 341, 344, 360, 361], [5, 8], [-10, -5, 0]],
       0,
-      [entry.item.id, false, null],
+      [
+        "weapon",
+        entry.item.id,
+        entry.item.category,
+        entry.item.damage.formula,
+        entry.item.damage.type,
+        entry.item.page,
+        [false, null],
+      ],
+      [
+        "supported",
+        attack.kind,
+        attack.minimumStrikeTotal,
+        attack.strikeBonus,
+        attack.strikeBonusSources.map((source) => [source.source, source.label, source.value]),
+        attack.proficiencyBonus,
+        attack.damageFormula,
+        attack.damageBonus,
+        attack.criticalOn,
+        attack.damageType,
+        [
+          attack.weapon.index,
+          attack.weapon.itemId,
+          attack.weapon.name,
+          attack.weapon.category,
+          false,
+          null,
+        ],
+      ],
     ]);
     expect(JSON.parse(defenderCombatStateToken(first))).toEqual([
       "defender-v1",
@@ -237,6 +268,61 @@ describe("combat-state tokens", () => {
     expect(attackerCombatStateToken(appendedInventory, 0)).toBe(
       attackerCombatStateToken(selectedWorn, 0),
     );
+  });
+
+  test("fingerprints selected weapon mechanics, attack sources, and page-stamped rules", () => {
+    const base = tokenSheet();
+    const selected = base.equipment[0]!;
+    if (selected.item.kind !== "weapon")
+      throw new Error("Expected the selected test item to be a weapon.");
+    const baseToken = attackerCombatStateToken(base, 0);
+    const withWeapon = (item: typeof selected.item): CharacterSheet => ({
+      ...base,
+      equipment: [{ ...selected, item }, ...base.equipment.slice(1)],
+    });
+    const changedSources: CharacterSheet = {
+      ...base,
+      attributeBonuses: {
+        ...base.attributeBonuses,
+        strike: (base.attributeBonuses.strike ?? 0) + 1,
+      },
+      combat: {
+        ...base.combat,
+        handToHandBonuses: {
+          ...base.combat.handToHandBonuses,
+          strike: (base.combat.handToHandBonuses.strike ?? 0) - 1,
+        },
+      },
+    };
+    const changedRules = {
+      ...combatExchangeRules,
+      pages: { ...combatExchangeRules.pages, sdcCombat: 340 },
+      minimumStrikeTotal: { ...combatExchangeRules.minimumStrikeTotal, melee: 6 },
+    } as unknown as typeof combatExchangeRules;
+
+    expect(
+      attackerCombatStateToken(
+        withWeapon({
+          ...selected.item,
+          damage: { ...selected.item.damage, formula: "2D6" },
+        }),
+        0,
+      ),
+    ).not.toBe(baseToken);
+    expect(attackerCombatStateToken(withWeapon({ ...selected.item, category: "axe" }), 0)).not.toBe(
+      baseToken,
+    );
+    expect(
+      attackerCombatStateToken(
+        withWeapon({
+          ...selected.item,
+          damage: { ...selected.item.damage, type: "md" },
+        }),
+        0,
+      ),
+    ).not.toBe(baseToken);
+    expect(attackerCombatStateToken(changedSources, 0)).not.toBe(baseToken);
+    expect(attackerCombatStateToken(base, 0, changedRules)).not.toBe(baseToken);
   });
 
   test("stales defenses for level, every attribute, and every defense-profile dimension", () => {

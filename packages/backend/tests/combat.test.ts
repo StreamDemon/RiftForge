@@ -533,13 +533,7 @@ describe("combat attack declaration", () => {
       strikeModifierReason: "Guaranteed test declaration",
     };
 
-    const exchange = await t.mutation(api.combat.declareAttack, {
-      attackerId,
-      defenderId,
-      weaponIndex: 0,
-      expect: { itemId: "survival-knife" },
-      context,
-    });
+    const exchange = await declarePending(t, attackerId, defenderId);
 
     const { _id, _creationTime, strikeRoll, ...snapshot } = exchange;
     expect(_id).toBeTruthy();
@@ -769,7 +763,7 @@ describe("combat response and cancellation", () => {
     },
   );
 
-  test("rejects illegal defenses and missing modifier reasons without dice or writes", async () => {
+  test("stales changed stored options and rejects missing modifier reasons without dice or writes", async () => {
     const t = testDb();
     const attackerId = await createCharacter(t, {
       rolled: ready,
@@ -800,27 +794,30 @@ describe("combat response and cancellation", () => {
     const missingBefore = await t.run((ctx) => ctx.db.get(missingReason._id));
     const random = vi.spyOn(Math, "random");
 
-    await expectCombatFailure(
-      t.mutation(api.combat.respondToAttack, {
+    let stale;
+    try {
+      stale = await t.mutation(api.combat.respondToAttack, {
         exchangeId: unavailable._id,
         response: { kind: "autoDodge" },
-      }),
-      "illegalDefense",
-      "That defense is not legal for this exchange.",
-    );
-    await expectCombatFailure(
-      t.mutation(api.combat.respondToAttack, {
-        exchangeId: missingReason._id,
-        response: { kind: "dodge", defenseModifier: 1 },
-      }),
-      "modifierReasonRequired",
-      "A reason is required for a nonzero defense modifier.",
-    );
-
-    expect(random).not.toHaveBeenCalled();
-    random.mockRestore();
+      });
+      await expectCombatFailure(
+        t.mutation(api.combat.respondToAttack, {
+          exchangeId: missingReason._id,
+          response: { kind: "dodge", defenseModifier: 1 },
+        }),
+        "modifierReasonRequired",
+        "A reason is required for a nonzero defense modifier.",
+      );
+      expect(random).not.toHaveBeenCalled();
+    } finally {
+      random.mockRestore();
+    }
+    if (stale === undefined) throw new Error("Expected changed stored options to finalize stale.");
+    expect(stale).toMatchObject({ status: "stale", reason: "combatStateChanged" });
+    expect("defenseOptions" in stale).toBe(false);
     expect(await getCharacter(t, defenderId)).toEqual(characterBefore);
-    expect(await t.run((ctx) => ctx.db.get(unavailable._id))).toEqual(unavailableBefore);
+    expect(await t.run((ctx) => ctx.db.get(unavailable._id))).toEqual(stale);
+    expect(await t.run((ctx) => ctx.db.get(unavailable._id))).not.toEqual(unavailableBefore);
     expect(await t.run((ctx) => ctx.db.get(missingReason._id))).toEqual(missingBefore);
   });
 
@@ -916,6 +913,157 @@ describe("combat response and cancellation", () => {
 });
 
 describe("combat response stale-state finalization", () => {
+  test("stales a legacy attack snapshot that differs from the current weapon profile", async () => {
+    const t = testDb();
+    const attackerId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "survival-knife" }],
+    });
+    const defenderId = await createCharacter(t, { rolled: ready });
+    const pending = await declarePending(t, attackerId, defenderId);
+    await t.run((ctx) =>
+      ctx.db.patch(pending._id, {
+        attack: { ...pending.attack, damageFormula: "2D6", criticalOn: 19 },
+      }),
+    );
+    const defenderBefore = await getCharacter(t, defenderId);
+    const random = vi.spyOn(Math, "random");
+
+    const outcome = await t
+      .mutation(api.combat.respondToAttack, {
+        exchangeId: pending._id,
+        response: { kind: "none" },
+      })
+      .then(
+        (value) => ({ status: "fulfilled" as const, value }),
+        (reason: unknown) => ({ status: "rejected" as const, reason }),
+      );
+    const randomCalls = random.mock.calls.length;
+    random.mockRestore();
+    if (outcome.status === "rejected") throw outcome.reason;
+    const stale = outcome.value;
+
+    expect(randomCalls).toBe(0);
+    expect(stale).toMatchObject({
+      status: "stale",
+      reason: "combatStateChanged",
+      attack: { damageFormula: "2D6", criticalOn: 19 },
+    });
+    expect("defenseOptions" in stale).toBe(false);
+    expect(await getCharacter(t, defenderId)).toEqual(defenderBefore);
+  });
+
+  test("stales changed ordered defense options before response authorization", async () => {
+    const t = testDb();
+    const attackerId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "survival-knife" }],
+    });
+    const defenderId = await createCharacter(t, { rolled: ready });
+    const pending = await declarePending(t, attackerId, defenderId);
+    await t.run((ctx) =>
+      ctx.db.patch(pending._id, {
+        defenseOptions: [...pending.defenseOptions].reverse(),
+      }),
+    );
+    const defenderBefore = await getCharacter(t, defenderId);
+    const random = vi.spyOn(Math, "random");
+
+    const outcome = await t
+      .mutation(api.combat.respondToAttack, {
+        exchangeId: pending._id,
+        response: { kind: "autoDodge" },
+      })
+      .then(
+        (value) => ({ status: "fulfilled" as const, value }),
+        (reason: unknown) => ({ status: "rejected" as const, reason }),
+      );
+    const randomCalls = random.mock.calls.length;
+    random.mockRestore();
+    if (outcome.status === "rejected") throw outcome.reason;
+    const stale = outcome.value;
+
+    expect(randomCalls).toBe(0);
+    expect(stale).toMatchObject({ status: "stale", reason: "combatStateChanged" });
+    expect("defenseOptions" in stale).toBe(false);
+    expect(await getCharacter(t, defenderId)).toEqual(defenderBefore);
+  });
+
+  test("stales a legacy context that no longer validates for the derived attack", async () => {
+    const t = testDb();
+    const attackerId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "survival-knife" }],
+    });
+    const defenderId = await createCharacter(t, { rolled: ready });
+    const pending = await declarePending(t, attackerId, defenderId);
+    await t.run((ctx) =>
+      ctx.db.patch(pending._id, {
+        context: { kind: "ranged", defenderAware: true, rangeBand: "normal" },
+      }),
+    );
+    const defenderBefore = await getCharacter(t, defenderId);
+    const random = vi.spyOn(Math, "random");
+
+    const outcome = await t
+      .mutation(api.combat.respondToAttack, {
+        exchangeId: pending._id,
+        response: { kind: "none" },
+      })
+      .then(
+        (value) => ({ status: "fulfilled" as const, value }),
+        (reason: unknown) => ({ status: "rejected" as const, reason }),
+      );
+    const randomCalls = random.mock.calls.length;
+    random.mockRestore();
+    if (outcome.status === "rejected") throw outcome.reason;
+    const stale = outcome.value;
+
+    expect(randomCalls).toBe(0);
+    expect(stale).toMatchObject({ status: "stale", reason: "combatStateChanged" });
+    expect("defenseOptions" in stale).toBe(false);
+    expect(await getCharacter(t, defenderId)).toEqual(defenderBefore);
+  });
+
+  test("stales an attack that can no longer derive a supported profile", async () => {
+    const t = testDb();
+    const attackerId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "survival-knife" }],
+    });
+    const defenderId = await createCharacter(t, { rolled: ready });
+    const pending = await declarePending(t, attackerId, defenderId);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(attackerId, { items: [{ itemId: "wilks-320-laser-pistol" }] });
+      const changed = await ctx.db.get(attackerId);
+      if (changed === null) throw new Error("Expected the changed attacker to exist.");
+      await ctx.db.patch(pending._id, {
+        attackerStateToken: attackerCombatStateToken(deriveSheet(changed), 0),
+      });
+    });
+    const defenderBefore = await getCharacter(t, defenderId);
+    const random = vi.spyOn(Math, "random");
+
+    const outcome = await t
+      .mutation(api.combat.respondToAttack, {
+        exchangeId: pending._id,
+        response: { kind: "none" },
+      })
+      .then(
+        (value) => ({ status: "fulfilled" as const, value }),
+        (reason: unknown) => ({ status: "rejected" as const, reason }),
+      );
+    const randomCalls = random.mock.calls.length;
+    random.mockRestore();
+    if (outcome.status === "rejected") throw outcome.reason;
+    const stale = outcome.value;
+
+    expect(randomCalls).toBe(0);
+    expect(stale).toMatchObject({ status: "stale", reason: "combatStateChanged" });
+    expect("defenseOptions" in stale).toBe(false);
+    expect(await getCharacter(t, defenderId)).toEqual(defenderBefore);
+  });
+
   test.each([
     [
       "level",

@@ -22,10 +22,11 @@ import {
   type CombatExchangeErrorCode,
   type CombatResponseInput,
   type DefenseKind,
+  type DefenseOption,
 } from "@riftforge/rules";
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type MutationCtx } from "./_generated/server";
 import {
   expectedItemValidator,
   loadCharacter,
@@ -83,7 +84,74 @@ function pendingBase(exchange: Doc<"combatExchanges">) {
     defenseOptions: _defenseOptions,
     ...base
   } = exchange;
-  return { id: _id, base };
+  return { id: _id, base, defenseOptions: _defenseOptions };
+}
+
+async function finalizeStale(ctx: MutationCtx, pending: ReturnType<typeof pendingBase>) {
+  await ctx.db.replace(pending.id, {
+    ...pending.base,
+    status: "stale",
+    staleAt: Date.now(),
+    reason: "combatStateChanged",
+  });
+  return (await ctx.db.get(pending.id))!;
+}
+
+type SupportedAttack = Extract<AttackProfile, { supported: true }>;
+type StoredWeapon = Doc<"combatExchanges">["weapon"];
+type StoredAttack = Doc<"combatExchanges">["attack"];
+
+function weaponSnapshotsMatch(current: SupportedAttack["weapon"], stored: StoredWeapon): boolean {
+  return (
+    current.index === stored.index &&
+    current.itemId === stored.itemId &&
+    current.name === stored.name &&
+    current.category === stored.category &&
+    current.worn === stored.worn &&
+    current.rolledMdc === stored.rolledMdc
+  );
+}
+
+function attackSnapshotsMatch(current: SupportedAttack, stored: StoredAttack): boolean {
+  return (
+    current.kind === stored.kind &&
+    current.minimumStrikeTotal === stored.minimumStrikeTotal &&
+    current.strikeBonus === stored.strikeBonus &&
+    current.proficiencyBonus === stored.proficiencyBonus &&
+    current.damageFormula === stored.damageFormula &&
+    current.damageBonus === stored.damageBonus &&
+    current.criticalOn === stored.criticalOn &&
+    current.damageType === stored.damageType &&
+    current.strikeBonusSources.length === stored.strikeBonusSources.length &&
+    current.strikeBonusSources.every((source, index) => {
+      const prior = stored.strikeBonusSources[index];
+      return (
+        prior !== undefined &&
+        source.source === prior.source &&
+        source.label === prior.label &&
+        source.value === prior.value
+      );
+    })
+  );
+}
+
+function defenseOptionSnapshotsMatch(
+  current: readonly DefenseOption[],
+  stored: readonly DefenseOption[],
+): boolean {
+  return (
+    current.length === stored.length &&
+    current.every((option, index) => {
+      const prior = stored[index];
+      return (
+        prior !== undefined &&
+        option.kind === prior.kind &&
+        option.bonus === prior.bonus &&
+        option.actionCost === prior.actionCost &&
+        option.explanation === prior.explanation
+      );
+    })
+  );
 }
 
 function parseResponse(input: unknown): CombatResponseInput {
@@ -204,7 +272,7 @@ export const respondToAttack = mutation({
     if (stored === null) {
       combatFailure("exchangeNotPending", "The combat exchange no longer exists.");
     }
-    const { id, base } = pendingBase(stored);
+    const pending = pendingBase(stored);
 
     let attacker: Character;
     let defender: Character;
@@ -223,25 +291,38 @@ export const respondToAttack = mutation({
       attackerCombatStateToken(attackerSheet, stored.weapon.index) === stored.attackerStateToken &&
       defenderCombatStateToken(defenderSheet) === stored.defenderStateToken;
     if (!tokensMatch) {
-      await ctx.db.replace(id, {
-        ...base,
-        status: "stale",
-        staleAt: Date.now(),
-        reason: "combatStateChanged",
-      });
-      return (await ctx.db.get(id))!;
+      return finalizeStale(ctx, pending);
     }
 
     const attack = deriveAttackProfile(attackerSheet, stored.weapon.index);
     if (!attack.supported) {
-      combatFailure("combatStateChanged", "The stored attack profile can no longer be derived.");
+      return finalizeStale(ctx, pending);
     }
-    const context = validateCombatContext(attack, stored.context);
+    if (
+      !weaponSnapshotsMatch(attack.weapon, stored.weapon) ||
+      !attackSnapshotsMatch(attack, stored.attack)
+    ) {
+      return finalizeStale(ctx, pending);
+    }
+    let context: CombatContext;
+    try {
+      context = validateCombatContext(attack, stored.context);
+    } catch {
+      return finalizeStale(ctx, pending);
+    }
     const protection = deriveProtection(defenderSheet);
     if (protection.kind === "mdcArmor") {
-      combatFailure("combatStateChanged", "The defender's protection changed.");
+      return finalizeStale(ctx, pending);
     }
-    const options = deriveDefenseOptions(defenderSheet, attack, context);
+    let options: DefenseOption[];
+    try {
+      options = deriveDefenseOptions(defenderSheet, attack, context);
+    } catch {
+      return finalizeStale(ctx, pending);
+    }
+    if (!defenseOptionSnapshotsMatch(options, pending.defenseOptions)) {
+      return finalizeStale(ctx, pending);
+    }
     const responseInput = parseResponse(args.response);
     let response: AuthorizedCombatResponse;
     try {
@@ -289,8 +370,8 @@ export const respondToAttack = mutation({
             };
       await patchCurrent(ctx, stored.defenderId, defender, current);
     }
-    await ctx.db.replace(id, { ...base, status: "resolved", resolution });
-    return (await ctx.db.get(id))!;
+    await ctx.db.replace(pending.id, { ...pending.base, status: "resolved", resolution });
+    return (await ctx.db.get(pending.id))!;
   },
 });
 
@@ -301,10 +382,14 @@ export const cancelAttack = mutation({
     if (stored === null) {
       combatFailure("exchangeNotPending", "The combat exchange no longer exists.");
     }
-    const { id, base } = pendingBase(stored);
+    const pending = pendingBase(stored);
     // Accounts/roles are not modeled yet; do not pretend an actor ID is authorization.
-    await ctx.db.replace(id, { ...base, status: "cancelled", cancelledAt: Date.now() });
-    return (await ctx.db.get(id))!;
+    await ctx.db.replace(pending.id, {
+      ...pending.base,
+      status: "cancelled",
+      cancelledAt: Date.now(),
+    });
+    return (await ctx.db.get(pending.id))!;
   },
 });
 
