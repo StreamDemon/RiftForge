@@ -393,6 +393,15 @@ describe("combat exchange component contract", () => {
     expect(characterSheetSource).not.toContain("function ToggleChip(");
   });
 
+  test("keeps declaration and response modifier inputs inside their fixed grid tracks", () => {
+    expect(panelSource).toMatch(
+      /aria-label="Defense modifier"\s*inputmode="numeric"\s*class="w-full"/,
+    );
+    expect(panelSource).toMatch(
+      /aria-label="Strike modifier"\s*inputmode="numeric"\s*class="w-full"/,
+    );
+  });
+
   test("subscribes every queue reactively and keeps strike, damage, and routing server-owned", () => {
     expect(panelSource).toContain("api.combat.targets");
     expect(panelSource).toContain("api.combat.incoming");
@@ -465,7 +474,14 @@ describe("combat exchange component contract", () => {
     expect(noticeEnd).toBeGreaterThan(noticeStart);
     const notice = panelSource.slice(noticeStart, noticeEnd);
     expect(notice).toMatch(/result\.status === "resolved"\s*\? \{ tone: "ok"/s);
-    expect(notice).toMatch(/: \{ tone: "warn".*AWAITING DEFENSE/s);
+    expect(notice).toMatch(/: \{\s*tone: "warn".*AWAITING DEFENSE/s);
+  });
+
+  test("clears a pending declaration notice after that exchange resolves", () => {
+    expect(panelSource).toContain("exchangeId: result._id");
+    expect(panelSource).toMatch(
+      /const currentNotice = notice\(\);[\s\S]*recent\s*\.data\(\)\s*\?\.find\([\s\S]*currentNotice\.exchangeId[\s\S]*matchingExchange\.status !== "pendingDefense"[\s\S]*setNotice\(undefined\)/,
+    );
   });
 
   test("keeps persisted combat history bounded and uses no magic signal tone", () => {

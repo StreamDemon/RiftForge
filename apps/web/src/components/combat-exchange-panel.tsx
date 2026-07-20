@@ -49,6 +49,11 @@ type OutgoingExchange = Extract<
   FunctionReturnType<typeof api.combat.outgoing>[number],
   { status: "pendingDefense" }
 >;
+type DeclarationNotice = {
+  tone: "ok" | "warn";
+  text: string;
+  exchangeId?: Id<"combatExchanges">;
+};
 
 const toneClass = {
   dim: "border-dead text-muted",
@@ -180,6 +185,7 @@ function IncomingExchangeRow(props: {
               <TextInput
                 aria-label="Defense modifier"
                 inputmode="numeric"
+                class="w-full"
                 value={defenseModifier()}
                 onInput={(event) => setDefenseModifier(event.currentTarget.value)}
               />
@@ -317,7 +323,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
   const [strikeReason, setStrikeReason] = createSignal("");
   const [busy, setBusy] = createSignal(false);
   const [error, setError] = createSignal<string>();
-  const [notice, setNotice] = createSignal<{ tone: "ok" | "warn"; text: string }>();
+  const [notice, setNotice] = createSignal<DeclarationNotice>();
   const [historyExpanded, setHistoryExpanded] = createSignal(false);
   const [flashingIds, setFlashingIds] = createSignal<ReadonlySet<string>>(new Set());
   const choices = createMemo(() => combatWeaponChoices(props.sheet));
@@ -426,6 +432,17 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
     }, 650);
   });
 
+  createEffect(() => {
+    const currentNotice = notice();
+    if (currentNotice?.exchangeId === undefined) return;
+    const matchingExchange = recent
+      .data()
+      ?.find((exchange) => exchange._id === currentNotice.exchangeId);
+    if (matchingExchange !== undefined && matchingExchange.status !== "pendingDefense") {
+      setNotice(undefined);
+    }
+  });
+
   const submitDeclaration = async () => {
     const index = selectedIndex();
     const attack = selectedSupportedAttack();
@@ -478,7 +495,11 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
       setNotice(
         result.status === "resolved"
           ? { tone: "ok", text: `${result.weapon.name.toUpperCase()} — MISS RECORDED` }
-          : { tone: "warn", text: `${result.weapon.name.toUpperCase()} — AWAITING DEFENSE` },
+          : {
+              tone: "warn",
+              text: `${result.weapon.name.toUpperCase()} — AWAITING DEFENSE`,
+              exchangeId: result._id,
+            },
       );
       setStrikeModifier("");
       setStrikeReason("");
@@ -576,6 +597,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
             <TextInput
               aria-label="Strike modifier"
               inputmode="numeric"
+              class="w-full"
               value={strikeModifier()}
               onInput={(event) => setStrikeModifier(event.currentTarget.value)}
             />
