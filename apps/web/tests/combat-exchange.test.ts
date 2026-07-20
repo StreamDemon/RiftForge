@@ -431,6 +431,18 @@ describe("combat exchange component contract", () => {
     expect(panelSource).toContain("option.actionCost} ACTION");
   });
 
+  test("keeps take-the-hit independent from draft defense modifiers", () => {
+    expect(panelSource).toContain('const usesDefense = kind !== "none";');
+    expect(panelSource).toMatch(
+      /if \(\s*usesDefense &&\s*\(modifier === undefined \|\| \(modifier !== 0 && defenseReason\(\)\.trim\(\) === ""\)\)\s*\)\s*return;/,
+    );
+    expect(panelSource).toContain(
+      'disabled={busy() || (option.kind !== "none" && !responseReady())}',
+    );
+    expect(panelSource).toContain("...(usesDefense && modifier !== 0");
+    expect(panelSource).toContain('...(usesDefense && defenseReason().trim() !== ""');
+  });
+
   test("resets route state and gates declaration, response, and cancellation by ownership", () => {
     expect(panelSource).toContain("const resetRouteState = () => {");
     expect(panelSource).toContain("routeEpoch += 1");
@@ -493,6 +505,11 @@ describe("combat exchange component contract", () => {
     expect(panelSource).toContain('bad: "border-blood text-blood-text"');
     expect(panelSource).toContain('good: "border-ok text-ok"');
     expect(panelSource).not.toMatch(/border-ley|text-ley/);
+  });
+
+  test("associates the recent-history disclosure with its controlled list", () => {
+    expect(panelSource).toContain('aria-controls="combat-recent-history"');
+    expect(panelSource).toContain('<ol id="combat-recent-history"');
   });
 
   test("mounts combat above telemetry under one complementary rail landmark", () => {

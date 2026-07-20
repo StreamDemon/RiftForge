@@ -221,9 +221,12 @@ short explanation for the UI and persisted result.
   any bonus still obeys the ranged-defense bonus restrictions.
 - `none` is always available.
 
-The response may include a safe-integer `defenseModifier` with a required reason
-when nonzero. The engine revalidates the selected option; the client cannot submit
-an arbitrary defense kind or bonus.
+An actual defense response may include a safe-integer `defenseModifier` with a
+required reason when nonzero. A `none` response cannot carry a nonzero defense
+modifier, and the client omits both defense-modifier fields when taking the hit so
+immutable history cannot imply that a bonus affected an unopposed strike. The
+engine revalidates the selected option; the client cannot submit an arbitrary
+defense kind or bonus.
 
 ### Resolution order
 
@@ -620,3 +623,34 @@ Artificial S.D.C. armor equality, penetration, depletion, and no-spill behavior
 are covered by pure rules tests because the production catalog still has no
 page-stamped S.D.C. armor suit. Full M.D.C. resolution remains deliberately outside
 this delivery and requires its own tracker and rendered-page design pass.
+
+## Cubic review hardening
+
+Two findings from the first ready-for-review Cubic pass were reproduced and fixed
+on 2026-07-20 (Asia/Singapore):
+
+- the recent-history disclosure now points through `aria-controls` to the exact
+  ordered list whose visible length it changes; and
+- take-the-hit responses reject nonzero defense modifiers at the authoritative
+  response schema, while the web submission path omits any draft modifier and
+  reason for that response kind.
+
+Regression coverage proves the schema rejection before backend randomness or
+writes, modifier-free take-the-hit submission, and the disclosure/list association.
+Live two-dossier acceptance additionally proved that a draft modifier and reason
+are ignored when taking the hit, the immutable record carries a canonical zero
+modifier with no reason, the disclosure expands to its controlled list, and the
+restored target dossier finishes with no console errors or warnings.
+
+Fresh automated evidence after this hardening was:
+
+- rules package: 17/17 files and 309/309 tests passed;
+- backend package: 3/3 files and 83/83 tests passed;
+- web package: 2/2 files and 29/29 tests passed; and
+- root workspace: 22/22 files and 421/421 tests passed.
+
+All six package gates ran with task caches disabled and root `vp check` passed.
+The root test configuration caps cross-workspace workers at 50% because two
+unchanged Convex edge-runtime tests reproducibly exceeded their five-second
+timeouts under full local saturation but passed both focused and in the complete
+421-test run at the capped concurrency.

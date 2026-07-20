@@ -49,6 +49,13 @@ const rawCombatResponseInputSchema = z.object({
 });
 export const combatResponseInputSchema = rawCombatResponseInputSchema.superRefine(
   (response, check) => {
+    if (response.kind === "none" && (response.defenseModifier ?? 0) !== 0) {
+      check.addIssue({
+        code: "custom",
+        path: ["defenseModifier"],
+        message: "Take-the-hit cannot include a nonzero defense modifier.",
+      });
+    }
     if ((response.defenseModifier ?? 0) !== 0 && response.defenseModifierReason === undefined) {
       check.addIssue({
         code: "custom",

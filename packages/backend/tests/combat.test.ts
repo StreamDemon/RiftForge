@@ -681,6 +681,41 @@ describe("combat response and cancellation", () => {
     expect("defenseOptions" in resolved).toBe(false);
   });
 
+  test("rejects a nonzero take-the-hit modifier before dice or writes", async () => {
+    const t = testDb();
+    const attackerId = await createCharacter(t, {
+      name: "Attacker",
+      rolled: ready,
+      items: [{ itemId: "survival-knife" }],
+    });
+    const defenderId = await createCharacter(t, { name: "Defender", rolled: ready });
+    const pending = await declarePending(t, attackerId, defenderId);
+    const defenderBefore = await getCharacter(t, defenderId);
+    const exchangeBefore = await t.run((ctx) => ctx.db.get(pending._id));
+    const random = vi.spyOn(Math, "random");
+
+    try {
+      await expectCombatFailure(
+        t.mutation(api.combat.respondToAttack, {
+          exchangeId: pending._id,
+          response: {
+            kind: "none",
+            defenseModifier: 1,
+            defenseModifierReason: "GM ruling",
+          },
+        }),
+        "illegalDefense",
+        "The combat response is invalid.",
+      );
+      expect(random).not.toHaveBeenCalled();
+    } finally {
+      random.mockRestore();
+    }
+
+    expect(await getCharacter(t, defenderId)).toEqual(defenderBefore);
+    expect(await t.run((ctx) => ctx.db.get(pending._id))).toEqual(exchangeBefore);
+  });
+
   test("a server-rolled natural-20 defense changes no pools", async () => {
     const random = vi.spyOn(Math, "random").mockReturnValue(0.999_999);
     try {

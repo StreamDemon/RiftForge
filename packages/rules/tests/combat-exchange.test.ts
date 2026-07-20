@@ -741,6 +741,16 @@ describe("combat response authorization", () => {
     ).toThrow(/string|reason/i);
   });
 
+  test("rejects a nonzero defense modifier when taking the hit", () => {
+    expect(() =>
+      authorizeCombatResponse(options, {
+        kind: "none",
+        defenseModifier: 1,
+        defenseModifierReason: "GM ruling",
+      }),
+    ).toThrow(/take-the-hit.*defense modifier/i);
+  });
+
   test("rejects unsafe, fractional, and out-of-range defense modifiers", () => {
     const response = {
       kind: "dodge",

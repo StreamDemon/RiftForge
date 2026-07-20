@@ -111,7 +111,12 @@ function IncomingExchangeRow(props: {
   const submitResponse = async (kind: CombatResponseKind) => {
     if (props.exchange() === undefined) return;
     const modifier = defenseModifierValue();
-    if (modifier === undefined || (modifier !== 0 && defenseReason().trim() === "")) return;
+    const usesDefense = kind !== "none";
+    if (
+      usesDefense &&
+      (modifier === undefined || (modifier !== 0 && defenseReason().trim() === ""))
+    )
+      return;
     const owner = {
       routeId: props.characterId,
       routeEpoch: props.routeEpoch(),
@@ -124,10 +129,10 @@ function IncomingExchangeRow(props: {
         exchangeId: props.exchangeId,
         response: {
           kind,
-          ...(modifier === 0 ? {} : { defenseModifier: modifier }),
-          ...(defenseReason().trim() === ""
-            ? {}
-            : { defenseModifierReason: defenseReason().trim() }),
+          ...(usesDefense && modifier !== 0 ? { defenseModifier: modifier } : {}),
+          ...(usesDefense && defenseReason().trim() !== ""
+            ? { defenseModifierReason: defenseReason().trim() }
+            : {}),
         },
       });
       const current = {
@@ -205,7 +210,7 @@ function IncomingExchangeRow(props: {
               {(option) => (
                 <Button
                   class="w-full px-2 text-left text-[11.5px]"
-                  disabled={busy() || !responseReady()}
+                  disabled={busy() || (option.kind !== "none" && !responseReady())}
                   title={option.explanation}
                   onClick={() => void submitResponse(option.kind)}
                 >
@@ -697,6 +702,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
               variant="ghost"
               class="ml-auto px-0 py-0 text-[11px]"
               aria-expanded={historyExpanded()}
+              aria-controls="combat-recent-history"
               onClick={() => setHistoryExpanded((value) => !value)}
             >
               {historyExpanded() ? "SHOW 5" : "SHOW 20"}
@@ -707,7 +713,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
           when={visibleRecent().length > 0}
           fallback={<p class="mt-1 font-mono text-[11.5px] text-dead">// NO EXCHANGES</p>}
         >
-          <ol class="mt-2 space-y-2">
+          <ol id="combat-recent-history" class="mt-2 space-y-2">
             <For each={visibleRecent()}>
               {(exchange) => (
                 <li

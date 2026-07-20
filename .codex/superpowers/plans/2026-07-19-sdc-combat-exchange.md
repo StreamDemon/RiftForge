@@ -3147,6 +3147,15 @@ than copying counts that can change during review hardening.
 
 For every finding, reproduce/validate first. If real, add a regression test and fix the entire bug class; if invalid, reply with evidence. After each push, wait for the new Cubic review and rerun the affected gates. Leave the PR unmerged for the human maintainer.
 
+Review pass evidence on 2026-07-20: both P3 findings were valid. The web disclosure
+now associates its state with the recent-history list, and take-the-hit rejects a
+nonzero defense modifier at the shared schema while the web omits modifier fields
+for that response. Red-green coverage spans rules, backend, and web. Fresh package
+gates pass at 309 rules, 83 backend, and 29 web tests; root `vp check` and the
+421-test root suite pass. Live acceptance covered both fixes against local Convex.
+Publication, thread replies, and the triggered Cubic re-review remain before this
+step can be checked complete.
+
 ---
 
 ## Final Success Checklist

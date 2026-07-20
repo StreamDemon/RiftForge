@@ -19,5 +19,8 @@ export default defineConfig({
     // the only one loaded — apps/web then resolves solid-js to its
     // non-reactive server build and the Convex bindings tests fail.
     projects: ["apps/*", "packages/*"],
+    // Keep cross-workspace runs below the saturation point where concurrent
+    // Convex edge-runtime startup can consume an individual test's timeout.
+    maxWorkers: "50%",
   },
 });
