@@ -1,0 +1,36 @@
+packages/rules/src/schema/combat-exchange.ts
+  s_816bafeabb951b::t_27125e7cc8bf85 52-58
+apps/web/tests/combat-exchange.test.ts
+  s_816bafeabb951b::t_1e8f4c2130d208 443
+  s_816bafeabb951b::t_e2140957a659e9 434-442,444-445,510-513
+  s_816bafeabb951b::t_c74e06e9666a88 514
+vite.config.ts
+  s_816bafeabb951b::t_ffe1fed34cb852 22-24
+.codex/superpowers/plans/2026-07-19-sdc-combat-exchange.md
+  s_816bafeabb951b::t_571e919a70da80 3150-3158
+.codex/superpowers/specs/2026-07-19-sdc-combat-exchange-design.md
+  s_816bafeabb951b::t_571e919a70da80 626-656
+  s_816bafeabb951b::t_9a2d82fae1dd37 224-229
+packages/rules/tests/combat-exchange.test.ts
+  s_816bafeabb951b::t_e2140957a659e9 744-753
+packages/backend/tests/combat.test.ts
+  s_816bafeabb951b::t_e2140957a659e9 684-718
+apps/web/src/components/combat-exchange-panel.tsx
+  s_816bafeabb951b::t_27125e7cc8bf85 114-119,132-135,213,705,716
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a9a0fdec359f4ee6b95d8675c47ce6e10bc07fd9",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
