@@ -3018,7 +3018,7 @@ Replace README language saying A.R./hostile persistence are wholly future work w
 
 Append an implementation-outcome section to the approved design with commit(s), actual package/root test counts, live scenarios, and the date/time scope. Check completed plan boxes only when their evidence exists.
 
-- [ ] **Step 2: Run documentation gates and commit**
+- [x] **Step 2: Run documentation gates and commit**
 
 ```text
 vp check
@@ -3034,7 +3034,7 @@ git add -- README.md .codex/superpowers/specs/2026-07-19-sdc-combat-exchange-des
 git commit -m "docs: record S.D.C. combat delivery"
 ```
 
-- [ ] **Step 3: Correct and align issue #44**
+- [x] **Step 3: Correct and align issue #44**
 
 Refresh the issue first:
 
@@ -3044,7 +3044,7 @@ gh issue view 44 --json number,title,body,state,labels,url
 
 Edit the body so it no longer claims Natural A.R. needs implementation. Preserve the foundation context, then state with rendered p.339 evidence that Natural A.R. does not apply in Rifts; describe the delivered S.D.C.-tier exchange/armor-routing scope; list full M.D.C. as an explicit follow-up; and include time-scoped package/root/live verification. Do not close #44 from the branch.
 
-- [ ] **Step 4: Create the dedicated full-M.D.C. follow-up**
+- [x] **Step 4: Create the dedicated full-M.D.C. follow-up**
 
 Before creating, search again to prevent a duplicate:
 
@@ -3080,7 +3080,7 @@ Depends on #44.
 $mdcIssueUrl = gh issue create --title "Full M.D.C. combat: tier interaction, armor ablation, and unprotected outcomes" --body $mdcBody --label "area:rules"
 ```
 
-- [ ] **Step 5: Perform final verification immediately before publication**
+- [x] **Step 5: Perform final verification immediately before publication**
 
 Run:
 
@@ -3099,7 +3099,7 @@ git status --short --branch
 
 Expected: clean gates and only intentional committed history.
 
-- [ ] **Step 6: Push and open a draft PR for Cubic review**
+- [x] **Step 6: Push and open a draft PR for Cubic review**
 
 ```text
 git push -u origin feat/sdc-combat-exchange
@@ -3163,5 +3163,5 @@ For every finding, reproduce/validate first. If real, add a regression test and 
 - [x] No Natural A.R., rounds/actions enforcement, auth, geometry, or other excluded system was added.
 - [x] Route changes cannot leak drafts, feeds, telemetry, or late mutation results.
 - [x] Rules, backend, web, and root gates pass with current counts; live browser acceptance passes.
-- [ ] README, approved design, issue #44, full-M.D.C. follow-up, and draft PR all reflect the same verified scope.
+- [x] README, approved design, issue #44, full-M.D.C. follow-up, and draft PR all reflect the same verified scope.
 - [x] The human maintainer, not the agent, retains merge authority.

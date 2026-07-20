@@ -582,24 +582,31 @@ and the PR review are genuinely aligned. The human maintainer remains the merger
 
 ## Implementation outcome
 
-Implemented and verified on `feat/sdc-combat-exchange` through commit `94443ea`
+Implemented and verified on `feat/sdc-combat-exchange` through commit `a44f193`
 on 2026-07-20 (Asia/Singapore). The implementation history is grouped as:
 
 - rules and combat-state derivation: `57b2c64` through `032c487`;
 - backend helpers, ledger, declaration, and atomic resolution: `3737f33` through
-  `0e20bf1`; and
+  `0e20bf1`;
 - web presentation, route ownership, and live-found hardening: `e8cf9af` through
-  `94443ea`.
+  `94443ea`; and
+- final mechanical attack/rules snapshot hardening: `a44f193`.
 
-Fresh post-live automated evidence at that commit was:
+Fresh post-final-review automated evidence at `a44f193` was:
 
-- rules package: 17/17 files and 307/307 tests passed;
-- backend package: 3/3 files and 78/78 tests passed;
+- rules package: 17/17 files and 308/308 tests passed;
+- backend package: 3/3 files and 82/82 tests passed;
 - web package: 2/2 files and 27/27 tests passed; and
-- root workspace: 22/22 files and 412/412 tests passed.
+- root workspace: 22/22 files and 417/417 tests passed.
 
-All affected package checks, root `vp check`, and both branch/working-tree diff
-checks were clean. Live Convex/browser acceptance used two dossiers and covered an
+All six package gates ran with task caches disabled; root `vp check` and both
+branch/working-tree diff checks were clean. The final hardening makes attacker
+tokens explicitly versioned over selected weapon mechanics, full derived attack
+sources/profile, and page-stamped exchange constants. Response finalization now
+stales incompatible stored weapon, attack, context, or ordered defense-option
+snapshots before authorization, random rolls, or pool writes.
+
+Live Convex/browser acceptance at `94443ea` used two dossiers and covered an
 immediate miss; a melee defense with unchanged pools; a ranged exchange with no
 parry option; body S.D.C. depletion followed by a critical Hit Point hit; detailed
 persisted history in both dossiers; M.D. weapon and nondepleted M.D.C.-protection
