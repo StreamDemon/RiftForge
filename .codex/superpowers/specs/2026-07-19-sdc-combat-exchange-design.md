@@ -579,3 +579,37 @@ and the PR review are genuinely aligned. The human maintainer remains the merger
 - No natural-A.R. behavior is added contrary to RUE p.339.
 - Navigation cannot leak combat drafts, logs, or late results between characters.
 - All affected package gates, root gates, and live-browser checks pass.
+
+## Implementation outcome
+
+Implemented and verified on `feat/sdc-combat-exchange` through commit `94443ea`
+on 2026-07-20 (Asia/Singapore). The implementation history is grouped as:
+
+- rules and combat-state derivation: `57b2c64` through `032c487`;
+- backend helpers, ledger, declaration, and atomic resolution: `3737f33` through
+  `0e20bf1`; and
+- web presentation, route ownership, and live-found hardening: `e8cf9af` through
+  `94443ea`.
+
+Fresh post-live automated evidence at that commit was:
+
+- rules package: 17/17 files and 307/307 tests passed;
+- backend package: 3/3 files and 78/78 tests passed;
+- web package: 2/2 files and 27/27 tests passed; and
+- root workspace: 22/22 files and 412/412 tests passed.
+
+All affected package checks, root `vp check`, and both branch/working-tree diff
+checks were clean. Live Convex/browser acceptance used two dossiers and covered an
+immediate miss; a melee defense with unchanged pools; a ranged exchange with no
+parry option; body S.D.C. depletion followed by a critical Hit Point hit; detailed
+persisted history in both dossiers; M.D. weapon and nondepleted M.D.C.-protection
+refusal; and A-to-B route isolation for drafts, feeds, telemetry, and late results.
+Native labels, keyboard focus, live-region semantics, and clean consoles were also
+verified. The new command rail had no internal overflow at the narrow probe; the
+page-level 500 px minimum was proven to predate this branch and remains outside this
+feature's scope.
+
+Artificial S.D.C. armor equality, penetration, depletion, and no-spill behavior
+are covered by pure rules tests because the production catalog still has no
+page-stamped S.D.C. armor suit. Full M.D.C. resolution remains deliberately outside
+this delivery and requires its own tracker and rendered-page design pass.

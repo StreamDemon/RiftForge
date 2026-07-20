@@ -44,8 +44,8 @@
 - `packages/rules/src/content/combat/combat-exchange.json` - rendered-page citations, melee/ranged target totals, and ranged dodge penalties.
 - `packages/rules/src/engine/combat-exchange.ts` - attack profiles, authorized defenses, protection classification, pure resolution/routing, and deterministic combat-state tokens.
 - `packages/rules/tests/combat-exchange.test.ts` - the full pure truth table, including future-ready S.D.C. armor fixtures.
-- `packages/backend/convex/character-state.ts` - shared character load/validate/patch and expected-item helpers extracted without behavior changes.
-- `packages/backend/convex/combat-values.ts` - reusable Convex validators for contexts, rolls, response options, and the discriminated ledger document.
+- `packages/backend/convex/character_state.ts` - shared character load/validate/patch and expected-item helpers extracted without behavior changes.
+- `packages/backend/convex/combat_values.ts` - reusable Convex validators for contexts, rolls, response options, and the discriminated ledger document.
 - `packages/backend/convex/combat.ts` - bounded combat queries plus declare/respond/cancel mutations.
 - `packages/backend/tests/combat.test.ts` - Convex ledger, mutation, atomicity, stale-token, and boundary tests.
 - `apps/web/src/lib/combat-exchange.ts` - pure selector/presentation helpers and async ownership-token helpers.
@@ -150,7 +150,7 @@ rangedAutoDodge: number;
 
 `rangedDodge` is the P.P. dodge bonus only. `rangedAutoDodge` is that same P.P. bonus when the character has automatic-dodge capability, otherwise zero. Neither includes ordinary H2H dodge nor the H2H `autoDodge` modifier; this preserves the p.361 ranged restriction. Future structured O.C.C. bonuses can be added at this named seam.
 
-- [ ] **Step 1: Add failing constants and combat-profile assertions**
+- [x] **Step 1: Add failing constants and combat-profile assertions**
 
 Create `packages/rules/tests/combat-exchange.test.ts` with the constants assertion:
 
@@ -206,7 +206,7 @@ test("makes training and ranged-defense capability explicit", () => {
 
 Update the exact object assertion in `packages/rules/tests/character.test.ts` to require the five new fields for the level-1 Basic H2H sheet.
 
-- [ ] **Step 2: Run the focused tests and observe the missing exports/fields**
+- [x] **Step 2: Run the focused tests and observe the missing exports/fields**
 
 Run:
 
@@ -216,7 +216,7 @@ vp test packages/rules/tests/combat-exchange.test.ts packages/rules/tests/combat
 
 Expected: FAIL because `combatExchangeRules` and the five profile fields do not exist.
 
-- [ ] **Step 3: Add the schema and page-stamped content**
+- [x] **Step 3: Add the schema and page-stamped content**
 
 Create `packages/rules/src/content/combat/combat-exchange.json` exactly as asserted above. Add the enums and `combatExchangeRulesSchema` to `packages/rules/src/schema/combat-exchange.ts`. Parse the JSON at module load in the initial `packages/rules/src/engine/combat-exchange.ts`:
 
@@ -227,7 +227,7 @@ import { combatExchangeRulesSchema } from "../schema/combat-exchange.ts";
 export const combatExchangeRules = combatExchangeRulesSchema.parse(combatExchangeRaw);
 ```
 
-- [ ] **Step 4: Derive the explicit profile fields**
+- [x] **Step 4: Derive the explicit profile fields**
 
 In `combatProfile`, calculate the capability booleans from the H2H ID/raw bonus and return:
 
@@ -242,7 +242,7 @@ existing returned object without removing or redefining any current field.
 
 Do not remove or redefine the existing `dodge` and `autoDodge` totals.
 
-- [ ] **Step 5: Export the new public surface and pass the focused tests**
+- [x] **Step 5: Export the new public surface and pass the focused tests**
 
 Add to `packages/rules/src/index.ts`:
 
@@ -253,7 +253,7 @@ export * from "./engine/combat-exchange.ts";
 
 Run the Step 2 command again. Expected: PASS.
 
-- [ ] **Step 6: Run the rules gate and commit**
+- [x] **Step 6: Run the rules gate and commit**
 
 Run:
 
@@ -342,7 +342,7 @@ export function validateCombatContext(
 
 `combatContextSchema` is a discriminated Zod union. `strikeModifier` is optional and defaults semantically to zero; when nonzero it must be a safe integer from -100 through +100 and `strikeModifierReason` must contain non-whitespace text. Context kind must equal the server-derived attack kind.
 
-- [ ] **Step 1: Add failing profile and validation tests**
+- [x] **Step 1: Add failing profile and validation tests**
 
 Build sheets with `deriveSheet` and real catalog entries. Cover these exact cases:
 
@@ -416,13 +416,13 @@ test("requires reasons for nonzero GM modifiers and rejects kind mismatch", () =
 
 The test-local `combatSheet` helper must use a complete valid level-1 Ley Line Walker input with rolled H.P./S.D.C.; it must not cast an arbitrary object to `CharacterSheet`.
 
-- [ ] **Step 2: Run the focused test and observe missing functions**
+- [x] **Step 2: Run the focused test and observe missing functions**
 
 Run: `vp test packages/rules/tests/combat-exchange.test.ts`
 
 Expected: FAIL because attack-profile and context functions are missing.
 
-- [ ] **Step 3: Implement schemas and the category/tier classifier**
+- [x] **Step 3: Implement schemas and the category/tier classifier**
 
 Map `knife` and `axe` to `melee`; map `handgun`, `submachineGun`, `energyPistol`, and `energyRifle` to `ranged`; then refuse any weapon whose damage type is `md`. Do not infer a thrown mode from a knife or axe.
 
@@ -493,7 +493,7 @@ export function deriveAttackProfile(sheet: CharacterSheet, weaponIndex: number):
 }
 ```
 
-- [ ] **Step 4: Implement context normalization**
+- [x] **Step 4: Implement context normalization**
 
 Parse with the discriminated schema, compare `context.kind` to `profile.kind`, normalize omitted modifiers to zero at use sites, and keep the submitted reason for history. Reject non-safe integers, values outside -100..100, and blank required reasons.
 
@@ -548,7 +548,7 @@ export function validateCombatContext(
 }
 ```
 
-- [ ] **Step 5: Pass focused/package tests and commit**
+- [x] **Step 5: Pass focused/package tests and commit**
 
 Run:
 
@@ -611,7 +611,7 @@ export function authorizeCombatResponse(
 ): AuthorizedCombatResponse;
 ```
 
-- [ ] **Step 1: Add the failing defense truth table**
+- [x] **Step 1: Add the failing defense truth table**
 
 Cover all approved rules in `packages/rules/tests/combat-exchange.test.ts`:
 
@@ -627,13 +627,13 @@ Cover all approved rules in `packages/rules/tests/combat-exchange.test.ts`:
 - response modifiers obey the same safe-integer/reason rule;
 - submitting an option not present in the derived list throws `illegalDefense`.
 
-- [ ] **Step 2: Run the focused test and observe missing defense functions**
+- [x] **Step 2: Run the focused test and observe missing defense functions**
 
 Run: `vp test packages/rules/tests/combat-exchange.test.ts`
 
 Expected: FAIL on missing exports.
 
-- [ ] **Step 3: Implement deterministic option enumeration**
+- [x] **Step 3: Implement deterministic option enumeration**
 
 Use this ordering so UI and persisted history remain stable:
 
@@ -703,7 +703,7 @@ if (attack.kind === "melee") {
 
 Melee automatic dodge does not require `defenderAware`; ranged dodge-family options do. Standard parry uses `sheet.combat.parry`; bare-handed parry uses zero. Ordinary dodge costs one action, automatic dodge costs zero, and a trained standard parry costs zero while an untrained standard parry records one.
 
-- [ ] **Step 4: Authorize the submitted response against the derived list**
+- [x] **Step 4: Authorize the submitted response against the derived list**
 
 Parse the response schema, find the exact `kind` in the server-derived options, then return its server-owned bonus/action metadata plus the normalized situational modifier. Never accept a bonus or action cost from the caller.
 
@@ -749,7 +749,7 @@ export function authorizeCombatResponse(
 }
 ```
 
-- [ ] **Step 5: Pass focused/package tests and commit**
+- [x] **Step 5: Pass focused/package tests and commit**
 
 Run:
 
@@ -845,7 +845,7 @@ export interface ResolveCombatExchangeInput {
 export function resolveCombatExchange(input: ResolveCombatExchangeInput): CombatExchangeResolution;
 ```
 
-- [ ] **Step 1: Add failing declaration and protection tests**
+- [x] **Step 1: Add failing declaration and protection tests**
 
 Assert melee total 4 misses/5 proceeds, ranged total 7 misses/8 proceeds, natural 1 misses, and invalid completed rolls are rejected through the existing resolver validation path.
 
@@ -889,13 +889,13 @@ expect(
 
 Also assert strike 13 routes the full hit to the body without changing armor, depleted armor routes future hits to the body, armor destruction never spills, body S.D.C. depletes before H.P., and `mdcArmor` returns `unsupportedMdcProtection` without conversion.
 
-- [ ] **Step 2: Run the focused test and observe missing routing exports**
+- [x] **Step 2: Run the focused test and observe missing routing exports**
 
 Run: `vp test packages/rules/tests/combat-exchange.test.ts`
 
 Expected: FAIL.
 
-- [ ] **Step 3: Implement protection classification and routing**
+- [x] **Step 3: Implement protection classification and routing**
 
 For worn S.D.C. armor, require its schema-guaranteed `ar` and `sdc`; use its derived current pool. Treat current zero as `none`. For worn M.D.C. armor, return `mdcArmor` while current is positive and `none` when depleted.
 
@@ -976,7 +976,7 @@ export function routeSdcHit(input: {
 }
 ```
 
-- [ ] **Step 4: Add failing end-to-end pure resolution tests**
+- [x] **Step 4: Add failing end-to-end pure resolution tests**
 
 Use completed `D20Roll` and `DamageRoll` objects to cover:
 
@@ -993,7 +993,7 @@ Use completed `D20Roll` and `DamageRoll` objects to cover:
   consistent;
 - M.D.C. protection is rejected before any S.D.C. route result.
 
-- [ ] **Step 5: Implement `resolveCombatExchange` over `resolveStrike`**
+- [x] **Step 5: Implement `resolveCombatExchange` over `resolveStrike`**
 
 Call `evaluateDeclaration` first. For a selected defense, require the completed defense roll and pass only its server-authorized kind to `resolveStrike`. For `none`, omit defense. Require the completed damage roll only after a hit. Multiply `damageRoll.total` after its flat bonus, then call `routeSdcHit`.
 
@@ -1108,7 +1108,7 @@ export function resolveCombatExchange(input: ResolveCombatExchangeInput): Combat
 }
 ```
 
-- [ ] **Step 6: Pass focused/package tests and commit**
+- [x] **Step 6: Pass focused/package tests and commit**
 
 Run:
 
@@ -1143,7 +1143,7 @@ export function defenderCombatStateToken(sheet: CharacterSheet): string;
 
 Tokens are stable JSON serialization of explicit ordered arrays, not arbitrary object serialization and not a security hash.
 
-- [ ] **Step 1: Add failing token-scope tests**
+- [x] **Step 1: Add failing token-scope tests**
 
 Create two independently derived equivalent sheets and assert identical attacker/defender tokens. Then assert:
 
@@ -1153,13 +1153,13 @@ Create two independently derived equivalent sheets and assert identical attacker
 - an unrelated attacker inventory entry does not stale the selected attack;
 - token strings do not contain narrative/backstory text.
 
-- [ ] **Step 2: Run the focused test and observe missing token exports**
+- [x] **Step 2: Run the focused test and observe missing token exports**
 
 Run: `vp test packages/rules/tests/combat-exchange.test.ts`
 
 Expected: FAIL.
 
-- [ ] **Step 3: Implement explicit ordered serialization**
+- [x] **Step 3: Implement explicit ordered serialization**
 
 Use fixed attribute order `IQ, ME, MA, PS, PP, PE, PB, Spd`. The attacker tuple must contain level, attributes, the combat fields consumed by `deriveAttackProfile`, selected index, and selected instance snapshot. The defender tuple must contain level, attributes, the fields consumed by `deriveDefenseOptions`, rolled/current body pools, coma floor, and the complete derived worn-protection tuple.
 
@@ -1223,7 +1223,7 @@ export function defenderCombatStateToken(sheet: CharacterSheet): string {
 }
 ```
 
-- [ ] **Step 4: Pass focused/package tests and commit**
+- [x] **Step 4: Pass focused/package tests and commit**
 
 Run:
 
@@ -1246,7 +1246,7 @@ git commit -m "feat(rules): add combat state tokens"
 
 **Files:**
 
-- Create: `packages/backend/convex/character-state.ts`
+- Create: `packages/backend/convex/character_state.ts`
 - Modify: `packages/backend/convex/characters.ts`
 - Modify: `packages/backend/tests/characters.test.ts`
 
@@ -1280,19 +1280,19 @@ export function requireItemAt(
 ): NonNullable<Character["items"]>[number];
 ```
 
-- [ ] **Step 1: Strengthen the stale-index regression before moving code**
+- [x] **Step 1: Strengthen the stale-index regression before moving code**
 
 In `packages/backend/tests/characters.test.ts`, add an assertion that `requireItemAt` behavior exposed through `removeItem`/`equipArmor` rejects when the same index now contains a different `itemId`, even if the index remains valid.
 
-- [ ] **Step 2: Run the focused backend test before refactoring**
+- [x] **Step 2: Run the focused backend test before refactoring**
 
 Run: `vp test packages/backend/tests/characters.test.ts`
 
 Expected: PASS, proving the behavior being preserved.
 
-- [ ] **Step 3: Move helpers and update imports**
+- [x] **Step 3: Move helpers and update imports**
 
-Create `character-state.ts`, move the five helpers/types, and import them into `characters.ts`. Keep validation through `characterSchema`/`deriveSheet` and all current error messages unchanged. Do not export public Convex functions from the helper file.
+Create `character_state.ts`, move the five helpers/types, and import them into `characters.ts`. Keep validation through `characterSchema`/`deriveSheet` and all current error messages unchanged. Do not export public Convex functions from the helper file.
 
 The new helper file is:
 
@@ -1359,10 +1359,10 @@ import {
   patchCurrent,
   requireItemAt,
   validateCharacter,
-} from "./character-state";
+} from "./character_state";
 ```
 
-- [ ] **Step 4: Run backend regression gates**
+- [x] **Step 4: Run backend regression gates**
 
 Run:
 
@@ -1374,10 +1374,10 @@ vp run @riftforge/backend#test
 
 Expected: PASS with no behavior change.
 
-- [ ] **Step 5: Commit the extraction**
+- [x] **Step 5: Commit the extraction**
 
 ```text
-git add -- packages/backend/convex/character-state.ts packages/backend/convex/characters.ts packages/backend/tests/characters.test.ts
+git add -- packages/backend/convex/character_state.ts packages/backend/convex/characters.ts packages/backend/tests/characters.test.ts
 git commit -m "refactor(backend): share character state helpers"
 ```
 
@@ -1387,7 +1387,7 @@ git commit -m "refactor(backend): share character state helpers"
 
 **Files:**
 
-- Create: `packages/backend/convex/combat-values.ts`
+- Create: `packages/backend/convex/combat_values.ts`
 - Create: `packages/backend/convex/combat.ts`
 - Modify: `packages/backend/convex/schema.ts`
 - Modify: `packages/backend/convex/_generated/api.d.ts`
@@ -1458,7 +1458,7 @@ export const outgoing = query({ args: { attackerId: v.id("characters") }, handle
 export const recent = query({ args: { characterId: v.id("characters") }, handler });
 ```
 
-- [ ] **Step 1: Add failing target/query tests**
+- [x] **Step 1: Add failing target/query tests**
 
 Create `packages/backend/tests/combat.test.ts` using the established `convexTest(schema, modules)` pattern. Assert:
 
@@ -1469,17 +1469,17 @@ Create `packages/backend/tests/combat.test.ts` using the established `convexTest
 - depleted worn M.D.C. armor reports `none` and is not disabled for protection;
 - incoming/outgoing/recent are empty initially and bounded at 20.
 
-- [ ] **Step 2: Run the focused test and observe the missing API/schema failure**
+- [x] **Step 2: Run the focused test and observe the missing API/schema failure**
 
 Run: `vp test packages/backend/tests/combat.test.ts`
 
 Expected: FAIL because `api.combat` and `combatExchanges` do not exist.
 
-- [ ] **Step 3: Add the validators, table, and read-only query module**
+- [x] **Step 3: Add the validators, table, and read-only query module**
 
 Mirror rule-layer unions with Convex validators; do not use `v.any()`. In `targets`, take 50 characters, exclude self, derive each sheet, and map only the selector-safe summary. In the ledger queries, use the matching index plus `.take(20)`. For `recent`, take 20 from `by_attacker` and 20 from `by_defender`, merge/deduplicate by `_id`, sort by `_creationTime` descending, and slice to 20.
 
-Define these primitives in `combat-values.ts`; compose every ledger variant from
+Define these primitives in `combat_values.ts`; compose every ledger variant from
 them rather than weakening the schema:
 
 ```ts
@@ -1726,7 +1726,7 @@ export const recent = query({
 });
 ```
 
-- [ ] **Step 4: Regenerate Convex types with pnpm**
+- [x] **Step 4: Regenerate Convex types with pnpm**
 
 From `packages/backend`, run:
 
@@ -1736,7 +1736,7 @@ pnpm exec convex codegen
 
 Expected: `api.d.ts` imports `../combat.js`; `dataModel.d.ts` remains generated from `schema.ts`. Do not follow the generated comment's `npx` wording.
 
-- [ ] **Step 5: Pass focused/package tests and commit**
+- [x] **Step 5: Pass focused/package tests and commit**
 
 Run:
 
@@ -1749,7 +1749,7 @@ vp run @riftforge/backend#test
 Commit:
 
 ```text
-git add -- packages/backend/convex/combat-values.ts packages/backend/convex/combat.ts packages/backend/convex/schema.ts packages/backend/convex/_generated/api.d.ts packages/backend/convex/_generated/dataModel.d.ts packages/backend/tests/combat.test.ts
+git add -- packages/backend/convex/combat_values.ts packages/backend/convex/combat.ts packages/backend/convex/schema.ts packages/backend/convex/_generated/api.d.ts packages/backend/convex/_generated/dataModel.d.ts packages/backend/tests/combat.test.ts
 git commit -m "feat(backend): add combat exchange ledger"
 ```
 
@@ -1788,7 +1788,7 @@ throw new ConvexError({
 
 Use the complete approved code set: `selfTarget`, `attackerNotReady`, `defenderNotReady`, `weaponMissingOrChanged`, `unsupportedWeaponMode`, `unsupportedMdWeapon`, `unsupportedMdcProtection`, `invalidContext`, `modifierReasonRequired`, `illegalDefense`, `exchangeNotPending`, `combatStateChanged`, and `characterMissing`.
 
-- [ ] **Step 1: Add failing declaration tests**
+- [x] **Step 1: Add failing declaration tests**
 
 Assert:
 
@@ -1804,13 +1804,13 @@ Assert:
 - stored roll fields are internally consistent and no die/result is accepted from client args;
 - a pending record captures names, exact weapon instance, attack/context snapshots, both tokens, and server-derived options including explicit `none`.
 
-- [ ] **Step 2: Run the focused test and observe the missing mutation**
+- [x] **Step 2: Run the focused test and observe the missing mutation**
 
 Run: `vp test packages/backend/tests/combat.test.ts`
 
 Expected: FAIL because `declareAttack` is missing.
 
-- [ ] **Step 3: Implement pre-roll validation in the approved order**
+- [x] **Step 3: Implement pre-roll validation in the approved order**
 
 1. Reject equal IDs.
 2. Load and derive both characters.
@@ -1826,8 +1826,8 @@ Expected: FAIL because `declareAttack` is missing.
 Convert rules validation errors into stable `ConvexError` data at the backend boundary; do not expose raw Zod issue arrays to the UI.
 
 Implement the mutation with these helpers (imports come from
-`@riftforge/rules`, `convex/values`, `./character-state`, and
-`./combat-values`):
+`@riftforge/rules`, `convex/values`, `./character_state`, and
+`./combat_values`):
 
 ```ts
 function combatFailure(code: CombatExchangeErrorCode, message: string): never {
@@ -1952,7 +1952,7 @@ export const declareAttack = mutation({
 });
 ```
 
-- [ ] **Step 4: Pass focused/backend gates and commit**
+- [x] **Step 4: Pass focused/backend gates and commit**
 
 Run:
 
@@ -1995,7 +1995,7 @@ export const cancelAttack = mutation({
 });
 ```
 
-- [ ] **Step 1: Add failing response/cancellation tests**
+- [x] **Step 1: Add failing response/cancellation tests**
 
 Use `strikeModifier: 100` to guarantee pending declarations and assert:
 
@@ -2012,13 +2012,13 @@ Use `strikeModifier: 100` to guarantee pending declarations and assert:
 - resolving one hit intentionally stales a second pending hit made against the prior defender pools;
 - response/cancel/query paths reject a missing character/exchange with the appropriate stable code.
 
-- [ ] **Step 2: Run the focused test and observe missing mutations**
+- [x] **Step 2: Run the focused test and observe missing mutations**
 
 Run: `vp test packages/backend/tests/combat.test.ts`
 
 Expected: FAIL.
 
-- [ ] **Step 3: Implement stale check and response authorization before dice**
+- [x] **Step 3: Implement stale check and response authorization before dice**
 
 Load the pending record, reload/rederive both characters, and compare both tokens. On mismatch, patch only the exchange to:
 
@@ -2057,7 +2057,7 @@ function parseResponse(input: unknown): CombatResponseInput {
 }
 ```
 
-- [ ] **Step 4: Implement server dice and the atomic character/result write**
+- [x] **Step 4: Implement server dice and the atomic character/result write**
 
 Roll defense only for `parry`/`dodge`/`autoDodge`, with target equal to the stored strike total. Run the pure resolver. Roll damage only if the result can hit, using `rollDamage(attack.damageFormula, attack.damageBonus)`; the pure resolver applies critical multiplication and routing.
 
@@ -2162,7 +2162,7 @@ export const respondToAttack = mutation({
 });
 ```
 
-- [ ] **Step 5: Implement pending-only cancellation**
+- [x] **Step 5: Implement pending-only cancellation**
 
 Reload by exchange ID, require `pendingDefense`, and patch the discriminated cancelled variant. Note in code that authorization is intentionally unavailable in this slice; do not simulate ownership with attacker/defender IDs supplied by the client.
 
@@ -2182,7 +2182,7 @@ export const cancelAttack = mutation({
 });
 ```
 
-- [ ] **Step 6: Pass focused/backend gates and commit**
+- [x] **Step 6: Pass focused/backend gates and commit**
 
 Run:
 
@@ -2245,7 +2245,7 @@ type CombatRecent = FunctionReturnType<typeof api.combat.recent>;
 export type ExchangeSummary = CombatRecent[number];
 ```
 
-- [ ] **Step 1: Add failing pure web tests**
+- [x] **Step 1: Add failing pure web tests**
 
 Assert:
 
@@ -2256,13 +2256,13 @@ Assert:
 - a result with a different route ID, epoch, or expected exchange ID is rejected;
 - a current owner with all fields equal is accepted.
 
-- [ ] **Step 2: Run the focused test and observe missing module failure**
+- [x] **Step 2: Run the focused test and observe missing module failure**
 
 Run: `vp test apps/web/tests/combat-exchange.test.ts`
 
 Expected: FAIL.
 
-- [ ] **Step 3: Implement structural helpers without duplicating rules math**
+- [x] **Step 3: Implement structural helpers without duplicating rules math**
 
 `combatWeaponChoices` may call `deriveAttackProfile` for preview/support labels, but it must not calculate bonuses, thresholds, defenses, criticals, or A.R. itself. Formatting consumes server result fields verbatim. Keep helpers DOM-free so the current Node test environment remains sufficient.
 
@@ -2366,7 +2366,7 @@ export function combatErrorMessage(error: unknown): string {
 }
 ```
 
-- [ ] **Step 4: Pass focused/web gates and commit**
+- [x] **Step 4: Pass focused/web gates and commit**
 
 Run:
 
@@ -2407,7 +2407,7 @@ export interface CombatExchangePanelProps {
 export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Element;
 ```
 
-- [ ] **Step 1: Add the native select primitive**
+- [x] **Step 1: Add the native select primitive**
 
 Add `SelectInput` beside `TextInput` in `components/ui.tsx` using the same `notch-8`, border, noir background, mono text, amber focus, disabled-dead styling, and `ComponentProps<"select">` forwarding. No rounded corners and no new color tokens.
 
@@ -2454,7 +2454,7 @@ export function ToggleChip(props: {
 }
 ```
 
-- [ ] **Step 2: Build the declaration section**
+- [x] **Step 2: Build the declaration section**
 
 In `CombatExchangePanel`:
 
@@ -2705,7 +2705,7 @@ around individual rows:
 </Panel>
 ```
 
-- [ ] **Step 3: Build incoming and outgoing queues**
+- [x] **Step 3: Build incoming and outgoing queues**
 
 Incoming rows show attacker, weapon, natural strike die, bonus, total, and stored context before any response action. Render only the stored server-derived response options as buttons, with modifier and `0 ACTION`/`1 ACTION` metadata. Render “TAKE THE HIT” explicitly for `none`.
 
@@ -2793,7 +2793,7 @@ The outgoing cancel handler captures the same owner triple, calls
 the owner still matches. Render the strike die/bonus/total before both incoming
 and outgoing actions.
 
-- [ ] **Step 4: Build recent persisted history**
+- [x] **Step 4: Build recent persisted history**
 
 Use `formatExchangeSummary` and `exchangeTone`. Show at most 20 entries; include miss, defended, hit, cancelled, and stale states. Newly observed resolved IDs may receive the existing `strike-flash` class once, but do not animate the whole rail or add an animation dependency.
 
@@ -2832,7 +2832,7 @@ const toneClass = {
 } as const;
 ```
 
-- [ ] **Step 5: Implement route reset and async ownership**
+- [x] **Step 5: Implement route reset and async ownership**
 
 Implement a named `resetRouteState` callback and wire it with
 `createEffect(on(() => props.characterId, resetRouteState, { defer: true }))`.
@@ -2860,7 +2860,7 @@ const resetRouteState = () => {
 createEffect(on(() => props.characterId, resetRouteState, { defer: true }));
 ```
 
-- [ ] **Step 6: Mount the panel at the top of the right rail**
+- [x] **Step 6: Mount the panel at the top of the right rail**
 
 Change `TelemetryRail`'s root from `<aside>` to `<section>` so the new outer rail
 is the sole complementary landmark. Preserve its `aria-label`, log role,
@@ -2887,7 +2887,7 @@ and keep `aria-label="Field telemetry"`. Update the page's gameplay comment to
 distinguish ephemeral client-side utility rolls from persisted server-owned
 hostile combat exchanges.
 
-- [ ] **Step 7: Run web and affected package gates**
+- [x] **Step 7: Run web and affected package gates**
 
 Run:
 
@@ -2900,7 +2900,7 @@ vp run @riftforge/backend#check
 
 Expected: PASS.
 
-- [ ] **Step 8: Commit the panel**
+- [x] **Step 8: Commit the panel**
 
 ```text
 git add -- apps/web/src/components/combat-exchange-panel.tsx apps/web/src/components/ui.tsx apps/web/src/pages/character-sheet.tsx apps/web/src/lib/combat-exchange.ts apps/web/tests/combat-exchange.test.ts
@@ -2915,7 +2915,7 @@ git commit -m "feat(web): add S.D.C. combat exchange panel"
 
 - Modify as needed: only files already in the approved file map
 
-- [ ] **Step 1: Run all affected package gates in CI order**
+- [x] **Step 1: Run all affected package gates in CI order**
 
 ```text
 vp run @riftforge/rules#check
@@ -2928,7 +2928,7 @@ vp run @riftforge/web#test
 
 Expected: all PASS. Record the actual test counts; do not reuse historical counts.
 
-- [ ] **Step 2: Run root gates and whitespace validation**
+- [x] **Step 2: Run root gates and whitespace validation**
 
 ```text
 vp check
@@ -2938,7 +2938,7 @@ git diff --check
 
 Expected: all PASS.
 
-- [ ] **Step 3: Review the full diff against the approved design**
+- [x] **Step 3: Review the full diff against the approved design**
 
 Run:
 
@@ -2950,7 +2950,7 @@ git status --short --branch
 
 Manually verify every stable error code is produced, no Natural A.R. branch exists, no M.D.C. arithmetic/conversion exists, every public query is bounded/indexed, every random roll is server-owned, final character state is revalidated, and the web never computes/routs damage.
 
-- [ ] **Step 4: Fix only evidence-backed findings with new regression tests**
+- [x] **Step 4: Fix only evidence-backed findings with new regression tests**
 
 For every real defect found, add the smallest failing test that demonstrates the bug class, run it red, fix the root cause, rerun the focused test and affected package gates, then checkpoint-commit:
 
@@ -2968,15 +2968,15 @@ Skip this commit if no change is needed.
 
 - No required source files; fix only reproducible defects with tests.
 
-- [ ] **Step 1: Start from a known live-backend state**
+- [x] **Step 1: Start from a known live-backend state**
 
 Check port 3210 and identify its owning process. If an orphaned `convex-local-backend` is serving stale functions, stop that exact process only. From `packages/backend`, run `pnpm exec convex dev`; from `apps/web`, run `vp dev`. Keep both processes available while testing `http://localhost:5173`.
 
-- [ ] **Step 2: Prepare two combat-ready characters**
+- [x] **Step 2: Prepare two combat-ready characters**
 
 Use existing local characters or seed two valid characters. Roll both characters' vitals. Give the attacker `survival-knife` and `automatic-pistol`. Keep the defender unarmored for the supported path. Open both dossier URLs in separate tabs/windows so Convex live subscriptions are exercised across clients.
 
-- [ ] **Step 3: Verify the complete supported flow**
+- [x] **Step 3: Verify the complete supported flow**
 
 Repeat real declarations as needed to observe and capture:
 
@@ -2988,17 +2988,17 @@ Repeat real declarations as needed to observe and capture:
 6. action-cost metadata and strike/defense/damage details;
 7. concise telemetry lines without telemetry becoming the source of truth.
 
-- [ ] **Step 4: Verify boundaries and navigation ownership**
+- [x] **Step 4: Verify boundaries and navigation ownership**
 
 Equip a nondepleted production M.D.C. suit on the defender and verify target/declaration disable copy. Keep backend tests as the direct-call proof that the server also refuses it before insertion. Verify M.D. weapons remain visible but disabled.
 
 Navigate from one character ID to another while a declaration/response is in flight. Verify target/weapon/context/error/history drafts reset and no late result or telemetry line crosses into the new dossier. Verify keyboard operation, visible focus, native labels, and screen-reader live regions. Check the rail at desktop and narrow/mobile widths for overflow.
 
-- [ ] **Step 5: Stop only the processes started for this check**
+- [x] **Step 5: Stop only the processes started for this check**
 
 Terminate the captured Convex CLI/local-backend and web-dev process IDs. Do not kill unrelated Node processes.
 
-- [ ] **Step 6: Re-run affected gates after any live fix**
+- [x] **Step 6: Re-run affected gates after any live fix**
 
 If live verification caused code changes, rerun Task 12 completely and commit the tested fix. If no changes were needed, record the live scenarios and timestamp in the design outcome without creating an empty commit.
 
@@ -3012,7 +3012,7 @@ If live verification caused code changes, rerun Task 12 completely and commit th
 - Modify: `.codex/superpowers/specs/2026-07-19-sdc-combat-exchange-design.md`
 - Modify: `.codex/superpowers/plans/2026-07-19-sdc-combat-exchange.md`
 
-- [ ] **Step 1: Update repository documentation with verified current state**
+- [x] **Step 1: Update repository documentation with verified current state**
 
 Replace README language saying A.R./hostile persistence are wholly future work with a concise statement that S.D.C. weapon exchanges, defense choice, body routing, and future-ready artificial S.D.C. armor routing exist; explicitly state that full M.D.C. interaction remains follow-up work.
 
@@ -3151,17 +3151,17 @@ For every finding, reproduce/validate first. If real, add a regression test and 
 
 ## Final Success Checklist
 
-- [ ] Attacker selects another ready character and a supported owned S.D.C. weapon.
-- [ ] Server validates context and owns strike, defense, and damage dice.
-- [ ] Immediate misses persist; potential hits pause for an explicit defender/GM choice.
-- [ ] Only engine-authorized parry/dodge/automatic-dodge/none choices appear and validate.
-- [ ] Melee and firearm thresholds/bonuses remain distinct; firearm math gets no P.P./general H2H leakage.
-- [ ] Artificial S.D.C. armor equality, penetration, depletion, and no-spill behavior are pure-tested against printed values.
-- [ ] Live unarmored hits atomically update body pools and immutable history exactly once.
-- [ ] Relevant state drift finalizes stale with no damage; narrative/unrelated state does not.
-- [ ] M.D. weapons and M.D.C.-protected targets fail before dice and persistence.
-- [ ] No Natural A.R., rounds/actions enforcement, auth, geometry, or other excluded system was added.
-- [ ] Route changes cannot leak drafts, feeds, telemetry, or late mutation results.
-- [ ] Rules, backend, web, and root gates pass with current counts; live browser acceptance passes.
+- [x] Attacker selects another ready character and a supported owned S.D.C. weapon.
+- [x] Server validates context and owns strike, defense, and damage dice.
+- [x] Immediate misses persist; potential hits pause for an explicit defender/GM choice.
+- [x] Only engine-authorized parry/dodge/automatic-dodge/none choices appear and validate.
+- [x] Melee and firearm thresholds/bonuses remain distinct; firearm math gets no P.P./general H2H leakage.
+- [x] Artificial S.D.C. armor equality, penetration, depletion, and no-spill behavior are pure-tested against printed values.
+- [x] Live unarmored hits atomically update body pools and immutable history exactly once.
+- [x] Relevant state drift finalizes stale with no damage; narrative/unrelated state does not.
+- [x] M.D. weapons and M.D.C.-protected targets fail before dice and persistence.
+- [x] No Natural A.R., rounds/actions enforcement, auth, geometry, or other excluded system was added.
+- [x] Route changes cannot leak drafts, feeds, telemetry, or late mutation results.
+- [x] Rules, backend, web, and root gates pass with current counts; live browser acceptance passes.
 - [ ] README, approved design, issue #44, full-M.D.C. follow-up, and draft PR all reflect the same verified scope.
-- [ ] The human maintainer, not the agent, retains merge authority.
+- [x] The human maintainer, not the agent, retains merge authority.
