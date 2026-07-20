@@ -3153,8 +3153,11 @@ nonzero defense modifier at the shared schema while the web omits modifier field
 for that response. Red-green coverage spans rules, backend, and web. Fresh package
 gates pass at 309 rules, 83 backend, and 29 web tests; root `vp check` and the
 421-test root suite pass. Live acceptance covered both fixes against local Convex.
-Publication, thread replies, and the triggered Cubic re-review remain before this
-step can be checked complete.
+Commit `a9a0fde` was published, CI passed, and both inline threads received
+evidence-backed replies. The requested Cubic re-review could not start because the
+workspace had consumed 40,345 of its 40,000 monthly review lines; Cubic reported
+that reviews resume on 2026-08-01. This step remains open and the PR remains
+unmerged until that external review gate can run.
 
 ---
 
