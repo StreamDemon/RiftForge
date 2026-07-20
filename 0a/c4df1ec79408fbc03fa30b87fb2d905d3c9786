@@ -1,0 +1,24 @@
+.codex/superpowers/specs/2026-07-19-sdc-combat-exchange-design.md
+  s_816bafeabb951b::t_27902e6789e96e 582-615
+.codex/superpowers/plans/2026-07-19-sdc-combat-exchange.md
+  s_816bafeabb951b::t_117b9a06cb00cb 153,209,219,230,245,256,345,419,425,496,551,614,630,636,706,752,848,892,898,979,996,1111,1146,1156,1162,1226,1283,1287,1293,1365,1377,1461,1472,1478,1729,1739,1791,1807,1813,1955,1998,2015,2021,2060,2165,2185,2248,2259,2265,2369,2410,2457,2708,2796,2835,2863,2890,2903,2918,2931,2941,2953,2971,2975,2979,2991,2997,3001,3015,3154-3165,3167
+  s_816bafeabb951b::t_06b403d55307ce 47-48,1249,1295,1362,1380,1390,1482,1752,1829-1830
+README.md
+  s_816bafeabb951b::t_27902e6789e96e 32-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0ac4df1ec79408fbc03fa30b87fb2d905d3c9786",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
