@@ -1,0 +1,22 @@
+.codex/superpowers/plans/2026-07-19-sdc-combat-exchange.md
+  s_816bafeabb951b::t_8685d976d1b305 3021,3037,3047,3083,3102,3166
+.codex/superpowers/specs/2026-07-19-sdc-combat-exchange-design.md
+  s_816bafeabb951b::t_8685d976d1b305 585,592-593,595,597-598,600,602-609
+  s_816bafeabb951b::t_ffc8c09c15ccc0 590
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ded894f60ac25b663b86c7390753b773e807983d",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
