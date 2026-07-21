@@ -93,7 +93,7 @@ const exchangeBase = {
     damageFormula: v.string(),
     damageBonus: v.number(),
     criticalOn: v.number(),
-    damageType: v.literal("sdc"),
+    damageType: v.union(v.literal("sdc"), v.literal("md")),
   }),
   context: combatContextValidator,
   attackerStateToken: v.string(),

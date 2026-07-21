@@ -151,16 +151,20 @@ function exchangeBase(attackerId: Id<"characters">, defenderId: Id<"characters">
 type ResolvedExchange = Extract<Doc<"combatExchanges">, { status: "resolved" }>;
 type HitResolution = Extract<ResolvedExchange["resolution"], { outcome: "hit" }>;
 type StoredDamageRoute = HitResolution["route"];
+type StoredAttackSnapshot = Pick<ResolvedExchange, "attack" | "context" | "weapon">;
 
 async function insertResolvedRoute(
   t: TestDb,
   characterId: Id<"characters">,
   serial: number,
   route: StoredDamageRoute,
+  snapshot?: StoredAttackSnapshot,
 ) {
+  const base = exchangeBase(characterId, characterId, serial);
   return t.run((ctx) =>
     ctx.db.insert("combatExchanges", {
-      ...exchangeBase(characterId, characterId, serial),
+      ...base,
+      ...snapshot,
       status: "resolved",
       resolution: {
         outcome: "hit",
@@ -284,6 +288,45 @@ describe("combat persistence compatibility", () => {
       expect(await readStoredRoute(t, exchangeId)).toEqual(route);
     },
   );
+
+  test("inserts and reads an M.D. attack snapshot with its v2 route unchanged", async () => {
+    const t = testDb();
+    const characterId = await createCharacter(t);
+    const route = {
+      routingVersion: 2,
+      kind: "armor",
+      nativeDamage: { type: "md", value: 4 },
+      armor: mdcArmor,
+      body: unchangedBody,
+      finalBlastAbsorbed: false,
+    } satisfies StoredDamageRoute;
+    const snapshot = {
+      weapon: {
+        index: 0,
+        itemId: "wilks-320-laser-pistol",
+        name: "Wilk's 320 Laser Pistol",
+        category: "energyPistol",
+      },
+      attack: {
+        kind: "ranged",
+        minimumStrikeTotal: 8,
+        strikeBonus: 0,
+        strikeBonusSources: [{ source: "proficiency", label: "Modern W.P.", value: 0 }],
+        proficiencyBonus: 0,
+        damageFormula: "1D6",
+        damageBonus: 0,
+        criticalOn: 20,
+        damageType: "md",
+      },
+      context: { kind: "ranged", defenderAware: true, rangeBand: "normal" },
+    } satisfies StoredAttackSnapshot;
+
+    const exchangeId = await insertResolvedRoute(t, characterId, 3, route, snapshot);
+    const exchange = await t.run((ctx) => ctx.db.get(exchangeId));
+
+    expect(exchange?.attack.damageType).toBe("md");
+    expect(await readStoredRoute(t, exchangeId)).toEqual(route);
+  });
 
   test.each([
     [
