@@ -465,7 +465,7 @@ git commit -m "docs: record mega-damage combat delivery"
 
 - [x] Push `feat/mdc-combat-exchange` and open draft PR [#55](https://github.com/StreamDemon/RiftForge/pull/55) to `main` summarizing architecture, compatibility, fatal boundary, automation, and live evidence. Link `Closes #51`, `Follow-up #54`, and `Roadmap #53`; no AI attribution; never merge.
 - [x] Comment on #51 with verified time-scoped evidence/PR link: [issue comment 5037268203](https://github.com/StreamDemon/RiftForge/issues/51#issuecomment-5037268203). Do not close it manually.
-- [x] Use CodeRabbit as the temporary review gate while Cubic is quota-blocked until 2026-08-01. CodeRabbit reviewed `3067c99..4e0afc5`, submitted `APPROVED` with zero inline threads, and left no finding to reproduce or fix. Stop ready for human merge.
+- [x] Use CodeRabbit as the temporary review gate while Cubic is quota-blocked until 2026-08-01. CodeRabbit approved the implementation, then its full `3067c99..4f5f0bb` re-review found one valid trivial nit: missing source-contract files could pass negative assertions vacuously. Fix the whole duplicated-helper class TDD, rerun affected and root gates, and stop ready for human merge.
 
 ---
 

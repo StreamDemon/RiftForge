@@ -1,7 +1,7 @@
 # Full M.D.C. Combat Exchange Design
 
 **Date:** 2026-07-21
-**Status:** PR #55 ready; CodeRabbit approved; human merge pending
+**Status:** PR #55 ready; CodeRabbit nit resolved; human merge pending
 **Branch:** `feat/mdc-combat-exchange`
 **Primary issue:** [#51 — Full M.D.C. combat](https://github.com/StreamDemon/RiftForge/issues/51)
 
@@ -618,6 +618,13 @@ not timeless project totals.
 - CodeRabbit reviewed the complete `3067c99..4e0afc5` change set and submitted
   `APPROVED` at **2026-07-22 03:04:16 +08:00 (Asia/Singapore)** with zero inline
   threads. The human maintainer retains sole merge authority.
+- A full re-review through `4f5f0bb` completed at
+  **2026-07-22 03:27:47 +08:00 (Asia/Singapore)** with one trivial nit: the two
+  source-contract test helpers returned an empty string for a missing file,
+  allowing negative assertions to pass vacuously. Both duplicated helpers now
+  throw with the missing relative path. RED failed 2/48 as expected; GREEN passed
+  48/48, the web package passed 54/54, and root validation passed 540/540 with
+  130/130 files formatted and 95/95 files lint/type clean.
 
 ### Live Convex and browser acceptance
 

@@ -7,8 +7,15 @@ const TERMINAL_REASON = "Life signs terminated; gameplay actions are unavailable
 
 function source(relative: string): string {
   const url = new URL(relative, import.meta.url);
-  return existsSync(url) ? readFileSync(url, "utf8") : "";
+  if (!existsSync(url)) throw new Error(`Missing source under test: ${relative}`);
+  return readFileSync(url, "utf8");
 }
+
+test("fails loudly when a source contract points at a missing file", () => {
+  expect(() => source("../src/definitely-missing-character-source.tsx")).toThrow(
+    "Missing source under test: ../src/definitely-missing-character-source.tsx",
+  );
+});
 
 const characterSheetSource = source("../src/pages/character-sheet.tsx");
 const sheetViewSource = source("../src/components/sheet-view.tsx");

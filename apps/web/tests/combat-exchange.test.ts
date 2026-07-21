@@ -18,8 +18,15 @@ import {
 
 function source(relative: string): string {
   const url = new URL(relative, import.meta.url);
-  return existsSync(url) ? readFileSync(url, "utf8") : "";
+  if (!existsSync(url)) throw new Error(`Missing source under test: ${relative}`);
+  return readFileSync(url, "utf8");
 }
+
+test("fails loudly when a source contract points at a missing file", () => {
+  expect(() => source("../src/definitely-missing-combat-source.tsx")).toThrow(
+    "Missing source under test: ../src/definitely-missing-combat-source.tsx",
+  );
+});
 
 const panelSource = source("../src/components/combat-exchange-panel.tsx");
 const uiSource = source("../src/components/ui.tsx");
