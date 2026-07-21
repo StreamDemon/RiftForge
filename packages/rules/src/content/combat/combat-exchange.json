@@ -2,12 +2,20 @@
   "book": "Rifts Ultimate Edition",
   "pages": {
     "armorAndVitals": 287,
+    "megaDamageIntro": 288,
     "sdcCombat": 339,
     "defense": 340,
     "damage": 341,
     "automaticDodge": 344,
+    "megaDamageCombat": 355,
     "modernWeapons": 360,
     "rangedDodging": 361
+  },
+  "rules": {
+    "sdcPerMd": 100,
+    "minimumSdcToDamageMdc": 100,
+    "depletedMdcArmorBypassStrike": 8,
+    "finalMdcAbsorbsDestroyingBlast": true
   },
   "minimumStrikeTotal": { "melee": 5, "ranged": 8 },
   "rangedDodgeModifier": { "pointBlank": -10, "close": -5, "normal": 0 }

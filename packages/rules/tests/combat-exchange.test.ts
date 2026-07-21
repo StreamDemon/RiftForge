@@ -4,6 +4,7 @@ import {
   armorSchema,
   authorizeCombatResponse,
   combatExchangeRules,
+  combatExchangeRulesSchema,
   defenderCombatStateToken,
   deriveAttackProfile,
   deriveDefenseOptions,
@@ -78,22 +79,79 @@ function d20(die: number, bonus = 0, overrides: Partial<D20Roll> = {}): D20Roll 
   };
 }
 
+const expectedCombatExchangeRules = {
+  book: "Rifts Ultimate Edition",
+  pages: {
+    armorAndVitals: 287,
+    megaDamageIntro: 288,
+    sdcCombat: 339,
+    defense: 340,
+    damage: 341,
+    automaticDodge: 344,
+    megaDamageCombat: 355,
+    modernWeapons: 360,
+    rangedDodging: 361,
+  },
+  rules: {
+    sdcPerMd: 100,
+    minimumSdcToDamageMdc: 100,
+    depletedMdcArmorBypassStrike: 8,
+    finalMdcAbsorbsDestroyingBlast: true,
+  },
+  minimumStrikeTotal: { melee: 5, ranged: 8 },
+  rangedDodgeModifier: { pointBlank: -10, close: -5, normal: 0 },
+} as const;
+
 describe("combat exchange constants", () => {
   test("loads rendered-page S.D.C. combat values", () => {
-    expect(combatExchangeRules).toEqual({
-      book: "Rifts Ultimate Edition",
-      pages: {
-        armorAndVitals: 287,
-        sdcCombat: 339,
-        defense: 340,
-        damage: 341,
-        automaticDodge: 344,
-        modernWeapons: 360,
-        rangedDodging: 361,
+    expect(combatExchangeRules).toEqual(expectedCombatExchangeRules);
+  });
+
+  test.each([
+    [
+      "mega-damage introduction page",
+      {
+        ...expectedCombatExchangeRules,
+        pages: { ...expectedCombatExchangeRules.pages, megaDamageIntro: 289 },
       },
-      minimumStrikeTotal: { melee: 5, ranged: 8 },
-      rangedDodgeModifier: { pointBlank: -10, close: -5, normal: 0 },
-    });
+    ],
+    [
+      "mega-damage combat page",
+      {
+        ...expectedCombatExchangeRules,
+        pages: { ...expectedCombatExchangeRules.pages, megaDamageCombat: 356 },
+      },
+    ],
+    [
+      "S.D.C. per M.D. ratio",
+      {
+        ...expectedCombatExchangeRules,
+        rules: { ...expectedCombatExchangeRules.rules, sdcPerMd: 101 },
+      },
+    ],
+    [
+      "minimum S.D.C. needed to damage M.D.C.",
+      {
+        ...expectedCombatExchangeRules,
+        rules: { ...expectedCombatExchangeRules.rules, minimumSdcToDamageMdc: 101 },
+      },
+    ],
+    [
+      "depleted M.D.C. armor bypass strike",
+      {
+        ...expectedCombatExchangeRules,
+        rules: { ...expectedCombatExchangeRules.rules, depletedMdcArmorBypassStrike: 9 },
+      },
+    ],
+    [
+      "final M.D.C. absorption rule",
+      {
+        ...expectedCombatExchangeRules,
+        rules: { ...expectedCombatExchangeRules.rules, finalMdcAbsorbsDestroyingBlast: false },
+      },
+    ],
+  ])("rejects an altered %s literal", (_name, candidate) => {
+    expect(combatExchangeRulesSchema.safeParse(candidate).success).toBe(false);
   });
 });
 
