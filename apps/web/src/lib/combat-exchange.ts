@@ -54,9 +54,16 @@ export function combatWeaponChoices(sheet: CharacterSheet): Array<{
 }
 
 export function combatTargetDisabledReason(target: CombatTargetSummary): string | undefined {
-  if (!target.ready) return "Roll this target's H.P. and S.D.C. first.";
-  if (target.protection === "mdcArmor") return "Full M.D.C. combat is follow-up work.";
-  return undefined;
+  switch (target.disabledReason) {
+    case "defenderNotReady":
+      return "Roll this target's H.P. and S.D.C. first.";
+    case "armorNotReady":
+      return "Roll this target's worn armor M.D.C. first.";
+    case "combatantDead":
+      return "Life signs terminated; this target cannot enter combat.";
+    default:
+      return undefined;
+  }
 }
 
 export function exchangeTone(exchange: ExchangeSummary): "dim" | "warn" | "bad" | "good" {

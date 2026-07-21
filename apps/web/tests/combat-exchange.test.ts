@@ -270,31 +270,71 @@ describe("combat weapon choices", () => {
 describe("combat target choices", () => {
   const targetId = "target-1" as CombatTargetSummary["id"];
 
-  test("explains unready and M.D.C.-protected targets precisely", () => {
-    expect(
-      combatTargetDisabledReason({
+  test.each([
+    [
+      "unrolled body",
+      {
         id: targetId,
-        name: "Unready",
+        name: "Unrolled body",
         ready: false,
-        protection: "none",
+        lifeState: "alive",
+        protection: { kind: "none" },
         disabledReason: "defenderNotReady",
-      }),
-    ).toBe("Roll this target's H.P. and S.D.C. first.");
+      },
+      "Roll this target's H.P. and S.D.C. first.",
+    ],
+    [
+      "unrolled armor",
+      {
+        id: targetId,
+        name: "Unrolled armor",
+        ready: false,
+        lifeState: "alive",
+        protection: {
+          kind: "mdcArmor",
+          itemId: "llw-concealed-light",
+          name: "Ley Line Walker Concealed Armor (Light)",
+        },
+        disabledReason: "armorNotReady",
+      },
+      "Roll this target's worn armor M.D.C. first.",
+    ],
+    [
+      "dead combatant",
+      {
+        id: targetId,
+        name: "Dead combatant",
+        ready: true,
+        lifeState: "dead",
+        protection: { kind: "none" },
+        disabledReason: "combatantDead",
+      },
+      "Life signs terminated; this target cannot enter combat.",
+    ],
+  ] satisfies ReadonlyArray<readonly [string, CombatTargetSummary, string]>)(
+    "maps the server's $0 reason to exact disabled copy",
+    (_label, target, expected) => {
+      expect(combatTargetDisabledReason(target)).toBe(expected);
+    },
+  );
+
+  test.each([
+    ["intact", 39],
+    ["depleted", 0],
+  ] as const)("keeps $0 M.D.C. protection enabled", (_label, current) => {
     expect(
       combatTargetDisabledReason({
         id: targetId,
-        name: "M.D.C. Target",
+        name: "M.D.C. target",
         ready: true,
-        protection: "mdcArmor",
-        disabledReason: "unsupportedMdcProtection",
-      }),
-    ).toBe("Full M.D.C. combat is follow-up work.");
-    expect(
-      combatTargetDisabledReason({
-        id: targetId,
-        name: "Ready",
-        ready: true,
-        protection: "sdcArmor",
+        lifeState: "alive",
+        protection: {
+          kind: "mdcArmor",
+          itemId: "llw-concealed-light",
+          name: "Ley Line Walker Concealed Armor (Light)",
+          max: 39,
+          current,
+        },
       }),
     ).toBeUndefined();
   });
