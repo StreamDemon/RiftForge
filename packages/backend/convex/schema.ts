@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { combatExchangeValidator } from "./combat_values";
 
 /**
  * Convex validators mirroring `characterSchema` from @riftforge/rules.
@@ -90,4 +91,9 @@ export const characterFields = {
 
 export default defineSchema({
   characters: defineTable(characterFields),
+  combatExchanges: defineTable(combatExchangeValidator)
+    .index("by_defender_and_status", ["defenderId", "status"])
+    .index("by_attacker_and_status", ["attackerId", "status"])
+    .index("by_defender", ["defenderId"])
+    .index("by_attacker", ["attackerId"]),
 });

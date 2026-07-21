@@ -319,6 +319,28 @@ describe("combatProfile integrates attributes + Hand to Hand", () => {
     expect(p.criticalStrikeOn).toBe(17);
   });
 
+  test("makes training and ranged-defense capability explicit", () => {
+    const untrained = combatProfile({ attributes: { PP: 20 }, hthType: "none", level: 1 });
+    expect(untrained).toMatchObject({
+      handToHandType: "none",
+      hasHandToHandTraining: false,
+      hasAutoDodge: false,
+      rangedDodge: 3,
+      rangedAutoDodge: 0,
+    });
+
+    const commando = combatProfile({ attributes: { PP: 20 }, hthType: "commando", level: 15 });
+    expect(commando).toMatchObject({
+      handToHandType: "commando",
+      hasHandToHandTraining: true,
+      hasAutoDodge: true,
+      dodge: 7,
+      autoDodge: 8,
+      rangedDodge: 3,
+      rangedAutoDodge: 3,
+    });
+  });
+
   test("unconditional critical ranges unlock at their printed levels", () => {
     expect(combatProfile({ attributes: {}, hthType: "basic", level: 5 }).criticalStrikeOn).toBe(20);
     expect(combatProfile({ attributes: {}, hthType: "basic", level: 6 }).criticalStrikeOn).toBe(19);

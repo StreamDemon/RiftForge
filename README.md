@@ -29,10 +29,13 @@ apps/web/
 
 The engine is isomorphic: the Convex backend derives sheets at query time, and the
 client imports the same package for ephemeral rolls. The runtime never parses the
-source book. Combat APIs expose page-stamped strike constants and deterministic
-opposed-roll resolution; spell APIs expose load-validated structured damage,
-derivation, and injected-RNG rolling. Equipment-aware A.R. selection, armor-first
-routing, M.D.C. application, and hostile-target persistence remain follow-on work.
+source book. Combat APIs now support persisted, server-rolled S.D.C. weapon
+exchanges with engine-authorized defense choices, immutable history, and atomic
+body S.D.C.-then-Hit-Point routing. Artificial S.D.C. armor A.R. and ablation
+routing are pure-tested and ready for page-stamped production content. Natural
+A.R. is intentionally absent per RUE p.339; full M.D.C. interaction remains
+follow-up work. Spell APIs expose load-validated structured damage, derivation,
+and injected-RNG rolling.
 
 ### Current status
 
