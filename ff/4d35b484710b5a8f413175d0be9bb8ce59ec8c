@@ -1,0 +1,32 @@
+packages/rules/src/engine/combat-exchange.ts
+  s_902623fce1fa2f::t_b3f7cd689c1a02 126
+packages/backend/tests/combat.test.ts
+  s_902623fce1fa2f::t_bb77432619692c 1854-1886
+packages/rules/tests/combat-exchange.test.ts
+  s_902623fce1fa2f::t_bb77432619692c 200,274-281
+  s_816bafeabb951b::t_7ef5128c7b024c 282-283
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ff4d35b484710b5a8f413175d0be9bb8ce59ec8c",
+  "prompts": {},
+  "sessions": {
+    "s_816bafeabb951b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f79e3-3bab-73c2-88c0-63686851a97d",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    },
+    "s_902623fce1fa2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f83d5-22f2-7893-b392-5a45d1c9a01a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
