@@ -16,6 +16,7 @@ import {
   psionicsSaveTarget,
   savingThrowTarget,
   type CombatProfile,
+  type LifeState,
   type StatRange,
 } from "./combat.ts";
 import { getOcc, ppeRange } from "./occ.ts";
@@ -71,6 +72,7 @@ export interface CharacterSheet {
     hitPoints: StatValue;
     sdc: StatValue;
     comaDeathFloor: number;
+    lifeState: LifeState;
     /** Days of battle-injury treatment already applied this course. */
     treatmentDays: number;
   };
@@ -157,6 +159,29 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     if (cur < min) {
       throw new Error(`current.${field} (${cur}) is below the legal minimum (${min}).`);
     }
+  }
+
+  const hitPoints = withRolled(
+    hitPointsRange(attrs.PE, level),
+    character.rolled?.hitPoints,
+    character.current?.hitPoints,
+  );
+  const sdc = withRolled(physicalSdcRange(), character.rolled?.sdc, character.current?.sdc);
+
+  let lifeState: LifeState;
+  if (character.lifeState === "dead") {
+    if (hitPoints.rolled === undefined || sdc.rolled === undefined) {
+      throw new Error("lifeState dead requires rolled vitals for H.P. and S.D.C.");
+    }
+    if (sdc.current !== 0) {
+      throw new Error("lifeState dead requires current S.D.C. to be 0.");
+    }
+    if (hitPoints.current !== floor) {
+      throw new Error(`lifeState dead requires current H.P. at the coma/death floor (${floor}).`);
+    }
+    lifeState = "dead";
+  } else {
+    lifeState = hitPoints.current !== undefined && hitPoints.current <= 0 ? "coma" : "alive";
   }
 
   const saves: Record<string, SheetSave> = {
@@ -282,13 +307,10 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
     attributeBonuses,
     combat: sheetCombat,
     vitals: {
-      hitPoints: withRolled(
-        hitPointsRange(attrs.PE, level),
-        character.rolled?.hitPoints,
-        character.current?.hitPoints,
-      ),
-      sdc: withRolled(physicalSdcRange(), character.rolled?.sdc, character.current?.sdc),
+      hitPoints,
+      sdc,
       comaDeathFloor: floor,
+      lifeState,
       treatmentDays: character.current?.treatmentDays ?? 0,
     },
     ppe: occ.ppe

@@ -148,6 +148,9 @@ export const characterSchema = z.object({
       treatmentDays: z.number().int().nonnegative().optional(),
     })
     .optional(),
+  /** Persisted only for the terminal state. Alive/coma are derived from live
+   * H.P.; `deriveSheet` validates that dead agrees with the body pools. */
+  lifeState: z.literal("dead").optional(),
   /** Optional player-authored identity; passed through to the sheet untouched. */
   narrative: narrativeSchema.optional(),
 });

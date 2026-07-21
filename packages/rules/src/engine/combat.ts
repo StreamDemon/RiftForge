@@ -79,6 +79,15 @@ export interface VitalsPool {
   hitPoints: number;
 }
 
+export type LifeState = "alive" | "coma" | "dead";
+
+export interface BodyDamageResult {
+  before: VitalsPool;
+  after: VitalsPool;
+  rawHitPoints: number;
+  lifeState: LifeState;
+}
+
 /**
  * Deal damage to the pools: S.D.C. absorbs first — "all the S.D.C. of a living
  * thing must be reduced to zero before the Hit Points can be affected by
@@ -86,13 +95,26 @@ export interface VitalsPool {
  * stop at the coma/death floor (0 down to the floor is the coma band; below
  * it, dead — RUE p.287, floor = `comaDeathFloor(pe)`).
  */
-export function applyDamage(pool: VitalsPool, damage: number, floor: number): VitalsPool {
+export function applyBodyDamage(
+  pool: VitalsPool,
+  damage: number,
+  comaDeathFloor: number,
+): BodyDamageResult {
   if (!Number.isInteger(damage) || damage < 0) {
     throw new Error(`Damage must be a non-negative integer, got ${damage}.`);
   }
-  const sdcAfter = Math.max(0, pool.sdc - damage);
-  const overflow = Math.max(0, damage - pool.sdc);
-  return { sdc: sdcAfter, hitPoints: Math.max(floor, pool.hitPoints - overflow) };
+  const sdcDamage = Math.min(pool.sdc, damage);
+  const rawHitPoints = pool.hitPoints - (damage - sdcDamage);
+  const lifeState = rawHitPoints < comaDeathFloor ? "dead" : rawHitPoints <= 0 ? "coma" : "alive";
+  const after = {
+    sdc: pool.sdc - sdcDamage,
+    hitPoints: Math.max(comaDeathFloor, rawHitPoints),
+  };
+  return { before: pool, after, rawHitPoints, lifeState };
+}
+
+export function applyDamage(pool: VitalsPool, damage: number, floor: number): VitalsPool {
+  return applyBodyDamage(pool, damage, floor).after;
 }
 
 /** Total attacks per melee for a Hand-to-Hand type at a given level. */
