@@ -1,7 +1,7 @@
 # Full M.D.C. Combat Exchange Design
 
 **Date:** 2026-07-21
-**Status:** Approved in conversation
+**Status:** Implemented locally; publication and Cubic review pending
 **Branch:** `feat/mdc-combat-exchange`
 **Primary issue:** [#51 — Full M.D.C. combat](https://github.com/StreamDemon/RiftForge/issues/51)
 
@@ -25,6 +25,17 @@ This slice will:
 
 The existing exchange remains the authority boundary. Issue #51 does not add
 M.D. input to the sheet's manual damage control.
+
+## Delivered outcome
+
+The local implementation now delivers the complete core boundary described here:
+page-stamped tier constants, critical-before-conversion routing, intact and
+depleted M.D.C. armor behavior, S.D.C. armor A.R. for either attack tier,
+final-blast absorption without spill, versioned immutable evidence, atomic Convex
+writes, and persisted terminal death. It extends the existing exchange and keeps
+legacy history readable. The optional RUE pp.358-359 near-fatal injury/survival
+procedure remains in issue #54, and the generic effects pipeline remains roadmap
+issue #53.
 
 ## Approved decisions
 
@@ -566,6 +577,69 @@ git diff --check
 User-visible changes also require the live-browser acceptance above. Test counts
 must be quoted as observations from the final branch revision, never as timeless
 project totals.
+
+## Delivery evidence
+
+This delivery record was assembled on **2026-07-22 (Asia/Singapore)**. The live
+acceptance itself ran on **2026-07-21 (Asia/Singapore)** against source commit
+`f67236e2badbb539dcd3b866ed5fb9ace1e915b6`; the automated gates below were rerun
+fresh on the final documentation revision before the local documentation commit.
+
+### Fresh automated gates
+
+Captured **2026-07-22 01:44:28 +08:00 (Asia/Singapore)** with package task
+caching explicitly disabled. Counts are observations from this branch revision,
+not timeless project totals.
+
+| Command | Fresh result |
+| ------- | ------------ |
+| `vp run --no-cache @riftforge/rules#check` | exit 0; 60/60 files formatted; 46/46 files free of warnings, lint errors, and type errors |
+| `vp run --no-cache @riftforge/rules#test` | exit 0; 17/17 files; 358/358 tests |
+| `vp run --no-cache @riftforge/backend#check` | exit 0; 13/13 files formatted; 15/15 files free of warnings, lint errors, and type errors |
+| `vp run --no-cache @riftforge/backend#test` | exit 0; 3/3 files; 128/128 tests |
+| `vp run --no-cache @riftforge/web#check` | exit 0; 37/37 files formatted; 33/33 files free of warnings, lint errors, and type errors |
+| `vp run --no-cache @riftforge/web#test` | exit 0; 3/3 files; 52/52 tests |
+| `vp check` | exit 0; 130/130 files formatted; 95/95 files free of warnings, lint errors, and type errors |
+| `vp test` | exit 0; 23/23 files; 538/538 tests |
+| `git diff --check` | exit 0; no output |
+| `git status --short --branch` | `feat/mdc-combat-exchange`; only README, this design, and the implementation plan modified before the documentation commit |
+
+### Live Convex and browser acceptance
+
+- Attacker dossier: `j5765xjcskpg5jwrj32qx3br9d8azgwe`.
+- Defender dossier: `j57b5e6myeyxxhffcqwy09kg8n8ayxw9`, with 39 rolled
+  M.D.C. staged at 3 current M.D.C. for the ablation sequence.
+- A legal Wilk's `1D6 M.D.` profile dealt 1 M.D., reducing armor from 3 to 2.
+- An NG-P7 10 M.D. hit reduced armor from 2 to 0, rendered
+  `FINAL BLAST ABSORBED`, and left body pools at 120 S.D.C./18 H.P.
+- With the same depleted shell still worn, exact completed strike 7 was stopped;
+  exact strike 8 bypassed and reduced body S.D.C. from 120 to 115.
+- A 6 S.D.C. hit against intact 39 M.D.C. persisted an impervious/no-change
+  result. A later 5 M.D. hit converted to 500 S.D.C., stored body pools at
+  0/-14, and persisted `DEAD`.
+- Six version-2 resolved rows rendered beside legacy/null resolved history.
+  Cancellation cleanup remained available and recorded `CANCELLED` after death.
+- The dead dossier kept identity, vitals, equipment, inventory, narrative, and
+  history readable while gameplay actions exposed the terminal reason.
+- Direct `/characters/:id` navigation from the dead defender to the living
+  attacker stayed in the same document: the window marker,
+  `performance.timeOrigin`, and sole Navigation Timing entry were unchanged.
+  Drafts reset, living controls re-enabled, and the dead target remained disabled.
+- Desktop acceptance ran at 1440px. Narrow acceptance ran at 390x844; browser
+  chrome yielded a 375 CSS-pixel document, and document/body scroll width equaled
+  client width with no overflowing elements.
+- `SHOW20` exposed `aria-controls`; keyboard activation updated `aria-expanded`
+  and rendered 20 rows. Fatal/body, stopped/armor, defended, and dim history
+  states retained explicit text in addition to color.
+- A fresh Chrome session reported zero console errors and zero warnings.
+- Web, Convex CLI, the orphan-prone local backend, and temporary logs were stopped
+  or removed; ports 5173 and 3210 were closed at handoff.
+
+The legal production catalog has no S.D.C. armor and no S.D.C. attack profile
+capable of reaching 100+ completed damage. Consequently, the 100+ S.D.C.-against-
+M.D.C. conversion rows and M.D.-against-S.D.C.-armor A.R. rows were verified by
+exact pure-rules and atomic-backend tests, not by the browser UI. No temporary or
+invented rules content was introduced to manufacture those scenarios.
 
 ## Tracker and documentation delivery
 

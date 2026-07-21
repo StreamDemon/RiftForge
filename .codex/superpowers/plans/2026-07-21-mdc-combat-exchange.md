@@ -89,11 +89,11 @@ rules: {
 }
 ```
 
-- [ ] Add failing tests asserting all six exact values and negative schema tests for altered literals.
-- [ ] Run `vp test packages/rules/tests/combat-exchange.test.ts`; observe missing-field failure.
-- [ ] Add `z.literal(...)` fields under the existing `pages`/`rules` objects and matching JSON values; retain all existing constants/exports.
-- [ ] Run `vp test packages/rules/tests/combat-exchange.test.ts`, `vp run @riftforge/rules#check`, and `vp run @riftforge/rules#test`; expect PASS.
-- [ ] Commit:
+- [x] Add failing tests asserting all six exact values and negative schema tests for altered literals.
+- [x] Run `vp test packages/rules/tests/combat-exchange.test.ts`; observe missing-field failure.
+- [x] Add `z.literal(...)` fields under the existing `pages`/`rules` objects and matching JSON values; retain all existing constants/exports.
+- [x] Run `vp test packages/rules/tests/combat-exchange.test.ts`, `vp run @riftforge/rules#check`, and `vp run @riftforge/rules#test`; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/rules/src/schema/combat-exchange.ts packages/rules/src/content/combat/combat-exchange.json packages/rules/src/index.ts packages/rules/tests/combat-exchange.test.ts
@@ -125,10 +125,10 @@ export function applyBodyDamage(
 
 Persist only `lifeState: z.literal("dead").optional()`; add `lifeState` to `CharacterSheet.vitals`.
 
-- [ ] Add a table for `{sdc:0, hitPoints:1}`, floor `-10`: damage `1 -> coma/0`, `11 -> coma/-10`, `12 -> dead/-10` with raw `-11`. Prove S.D.C. drains first and existing `applyDamage` still returns the clamped pool.
-- [ ] Add character tests: positive H.P. => alive; H.P. `0` through floor => coma; dead marker valid only with rolled vitals, S.D.C. `0`, H.P. exactly floor; contradictory/unrolled dead state rejected; legacy marker-absent documents valid.
-- [ ] Run `vp test packages/rules/tests/combat.test.ts packages/rules/tests/character.test.ts`; observe failure.
-- [ ] Implement:
+- [x] Add a table for `{sdc:0, hitPoints:1}`, floor `-10`: damage `1 -> coma/0`, `11 -> coma/-10`, `12 -> dead/-10` with raw `-11`. Prove S.D.C. drains first and existing `applyDamage` still returns the clamped pool.
+- [x] Add character tests: positive H.P. => alive; H.P. `0` through floor => coma; dead marker valid only with rolled vitals, S.D.C. `0`, H.P. exactly floor; contradictory/unrolled dead state rejected; legacy marker-absent documents valid.
+- [x] Run `vp test packages/rules/tests/combat.test.ts packages/rules/tests/character.test.ts`; observe failure.
+- [x] Implement:
 
 ```ts
 const sdcDamage = Math.min(pool.sdc, damage);
@@ -142,9 +142,9 @@ const after = {
 
 Keep integer/nonnegative validation. Make `applyDamage(...)` return `applyBodyDamage(...).after` for compatibility.
 
-- [ ] In `deriveSheet`, validate terminal invariants after pools/floor are known and derive unpersisted alive/coma from current H.P.
-- [ ] Run focused tests and rules check/test; expect PASS.
-- [ ] Commit:
+- [x] In `deriveSheet`, validate terminal invariants after pools/floor are known and derive unpersisted alive/coma from current H.P.
+- [x] Run focused tests and rules check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/rules/src/schema/character.ts packages/rules/src/engine/combat.ts packages/rules/src/engine/character.ts packages/rules/src/index.ts packages/rules/tests/combat.test.ts packages/rules/tests/character.test.ts
@@ -159,14 +159,14 @@ git commit -m "feat(rules): derive terminal life state"
 
 **Contract:** Supported `AttackProfile.damageType` is `"sdc" | "md"`. Preserve M.D.C. protection even at current `0`; worn unrolled armor derives `mdcArmor` with absent max/current. Add `combatantDead` and `armorNotReady` errors, but retain legacy unsupported error values for persisted data.
 
-- [ ] Replace M.D. refusal tests with legal energy-pistol/rifle profiles, printed formulas, unchanged strike/critical data, and `damageType: "md"`.
-- [ ] Test full/partial/depleted M.D.C. armor stays `mdcArmor`; unrolled armor exposes absent pools; depleted S.D.C. armor retains current no-protection behavior.
-- [ ] Test attacker token changes with damage tier/selected weapon. Defender token changes with life state, tier, M.D.C. readiness/max/current. Narrative, P.P.E., unrelated inventory remain excluded.
-- [ ] Run focused rules test; observe current refusal/collapse failure.
-- [ ] Return the validated item tier directly in supported profiles. Preserve all worn M.D.C. armor in `deriveProtection`.
-- [ ] Prefix explicit ordered token tuples `attacker-v2`/`defender-v2`; include the new relevant fields without serializing the whole sheet.
-- [ ] Run focused test and rules check/test; expect PASS.
-- [ ] Commit:
+- [x] Replace M.D. refusal tests with legal energy-pistol/rifle profiles, printed formulas, unchanged strike/critical data, and `damageType: "md"`.
+- [x] Test full/partial/depleted M.D.C. armor stays `mdcArmor`; unrolled armor exposes absent pools; depleted S.D.C. armor retains current no-protection behavior.
+- [x] Test attacker token changes with damage tier/selected weapon. Defender token changes with life state, tier, M.D.C. readiness/max/current. Narrative, P.P.E., unrelated inventory remain excluded.
+- [x] Run focused rules test; observe current refusal/collapse failure.
+- [x] Return the validated item tier directly in supported profiles. Preserve all worn M.D.C. armor in `deriveProtection`.
+- [x] Prefix explicit ordered token tuples `attacker-v2`/`defender-v2`; include the new relevant fields without serializing the whole sheet.
+- [x] Run focused test and rules check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/rules/src/schema/combat-exchange.ts packages/rules/src/engine/combat-exchange.ts packages/rules/tests/combat-exchange.test.ts
@@ -202,15 +202,15 @@ export type BodyDamageSnapshot = { before: VitalsPool; after: VitalsPool };
 
 All new hits use this union. Keep legacy `SdcDamageRoute` exported only for persisted validation/presentation.
 
-- [ ] Add intact-M.D.C. conversion tests for `99/100/199/200` plus printed `450/496 -> 4 M.D.C.`.
-- [ ] Add final-point M.D.C. no-spill and `finalBlastAbsorbed` tests.
-- [ ] Add depleted-shell tests for S.D.C. strike `7/8` and native M.D. bypass.
-- [ ] Add S.D.C.-armor tests for S.D. and M.D. attacks at/below/above A.R.
-- [ ] Add no-armor S.D./M.D. body tests for S.D.C.-before-H.P., exact floor, and fatal overflow.
-- [ ] Add a critical M.D. resolver test proving `totalDamage = native roll * multiplier` before `convertedDamage = totalDamage * 100`.
-- [ ] Assert every new hit has v2, native/converted evidence, exact armor/body snapshots, and no unsupported-M.D.C. route.
-- [ ] Run focused test; observe S.D.C.-only failures.
-- [ ] Implement exact helpers:
+- [x] Add intact-M.D.C. conversion tests for `99/100/199/200` plus printed `450/496 -> 4 M.D.C.`.
+- [x] Add final-point M.D.C. no-spill and `finalBlastAbsorbed` tests.
+- [x] Add depleted-shell tests for S.D.C. strike `7/8` and native M.D. bypass.
+- [x] Add S.D.C.-armor tests for S.D. and M.D. attacks at/below/above A.R.
+- [x] Add no-armor S.D./M.D. body tests for S.D.C.-before-H.P., exact floor, and fatal overflow.
+- [x] Add a critical M.D. resolver test proving `totalDamage = native roll * multiplier` before `convertedDamage = totalDamage * 100`.
+- [x] Assert every new hit has v2, native/converted evidence, exact armor/body snapshots, and no unsupported-M.D.C. route.
+- [x] Run focused test; observe S.D.C.-only failures.
+- [x] Implement exact helpers:
 
 ```ts
 const sdcToMd = (value: number): DamageAmount => ({
@@ -223,10 +223,10 @@ const mdToSdc = (value: number): DamageAmount => ({
 });
 ```
 
-- [ ] Implement routing in this order: S.D.C. armor A.R.; intact M.D.C.; depleted M.D.C. shell; no protection; fatal-aware body. `damageArmor` clamps armor; `finalBlastAbsorbed` is true when the armor hit ends at `0`; never spill armor damage.
-- [ ] Resolve using `{type: input.attack.damageType, value: totalDamage}` after critical multiplication and pass the actual tier to strike evaluation.
-- [ ] Run focused tests and rules check/test; expect PASS.
-- [ ] Commit:
+- [x] Implement routing in this order: S.D.C. armor A.R.; intact M.D.C.; depleted M.D.C. shell; no protection; fatal-aware body. `damageArmor` clamps armor; `finalBlastAbsorbed` is true when the armor hit ends at `0`; never spill armor damage.
+- [x] Resolve using `{type: input.attack.damageType, value: totalDamage}` after critical multiplication and pass the actual tier to strike evaluation.
+- [x] Run focused tests and rules check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/rules/src/engine/combat-exchange.ts packages/rules/src/index.ts packages/rules/tests/combat-exchange.test.ts
@@ -241,13 +241,13 @@ git commit -m "feat(rules): resolve tiered combat damage"
 
 **Contract:** Keep the legacy route validator exact, add separately discriminated v2 validators matching Task 4, and use `route: v.union(legacySdcDamageRouteValidator, tieredDamageRouteValidator)`. Add `lifeState: v.optional(v.literal("dead"))` to character current state.
 
-- [ ] Add fixtures proving legacy armor/body routes and v2 stopped/armor/fatal routes all insert/read unchanged. Add negative fixtures for missing v2 native damage, fatal ending in coma, and extra legacy fields.
-- [ ] Run `vp test packages/backend/tests/combat.test.ts`; observe validator failures.
-- [ ] Add exact `DamageAmount`, protection/body snapshot, and four v2 route validators with `v.literal(2)`. Optional fields are optional only on branches allowed by the rules type.
-- [ ] Preserve legacy unsupported error codes; add `combatantDead` and `armorNotReady`.
-- [ ] Add the dead marker to schema. From `packages/backend`, run `pnpm exec convex codegen`; do not hand-edit or commit generated files unless they change.
-- [ ] Run backend focused test and backend check/test; expect PASS.
-- [ ] Commit:
+- [x] Add fixtures proving legacy armor/body routes and v2 stopped/armor/fatal routes all insert/read unchanged. Add negative fixtures for missing v2 native damage, fatal ending in coma, and extra legacy fields.
+- [x] Run `vp test packages/backend/tests/combat.test.ts`; observe validator failures.
+- [x] Add exact `DamageAmount`, protection/body snapshot, and four v2 route validators with `v.literal(2)`. Optional fields are optional only on branches allowed by the rules type.
+- [x] Preserve legacy unsupported error codes; add `combatantDead` and `armorNotReady`.
+- [x] Add the dead marker to schema. From `packages/backend`, run `pnpm exec convex codegen`; do not hand-edit or commit generated files unless they change.
+- [x] Run backend focused test and backend check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/backend/convex/schema.ts packages/backend/convex/combat_values.ts packages/backend/convex/_generated/dataModel.d.ts packages/backend/convex/_generated/api.d.ts packages/backend/tests/combat.test.ts
@@ -269,12 +269,12 @@ export function requireLiving(character: Character, action: string): void;
 
 Manual damage returns `lifeState: "alive" | "coma" | "dead"` but accepts no tier argument.
 
-- [ ] Add manual damage tests at P.E. 10/current `{sdc:0,hp:1}`: 11 damage stores coma at -10 without marker; 12 stores dead at -10 with marker and raw overflow is not persisted.
-- [ ] Add dead-character rejections without state change for full update, roll/restore vitals, damage/healing, rest/meditation, treatment, ley draw, and casting (including cross-character healing).
-- [ ] Prove narrative edits and inventory add/remove/equip remain available and preserve the marker.
-- [ ] Run `vp test packages/backend/tests/characters.test.ts`; observe current floor-only/unguarded failures.
-- [ ] Implement `requireLiving` and call it after authoritative load but before dice or gameplay writes. Guard both caster and healing target. Guard existing document before full replacement.
-- [ ] Replace pool-only damage with:
+- [x] Add manual damage tests at P.E. 10/current `{sdc:0,hp:1}`: 11 damage stores coma at -10 without marker; 12 stores dead at -10 with marker and raw overflow is not persisted.
+- [x] Add dead-character rejections without state change for full update, roll/restore vitals, damage/healing, rest/meditation, treatment, ley draw, and casting (including cross-character healing).
+- [x] Prove narrative edits and inventory add/remove/equip remain available and preserve the marker.
+- [x] Run `vp test packages/backend/tests/characters.test.ts`; observe current floor-only/unguarded failures.
+- [x] Implement `requireLiving` and call it after authoritative load but before dice or gameplay writes. Guard both caster and healing target. Guard existing document before full replacement.
+- [x] Replace pool-only damage with:
 
 ```ts
 const result = applyBodyDamage(damagePools(sheet), args.amount, sheet.vitals.comaDeathFloor);
@@ -288,8 +288,8 @@ const current = {
 
 Patch once; return before/after/amount/lifeState. Keep the mutation S.D.C.-only.
 
-- [ ] Run focused test and backend check/test; expect PASS.
-- [ ] Commit:
+- [x] Run focused test and backend check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/backend/convex/character_state.ts packages/backend/convex/characters.ts packages/backend/tests/characters.test.ts
@@ -304,13 +304,13 @@ git commit -m "feat(backend): enforce terminal life state"
 
 **Contract:** Target summaries add `lifeState`, full `ProtectionState`, and optional `disabledReason: "defenderNotReady" | "armorNotReady" | "combatantDead"`.
 
-- [ ] Test discovery for intact/depleted rolled M.D.C. armor (enabled), unrolled worn M.D.C. (`armorNotReady`), dead target (`combatantDead` precedence), unrolled body (`defenderNotReady`), and unchanged S.D.C. target.
-- [ ] Test legal energy-pistol/rifle declarations store `damageType:"md"` and roll strike exactly once. Dead attacker/defender and unready armor must insert nothing and roll nothing.
-- [ ] Run backend combat test; observe current unsupported refusals.
-- [ ] Reject dead sheets with `combatFailure("combatantDead", ...)`. Reject only M.D.C. protection with absent max/current using `combatFailure("armorNotReady", ...)`; do not reject legal M.D. or depleted armor.
-- [ ] Persist the real attack profile/tier. Re-read both sheets, verify expected item identity/state, compute v2 tokens, roll once, and insert once. Keep current indexes/limits.
-- [ ] Run focused test and backend check/test; expect PASS.
-- [ ] Commit:
+- [x] Test discovery for intact/depleted rolled M.D.C. armor (enabled), unrolled worn M.D.C. (`armorNotReady`), dead target (`combatantDead` precedence), unrolled body (`defenderNotReady`), and unchanged S.D.C. target.
+- [x] Test legal energy-pistol/rifle declarations store `damageType:"md"` and roll strike exactly once. Dead attacker/defender and unready armor must insert nothing and roll nothing.
+- [x] Run backend combat test; observe current unsupported refusals.
+- [x] Reject dead sheets with `combatFailure("combatantDead", ...)`. Reject only M.D.C. protection with absent max/current using `combatFailure("armorNotReady", ...)`; do not reject legal M.D. or depleted armor.
+- [x] Persist the real attack profile/tier. Re-read both sheets, verify expected item identity/state, compute v2 tokens, roll once, and insert once. Keep current indexes/limits.
+- [x] Run focused test and backend check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/backend/convex/combat.ts packages/backend/tests/combat.test.ts
@@ -323,18 +323,18 @@ git commit -m "feat(backend): declare mega-damage attacks"
 
 **Files:** Modify `packages/backend/convex/combat.ts` and `packages/backend/tests/combat.test.ts`.
 
-- [ ] Add atomic intact-M.D.C. tests: S.D.C. 99 stopped, 100 ablates 1, and a destroying M.D. blast patches armor only.
-- [ ] Add atomic depleted-shell tests: S.D.C. strike 7 stopped, strike 8 hits body, and M.D. converts into body.
-- [ ] Add atomic S.D.C.-armor tests for M.D. at/below and above A.R.
-- [ ] Add exact-floor coma and one-point-overflow fatal marker tests. Assert native `totalDamage` and full route evidence.
-- [ ] Add stale races for death, armor readiness, and selected-weapon change after declaration.
-- [ ] Add idempotency/compatibility tests: cleanup cancellation remains legal, duplicate response never double-applies, and legacy v1 tokens stale safely.
-- [ ] Run backend combat test; observe S.D.C.-only write failures.
-- [ ] Call `resolveCombatExchange` with stored attack tier, completed server rolls, rederived protection/body, and derived floor. Convex does no conversion.
-- [ ] Apply one route patch: stopped => none; armor => armor only; body => S.D.C./H.P.; fatal => S.D.C./H.P./dead together. Patch exchange resolution in the same Convex mutation. Legacy routes are never newly generated.
-- [ ] Check v2 tokens before defense/damage rolls. Any race, including newly dead, settles through stale logic with no character patch; stable dead errors are for new declarations.
-- [ ] Run `vp test packages/backend/tests/combat.test.ts packages/backend/tests/characters.test.ts` and backend check/test; expect PASS.
-- [ ] Commit:
+- [x] Add atomic intact-M.D.C. tests: S.D.C. 99 stopped, 100 ablates 1, and a destroying M.D. blast patches armor only.
+- [x] Add atomic depleted-shell tests: S.D.C. strike 7 stopped, strike 8 hits body, and M.D. converts into body.
+- [x] Add atomic S.D.C.-armor tests for M.D. at/below and above A.R.
+- [x] Add exact-floor coma and one-point-overflow fatal marker tests. Assert native `totalDamage` and full route evidence.
+- [x] Add stale races for death, armor readiness, and selected-weapon change after declaration.
+- [x] Add idempotency/compatibility tests: cleanup cancellation remains legal, duplicate response never double-applies, and legacy v1 tokens stale safely.
+- [x] Run backend combat test; observe S.D.C.-only write failures.
+- [x] Call `resolveCombatExchange` with stored attack tier, completed server rolls, rederived protection/body, and derived floor. Convex does no conversion.
+- [x] Apply one route patch: stopped => none; armor => armor only; body => S.D.C./H.P.; fatal => S.D.C./H.P./dead together. Patch exchange resolution in the same Convex mutation. Legacy routes are never newly generated.
+- [x] Check v2 tokens before defense/damage rolls. Any race, including newly dead, settles through stale logic with no character patch; stable dead errors are for new declarations.
+- [x] Run `vp test packages/backend/tests/combat.test.ts packages/backend/tests/characters.test.ts` and backend check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- packages/backend/convex/combat.ts packages/backend/tests/combat.test.ts
@@ -347,12 +347,12 @@ git commit -m "feat(backend): persist tiered combat outcomes"
 
 **Files:** Modify `apps/web/src/lib/combat-exchange.ts`, `apps/web/src/components/combat-exchange-panel.tsx`, and `apps/web/tests/combat-exchange.test.ts`.
 
-- [ ] Replace M.D. disabled tests: legal catalog M.D. weapons are enabled and labeled with formula plus `M.D.`; invalid modes retain their reason.
-- [ ] Pin server-reason copy exactly: `defenderNotReady -> Roll this target's H.P. and S.D.C. first.`, `armorNotReady -> Roll this target's worn armor M.D.C. first.`, `combatantDead -> Life signs terminated; this target cannot enter combat.`
-- [ ] Pin exact legacy formatting unchanged and v2 summaries for stopped S.D.C., `496 S.D.C. -> 4 M.D.C.`, native M.D. ablation, M.D.-to-body conversion, final blast, depleted shell, and fatal termination.
-- [ ] Pin tones: stopped/armor `warn`, body/fatal `bad`, defended `good`, cancelled `dim`.
-- [ ] Run `vp test apps/web/tests/combat-exchange.test.ts`; observe M.D. refusal/S.D.C.-only formatter failures.
-- [ ] Remove unsupported-M.D. copy, map only server stable disabled reasons, and add:
+- [x] Replace M.D. disabled tests: legal catalog M.D. weapons are enabled and labeled with formula plus `M.D.`; invalid modes retain their reason.
+- [x] Pin server-reason copy exactly: `defenderNotReady -> Roll this target's H.P. and S.D.C. first.`, `armorNotReady -> Roll this target's worn armor M.D.C. first.`, `combatantDead -> Life signs terminated; this target cannot enter combat.`
+- [x] Pin exact legacy formatting unchanged and v2 summaries for stopped S.D.C., `496 S.D.C. -> 4 M.D.C.`, native M.D. ablation, M.D.-to-body conversion, final blast, depleted shell, and fatal termination.
+- [x] Pin tones: stopped/armor `warn`, body/fatal `bad`, defended `good`, cancelled `dim`.
+- [x] Run `vp test apps/web/tests/combat-exchange.test.ts`; observe M.D. refusal/S.D.C.-only formatter failures.
+- [x] Remove unsupported-M.D. copy, map only server stable disabled reasons, and add:
 
 ```ts
 function isTieredRoute(route: ExchangeRoute): route is TieredDamageRoute {
@@ -362,9 +362,9 @@ function isTieredRoute(route: ExchangeRoute): route is TieredDamageRoute {
 
 Keep legacy formatter branch. Build v2 text from persisted native/converted amounts, reason, before/after values, final-blast flag, and life state; never reconstruct evidence from `totalDamage`.
 
-- [ ] Update panel result labels using existing primitives and rail structure; add no new card system.
-- [ ] Run focused test and web check/test; expect PASS.
-- [ ] Commit:
+- [x] Update panel result labels using existing primitives and rail structure; add no new card system.
+- [x] Run focused test and web check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- apps/web/src/lib/combat-exchange.ts apps/web/src/components/combat-exchange-panel.tsx apps/web/tests/combat-exchange.test.ts
@@ -379,16 +379,16 @@ git commit -m "feat(web): present tiered combat outcomes"
 
 **Contract:** Add `gameplayDisabledReason?: string` to `SheetView` props. Use `Life signs terminated; gameplay actions are unavailable.` consistently.
 
-- [ ] Add a dead `SheetView` test: terminal label/reason render; identity/vitals/equipment remain; save/skill/weapon/spell/combat rows are disabled with `aria-disabled`/`title`; inventory remains usable.
-- [ ] Add a dead page/rail test: narrative, telemetry, history, navigation, and cancellation remain; declaration/response/damage/restore/recovery controls are unavailable.
-- [ ] Add an alive-sheet/page regression proving existing controls remain wired.
-- [ ] Add route-change regression: dead A -> living B during in-flight request resets drafts, increments epoch, ignores A result, enables B actions.
-- [ ] Run focused web tests; observe missing terminal behavior.
-- [ ] Pass terminal reason into save/skill/combat/weapon/spell rows while retaining the actions object for inventory. Terminal reason takes precedence over spell affordability.
-- [ ] In the page, derive `sheet()?.vitals.lifeState === "dead"`. Replace command-rail gameplay controls with a danger terminal alert; keep telemetry. In combat panel, keep outgoing cancellation/recent history but suppress declaration/response controls and show the alert.
-- [ ] Extend the existing ID-change reset/epoch logic; do not key/remount the page or replace ownership tokens with booleans.
-- [ ] Run focused tests and web check/test; expect PASS.
-- [ ] Commit:
+- [x] Add a dead `SheetView` test: terminal label/reason render; identity/vitals/equipment remain; save/skill/weapon/spell/combat rows are disabled with `aria-disabled`/`title`; inventory remains usable.
+- [x] Add a dead page/rail test: narrative, telemetry, history, navigation, and cancellation remain; declaration/response/damage/restore/recovery controls are unavailable.
+- [x] Add an alive-sheet/page regression proving existing controls remain wired.
+- [x] Add route-change regression: dead A -> living B during in-flight request resets drafts, increments epoch, ignores A result, enables B actions.
+- [x] Run focused web tests; observe missing terminal behavior.
+- [x] Pass terminal reason into save/skill/combat/weapon/spell rows while retaining the actions object for inventory. Terminal reason takes precedence over spell affordability.
+- [x] In the page, derive `sheet()?.vitals.lifeState === "dead"`. Replace command-rail gameplay controls with a danger terminal alert; keep telemetry. In combat panel, keep outgoing cancellation/recent history but suppress declaration/response controls and show the alert.
+- [x] Extend the existing ID-change reset/epoch logic; do not key/remount the page or replace ownership tokens with booleans.
+- [x] Run focused tests and web check/test; expect PASS.
+- [x] Commit:
 
 ```text
 git add -- apps/web/src/components/sheet-view.tsx apps/web/src/components/combat-exchange-panel.tsx apps/web/src/pages/character-sheet.tsx apps/web/tests/character-sheet.test.ts apps/web/tests/combat-exchange.test.ts
@@ -401,13 +401,13 @@ git commit -m "feat(web): render terminal character dossiers"
 
 **Files:** Modify only files already in scope when a reproduced failure requires it; update this plan's checked steps/evidence.
 
-- [ ] Run focused boundary suite:
+- [x] Run focused boundary suite:
 
 ```text
 vp test packages/rules/tests/combat.test.ts packages/rules/tests/character.test.ts packages/rules/tests/combat-exchange.test.ts packages/backend/tests/characters.test.ts packages/backend/tests/combat.test.ts apps/web/tests/combat-exchange.test.ts apps/web/tests/character-sheet.test.ts apps/web/tests/convex.test.ts
 ```
 
-- [ ] Run all package gates:
+- [x] Run all package gates:
 
 ```text
 vp run @riftforge/rules#check
@@ -418,8 +418,8 @@ vp run @riftforge/web#check
 vp run @riftforge/web#test
 ```
 
-- [ ] Run `vp check`, `vp test`, and `git diff --check`; expect PASS.
-- [ ] Audit the bug class:
+- [x] Run `vp check`, `vp test`, and `git diff --check`; expect PASS.
+- [x] Audit the bug class:
 
 ```text
 rg -n "unsupportedMdWeapon|unsupportedMdcProtection|Full M\.D\.C\. combat is follow-up work|damageType: \"sdc\"" packages apps README.md
@@ -429,9 +429,9 @@ rg -n "TODO|TBD|FIXME" packages/rules/src packages/backend/convex apps/web/src .
 
 Legacy validator/enum hits are expected; active refusals, hardcoded S.D.C. resolution, unguarded writes, and incomplete implementation markers are not.
 
-- [ ] Compare rules type, Convex validator, and formatter branch-by-branch. Confirm client non-authority, one atomic character patch, exact-floor distinction, and no final-blast spill.
-- [ ] Use `superpowers:requesting-code-review`. Reproduce findings, add regression tests for real bugs, fix root causes, rerun affected gates.
-- [ ] If hardening changes code, commit `fix(combat): harden mega-damage invariants`; do not create an empty commit.
+- [x] Compare rules type, Convex validator, and formatter branch-by-branch. Confirm client non-authority, one atomic character patch, exact-floor distinction, and no final-blast spill.
+- [x] Use `superpowers:requesting-code-review`. Reproduce findings, add regression tests for real bugs, fix root causes, rerun affected gates.
+- [x] If hardening changes code, commit `fix(combat): harden mega-damage invariants`; do not create an empty commit.
 
 ---
 
@@ -439,13 +439,13 @@ Legacy validator/enum hits are expected; active refusals, hardcoded S.D.C. resol
 
 **Files:** None expected; for a live defect modify the narrow source/test responsible.
 
-- [ ] Confirm port 3210 has no stale owner. Start `pnpm exec convex dev` in `packages/backend` and `vp dev` in `apps/web`.
-- [ ] Seed two reproducible dossiers with `pnpm exec convex run characters:create`: an alive attacker with S.D./M.D. weapons and an alive defender with worn rolled M.D.C. armor. Record returned IDs.
-- [ ] At `http://localhost:5173`, verify legal M.D. selection; sub-100 stop; 100+ floor conversion; native ablation; final-blast no spill; depleted-shell 7/8; M.D. through depleted shell; M.D. vs S.D.C. armor A.R.; fatal terminal marker; legacy and v2 history together.
-- [ ] On the dead dossier, verify explicit inaccessible gameplay actions while identity, pools, equipment, inventory, narrative, cleanup cancellation, and history remain. Navigate to the living ID without reload; drafts reset/actions re-enable.
-- [ ] Check desktop and narrow viewport, keyboard/accessibility text, layout clipping, and console errors/warnings.
-- [ ] For defects: add failing automated test, fix, rerun package gates, repeat scenario.
-- [ ] Stop web, Convex CLI, and orphaned backend; confirm ports 5173/3210 are closed.
+- [x] Confirm port 3210 has no stale owner. Start `pnpm exec convex dev` in `packages/backend` and `vp dev` in `apps/web`.
+- [x] Seed two reproducible dossiers with `pnpm exec convex run characters:create`: an alive attacker with S.D./M.D. weapons and an alive defender with worn rolled M.D.C. armor. Record returned IDs.
+- [x] At `http://localhost:5173`, verify every legal-catalog live route: legal M.D. selection, sub-100 stop, native ablation, final-blast no spill, depleted-shell `7/8`, fatal terminal marker, and legacy/v2 history together. Verify the unavailable 100+ S.D.C.-vs-M.D.C. and M.D.-vs-S.D.C.-armor rows through exact rules/backend tests; the production catalog has no legal browser path for either row.
+- [x] On the dead dossier, verify explicit inaccessible gameplay actions while identity, pools, equipment, inventory, narrative, cleanup cancellation, and history remain. Navigate to the living ID without reload; drafts reset/actions re-enable.
+- [x] Check desktop and narrow viewport, keyboard/accessibility text, layout clipping, and console errors/warnings.
+- [x] For defects: add failing automated test, fix, rerun package gates, repeat scenario.
+- [x] Stop web, Convex CLI, and orphaned backend; confirm ports 5173/3210 are closed.
 
 ---
 
@@ -453,10 +453,10 @@ Legacy validator/enum hits are expected; active refusals, hardcoded S.D.C. resol
 
 **Files:** Modify `README.md`, approved design spec, and this plan.
 
-- [ ] Replace README's stale “full M.D.C. interaction remains future work” boundary with completed conversion/armor/shell/final-blast/death behavior; defer optional survival to #54.
-- [ ] Append exact date/time, package/root command outputs and fresh counts, live IDs/scenarios, viewports, and console result to the design; check all completed plan boxes. Never reuse older counts.
-- [ ] Re-run `vp check`, `vp test`, `git diff --check`, and `git status --short --branch`.
-- [ ] Commit:
+- [x] Replace README's stale “full M.D.C. interaction remains future work” boundary with completed conversion/armor/shell/final-blast/death behavior; defer optional survival to #54.
+- [x] Append exact date/time, package/root command outputs and fresh counts, live IDs/scenarios, viewports, and console result to the design; check all completed plan boxes. Never reuse older counts.
+- [x] Re-run `vp check`, `vp test`, `git diff --check`, and `git status --short --branch`.
+- [x] Commit:
 
 ```text
 git add -- README.md .codex/superpowers/specs/2026-07-21-mdc-combat-exchange-design.md .codex/superpowers/plans/2026-07-21-mdc-combat-exchange.md
@@ -471,12 +471,12 @@ git commit -m "docs: record mega-damage combat delivery"
 
 ## Final Acceptance Checklist
 
-- [ ] Rendered/page-stamped authority covers every mechanic.
-- [ ] `99/100/199/200`, printed `450/496`, critical-before-conversion, final-blast, depleted-shell `7/8`, and M.D.-vs-S.D.C.-A.R. are pinned.
-- [ ] Exact `-P.E.` is coma; below is dead; all gameplay mutations reject dead while inventory/narrative preserve the marker.
-- [ ] Legacy routes read without migration; pending legacy/racing exchanges stale and never double-apply.
-- [ ] New history exposes native tier, conversion, reason, and before/after evidence.
-- [ ] Dead dossiers remain readable/accessibly terminal; route navigation owns async results.
-- [ ] Rules/backend/web package gates and root gates pass with fresh evidence.
-- [ ] Live desktop/narrow acceptance passes with clean console.
+- [x] Rendered/page-stamped authority covers every mechanic.
+- [x] `99/100/199/200`, printed `450/496`, critical-before-conversion, final-blast, depleted-shell `7/8`, and M.D.-vs-S.D.C.-A.R. are pinned.
+- [x] Exact `-P.E.` is coma; below is dead; all gameplay mutations reject dead while inventory/narrative preserve the marker.
+- [x] Legacy routes read without migration; pending legacy/racing exchanges stale and never double-apply.
+- [x] New history exposes native tier, conversion, reason, and before/after evidence.
+- [x] Dead dossiers remain readable/accessibly terminal; route navigation owns async results.
+- [x] Rules/backend/web package gates and root gates pass with fresh evidence.
+- [x] Live desktop/narrow acceptance passes with clean console.
 - [ ] README, #51, #54, #53, design, plan, and draft PR agree; human retains merge authority.
