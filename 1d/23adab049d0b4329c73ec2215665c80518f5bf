@@ -1,0 +1,27 @@
+apps/web/tests/character-sheet.test.ts
+  s_902623fce1fa2f::t_bb98ba5b7e9538 10-11
+  s_902623fce1fa2f::t_4072090b505b16 14-19
+.codex/superpowers/plans/2026-07-21-mdc-combat-exchange.md
+  s_902623fce1fa2f::t_68a1513c904d2c 468
+apps/web/tests/combat-exchange.test.ts
+  s_902623fce1fa2f::t_4072090b505b16 25-30
+  s_902623fce1fa2f::t_bb98ba5b7e9538 21-22
+.codex/superpowers/specs/2026-07-21-mdc-combat-exchange-design.md
+  s_902623fce1fa2f::t_68a1513c904d2c 4,621-627
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "1d23adab049d0b4329c73ec2215665c80518f5bf",
+  "prompts": {},
+  "sessions": {
+    "s_902623fce1fa2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f83d5-22f2-7893-b392-5a45d1c9a01a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
