@@ -1,7 +1,7 @@
 # Full M.D.C. Combat Exchange Design
 
 **Date:** 2026-07-21
-**Status:** Implemented locally; publication and Cubic review pending
+**Status:** Draft PR #55 open; Cubic review pending
 **Branch:** `feat/mdc-combat-exchange`
 **Primary issue:** [#51 — Full M.D.C. combat](https://github.com/StreamDemon/RiftForge/issues/51)
 
@@ -603,6 +603,17 @@ not timeless project totals.
 | `vp test` | exit 0; 23/23 files; 538/538 tests |
 | `git diff --check` | exit 0; no output |
 | `git status --short --branch` | `feat/mdc-combat-exchange`; only README, this design, and the implementation plan modified before the documentation commit |
+
+### Draft review publication
+
+- Draft PR [#55](https://github.com/StreamDemon/RiftForge/pull/55) opened against
+  `main` on **2026-07-22 01:51:21 +08:00 (Asia/Singapore)** from published head
+  `1ce2130adadc06bafe473236f3db0e52fc844265`.
+- Issue #51 received the verified delivery evidence and draft-PR link at
+  **2026-07-22 01:51:57 +08:00 (Asia/Singapore)** in
+  [issue comment 5037268203](https://github.com/StreamDemon/RiftForge/issues/51#issuecomment-5037268203).
+- The PR is deliberately draft. Cubic review and any resulting fixes remain
+  pending; the human maintainer retains sole merge authority.
 
 ### Live Convex and browser acceptance
 

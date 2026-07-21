@@ -463,8 +463,8 @@ git add -- README.md .codex/superpowers/specs/2026-07-21-mdc-combat-exchange-des
 git commit -m "docs: record mega-damage combat delivery"
 ```
 
-- [ ] Push `feat/mdc-combat-exchange` and open a draft PR to `main` summarizing architecture, compatibility, fatal boundary, automation, and live evidence. Link `Closes #51`, `Follow-up #54`, and `Roadmap #53`; no AI attribution; never merge.
-- [ ] Comment on #51 with verified time-scoped evidence/PR link. Do not close it manually.
+- [x] Push `feat/mdc-combat-exchange` and open draft PR [#55](https://github.com/StreamDemon/RiftForge/pull/55) to `main` summarizing architecture, compatibility, fatal boundary, automation, and live evidence. Link `Closes #51`, `Follow-up #54`, and `Roadmap #53`; no AI attribution; never merge.
+- [x] Comment on #51 with verified time-scoped evidence/PR link: [issue comment 5037268203](https://github.com/StreamDemon/RiftForge/issues/51#issuecomment-5037268203). Do not close it manually.
 - [ ] Wait for Cubic. Reproduce every finding; fix real root causes with tests or explain invalid findings with evidence; rerun affected gates after each push. Stop ready for human merge.
 
 ---
@@ -479,4 +479,4 @@ git commit -m "docs: record mega-damage combat delivery"
 - [x] Dead dossiers remain readable/accessibly terminal; route navigation owns async results.
 - [x] Rules/backend/web package gates and root gates pass with fresh evidence.
 - [x] Live desktop/narrow acceptance passes with clean console.
-- [ ] README, #51, #54, #53, design, plan, and draft PR agree; human retains merge authority.
+- [x] README, #51, #54, #53, design, plan, and draft PR agree; human retains merge authority.
