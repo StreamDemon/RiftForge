@@ -68,6 +68,7 @@ export const characterFields = {
       ppe: v.optional(v.number()),
       armor: v.optional(v.number()),
       treatmentDays: v.optional(v.number()),
+      lifeState: v.optional(v.literal("dead")),
     }),
   ),
   narrative: v.optional(

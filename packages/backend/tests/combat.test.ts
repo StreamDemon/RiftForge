@@ -8,7 +8,7 @@ import {
 import { convexTest } from "convex-test";
 import { describe, expect, test, vi } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
-import type { Id } from "../convex/_generated/dataModel";
+import type { Doc, Id } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 
 const modules = {
@@ -147,6 +147,197 @@ function exchangeBase(attackerId: Id<"characters">, defenderId: Id<"characters">
     },
   };
 }
+
+type ResolvedExchange = Extract<Doc<"combatExchanges">, { status: "resolved" }>;
+type HitResolution = Extract<ResolvedExchange["resolution"], { outcome: "hit" }>;
+type StoredDamageRoute = HitResolution["route"];
+
+async function insertResolvedRoute(
+  t: TestDb,
+  characterId: Id<"characters">,
+  serial: number,
+  route: StoredDamageRoute,
+) {
+  return t.run((ctx) =>
+    ctx.db.insert("combatExchanges", {
+      ...exchangeBase(characterId, characterId, serial),
+      status: "resolved",
+      resolution: {
+        outcome: "hit",
+        reason: "unopposed",
+        response: {
+          kind: "none",
+          bonus: 0,
+          actionCost: 0,
+          explanation: "No defense.",
+          defenseModifier: 0,
+          totalBonus: 0,
+        },
+        critical: false,
+        damageMultiplier: 1,
+        damageRoll: { dice: [4], total: 4, bonus: 0 },
+        totalDamage: 4,
+        route,
+      },
+    }),
+  );
+}
+
+async function readStoredRoute(t: TestDb, exchangeId: Id<"combatExchanges">) {
+  const exchange = await t.run((ctx) => ctx.db.get(exchangeId));
+  if (exchange?.status !== "resolved" || exchange.resolution.outcome !== "hit") {
+    throw new Error("Expected a stored resolved hit exchange.");
+  }
+  return exchange.resolution.route;
+}
+
+describe("combat persistence compatibility", () => {
+  const unchangedBody = {
+    before: { sdc: 20, hitPoints: 18 },
+    after: { sdc: 20, hitPoints: 18 },
+  };
+  const mdcArmor = {
+    kind: "mdcArmor" as const,
+    itemId: "explorer-armor",
+    name: "Explorer Armor",
+    before: 10,
+    after: 6,
+  };
+
+  test.each([
+    [
+      "legacy armor",
+      {
+        kind: "armor",
+        armor: { before: 30, after: 26 },
+        body: unchangedBody,
+      },
+    ],
+    [
+      "legacy body",
+      {
+        kind: "body",
+        body: {
+          before: { sdc: 3, hitPoints: 18 },
+          after: { sdc: 0, hitPoints: 17 },
+        },
+      },
+    ],
+    [
+      "v2 stopped",
+      {
+        routingVersion: 2,
+        kind: "stopped",
+        reason: "intactMdcImpervious",
+        nativeDamage: { type: "sdc", value: 99 },
+        armor: { ...mdcArmor, after: 10 },
+        body: unchangedBody,
+      },
+    ],
+    [
+      "v2 armor",
+      {
+        routingVersion: 2,
+        kind: "armor",
+        nativeDamage: { type: "md", value: 4 },
+        armor: mdcArmor,
+        body: unchangedBody,
+        finalBlastAbsorbed: false,
+      },
+    ],
+    [
+      "v2 body",
+      {
+        routingVersion: 2,
+        kind: "body",
+        nativeDamage: { type: "md", value: 1 },
+        convertedDamage: { type: "sdc", value: 100 },
+        armor: { ...mdcArmor, before: 0, after: 0 },
+        body: {
+          before: { sdc: 20, hitPoints: 18 },
+          after: { sdc: 0, hitPoints: -10 },
+        },
+        lifeState: { before: "alive", after: "coma" },
+      },
+    ],
+    [
+      "v2 fatal",
+      {
+        routingVersion: 2,
+        kind: "fatal",
+        nativeDamage: { type: "sdc", value: 30 },
+        body: {
+          before: { sdc: 0, hitPoints: 10 },
+          after: { sdc: 0, hitPoints: -11 },
+        },
+        lifeState: { before: "coma", after: "dead" },
+      },
+    ],
+  ] satisfies ReadonlyArray<readonly [string, StoredDamageRoute]>)(
+    "inserts and reads the $0 route unchanged",
+    async (_label, route) => {
+      const t = testDb();
+      const characterId = await createCharacter(t);
+
+      const exchangeId = await insertResolvedRoute(t, characterId, 1, route);
+
+      expect(await readStoredRoute(t, exchangeId)).toEqual(route);
+    },
+  );
+
+  test.each([
+    [
+      "v2 route without native damage",
+      {
+        routingVersion: 2,
+        kind: "stopped",
+        reason: "depletedMdcShell",
+        armor: { ...mdcArmor, before: 0, after: 0 },
+        body: unchangedBody,
+      },
+    ],
+    [
+      "fatal route ending in coma",
+      {
+        routingVersion: 2,
+        kind: "fatal",
+        nativeDamage: { type: "sdc", value: 30 },
+        body: {
+          before: { sdc: 0, hitPoints: 10 },
+          after: { sdc: 0, hitPoints: -10 },
+        },
+        lifeState: { before: "alive", after: "coma" },
+      },
+    ],
+    [
+      "legacy route with v2-only fields",
+      {
+        kind: "armor",
+        nativeDamage: { type: "sdc", value: 4 },
+        armor: { before: 30, after: 26 },
+        body: unchangedBody,
+      },
+    ],
+  ] as const)("rejects a $0", async (_label, route) => {
+    const t = testDb();
+    const characterId = await createCharacter(t);
+
+    await expect(
+      insertResolvedRoute(t, characterId, 2, route as unknown as StoredDamageRoute),
+    ).rejects.toThrow();
+  });
+
+  test("stores the optional dead marker in character current state", async () => {
+    const t = testDb();
+    const current = { hitPoints: -11, sdc: 0, lifeState: "dead" as const };
+
+    const characterId = await t.run((ctx) =>
+      ctx.db.insert("characters", { ...character, current }),
+    );
+
+    expect((await getCharacter(t, characterId))?.current).toEqual(current);
+  });
+});
 
 describe("combat target selector", () => {
   test("excludes self, stays bounded, and safely classifies readiness and protection", async () => {
