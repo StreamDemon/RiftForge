@@ -1,0 +1,39 @@
+apps/web/src/components/combat-exchange-panel.tsx
+  s_902623fce1fa2f::t_b29898aad07d29 306,336,358,528-590,592-618,620-622,624-627,629-631,633-649,652,654-683
+apps/web/tests/character-sheet.test.ts
+  s_902623fce1fa2f::t_377ed8ea17a6a0 38-41
+  s_902623fce1fa2f::t_3f2376506a99d1 27-32,53,68
+  s_902623fce1fa2f::t_9cec94e9178d85 1-13,15-17,46-48,54-56,63-67,69-86,98-113,117-118
+  s_902623fce1fa2f::t_8a7f951da9c428 116
+  s_902623fce1fa2f::t_fd35d7b87c1fd3 14,19-26,33-36,49-52,57-62
+  s_902623fce1fa2f::t_b55eebb168c737 18
+  s_902623fce1fa2f::t_0ec9c3c9b7aa72 37,42-45,87-97,114
+  s_902623fce1fa2f::t_298041960cc448 115
+apps/web/src/pages/character-sheet.tsx
+  s_902623fce1fa2f::t_df351eb60ce5bb 210,225,229,244,262,264-265,272,278,281-282,288,305,309,313,320,325,338,342,346,355,363,366-367,374,388,391-392,395,401,407,411,414,420,422-423,426,476,479-480,485
+  s_902623fce1fa2f::t_355d98e9b5a249 502,506-510,517,523-524,628-635
+  s_902623fce1fa2f::t_3f2376506a99d1 525-536,539,541-544,546,549-550,552-553,556-557,559-625,627
+  s_902623fce1fa2f::t_3eab134ee34b7e 16-25,37-38,46-48,56,59,65-67,71,75-76,79,82,133-134,166-169,177,192-195
+apps/web/tests/combat-exchange.test.ts
+  s_902623fce1fa2f::t_9cec94e9178d85 635-636,640-643,650,653-654,658,661-662,668-669
+  s_902623fce1fa2f::t_3f2376506a99d1 637-639
+  s_902623fce1fa2f::t_8a7f951da9c428 644-649,651-652,655-657,659-660,663-667
+apps/web/src/components/sheet-view.tsx
+  s_902623fce1fa2f::t_0c8a146b1c44a6 18,254,278-285,359-363,414-422,480-481,489-490,498-499,527-528,562-563,584-585,591,643
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "daa03f00d73babd7846c6013155e997259a806a8",
+  "prompts": {},
+  "sessions": {
+    "s_902623fce1fa2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f83d5-22f2-7893-b392-5a45d1c9a01a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
