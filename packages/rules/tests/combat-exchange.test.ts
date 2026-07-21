@@ -197,7 +197,13 @@ describe("combat-state tokens", () => {
         first.combat.strikeGuns,
         first.combat.criticalStrikeOn,
       ],
-      [combatExchangeRules.book, [287, 339, 340, 341, 344, 360, 361], [5, 8], [-10, -5, 0]],
+      [
+        combatExchangeRules.book,
+        [287, 288, 339, 340, 341, 344, 355, 360, 361],
+        [100, 100, 8, true],
+        [5, 8],
+        [-10, -5, 0],
+      ],
       0,
       [
         "weapon",
@@ -392,6 +398,73 @@ describe("combat-state tokens", () => {
     ).not.toBe(baseToken);
     expect(attackerCombatStateToken(changedSources, 0)).not.toBe(baseToken);
     expect(attackerCombatStateToken(base, 0, changedRules)).not.toBe(baseToken);
+  });
+
+  test.each([
+    [
+      "mega-damage introduction page",
+      {
+        ...combatExchangeRules,
+        pages: {
+          ...combatExchangeRules.pages,
+          megaDamageIntro: combatExchangeRules.pages.megaDamageIntro + 1,
+        },
+      },
+    ],
+    [
+      "mega-damage combat page",
+      {
+        ...combatExchangeRules,
+        pages: {
+          ...combatExchangeRules.pages,
+          megaDamageCombat: combatExchangeRules.pages.megaDamageCombat + 1,
+        },
+      },
+    ],
+    [
+      "S.D.C.-per-M.D. ratio",
+      {
+        ...combatExchangeRules,
+        rules: { ...combatExchangeRules.rules, sdcPerMd: combatExchangeRules.rules.sdcPerMd + 1 },
+      },
+    ],
+    [
+      "minimum S.D.C. needed to damage M.D.C.",
+      {
+        ...combatExchangeRules,
+        rules: {
+          ...combatExchangeRules.rules,
+          minimumSdcToDamageMdc: combatExchangeRules.rules.minimumSdcToDamageMdc + 1,
+        },
+      },
+    ],
+    [
+      "depleted M.D.C. armor bypass strike",
+      {
+        ...combatExchangeRules,
+        rules: {
+          ...combatExchangeRules.rules,
+          depletedMdcArmorBypassStrike: combatExchangeRules.rules.depletedMdcArmorBypassStrike + 1,
+        },
+      },
+    ],
+    [
+      "final M.D.C. absorption rule",
+      {
+        ...combatExchangeRules,
+        rules: {
+          ...combatExchangeRules.rules,
+          finalMdcAbsorbsDestroyingBlast: !combatExchangeRules.rules.finalMdcAbsorbsDestroyingBlast,
+        },
+      },
+    ],
+  ])("stales attacker-v2 when the %s changes", (_name, changedRules) => {
+    const sheet = tokenSheet();
+    const baseToken = attackerCombatStateToken(sheet, 0);
+
+    expect(
+      attackerCombatStateToken(sheet, 0, changedRules as unknown as typeof combatExchangeRules),
+    ).not.toBe(baseToken);
   });
 
   test("stales defenses for level, every attribute, and every defense-profile dimension", () => {

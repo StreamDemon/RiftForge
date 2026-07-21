@@ -27,12 +27,20 @@ function orderedCombatExchangeRules(rules: typeof combatExchangeRules) {
     rules.book,
     [
       rules.pages.armorAndVitals,
+      rules.pages.megaDamageIntro,
       rules.pages.sdcCombat,
       rules.pages.defense,
       rules.pages.damage,
       rules.pages.automaticDodge,
+      rules.pages.megaDamageCombat,
       rules.pages.modernWeapons,
       rules.pages.rangedDodging,
+    ],
+    [
+      rules.rules.sdcPerMd,
+      rules.rules.minimumSdcToDamageMdc,
+      rules.rules.depletedMdcArmorBypassStrike,
+      rules.rules.finalMdcAbsorbsDestroyingBlast,
     ],
     [rules.minimumStrikeTotal.melee, rules.minimumStrikeTotal.ranged],
     [
