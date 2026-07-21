@@ -197,6 +197,7 @@ describe("combat-state tokens", () => {
         first.combat.strikeGuns,
         first.combat.criticalStrikeOn,
       ],
+      first.vitals.lifeState,
       [
         combatExchangeRules.book,
         [287, 288, 339, 340, 341, 344, 355, 360, 361],
@@ -268,6 +269,16 @@ describe("combat-state tokens", () => {
       ],
       [armor.item.id, "mdc", true, null, armor.max, armor.current],
     ]);
+  });
+
+  test("stales an otherwise-identical attacker sheet when life state becomes dead", () => {
+    const alive = tokenSheet();
+    const dead: CharacterSheet = {
+      ...alive,
+      vitals: { ...alive.vitals, lifeState: "dead" },
+    };
+
+    expect(attackerCombatStateToken(dead, 0)).not.toBe(attackerCombatStateToken(alive, 0));
   });
 
   test("ignores narrative, P.P.E., and unrelated inventory without leaking backstory", () => {

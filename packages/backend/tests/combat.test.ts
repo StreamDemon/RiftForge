@@ -1851,6 +1851,39 @@ describe("combat response and cancellation", () => {
 });
 
 describe("combat response stale-state finalization", () => {
+  test("stales attacker death before response dice or character writes", async () => {
+    const t = testDb();
+    const attackerId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "survival-knife" }],
+    });
+    const defenderId = await createCharacter(t, { rolled: ready });
+    const pending = await declarePending(t, attackerId, defenderId);
+    await t.run((ctx) =>
+      ctx.db.patch(attackerId, {
+        current: { sdc: 0, hitPoints: -14, lifeState: "dead" },
+      }),
+    );
+    const deadBeforeResponse = await getCharacter(t, attackerId);
+    const defenderBeforeResponse = await getCharacter(t, defenderId);
+    const random = vi.spyOn(Math, "random");
+
+    try {
+      const stale = await t.mutation(api.combat.respondToAttack, {
+        exchangeId: pending._id,
+        response: { kind: "none" },
+      });
+
+      expect(random).not.toHaveBeenCalled();
+      expect(stale).toMatchObject({ status: "stale", reason: "combatStateChanged" });
+      expect(await getCharacter(t, attackerId)).toEqual(deadBeforeResponse);
+      expect(await getCharacter(t, defenderId)).toEqual(defenderBeforeResponse);
+      expect(await t.run((ctx) => ctx.db.get(pending._id))).toEqual(stale);
+    } finally {
+      random.mockRestore();
+    }
+  });
+
   test("stales defender death before response dice or character writes", async () => {
     const t = testDb();
     const attackerId = await createCharacter(t, {

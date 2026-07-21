@@ -123,6 +123,7 @@ export function attackerCombatStateToken(
       sheet.combat.strikeGuns,
       sheet.combat.criticalStrikeOn,
     ],
+    sheet.vitals.lifeState,
     orderedCombatExchangeRules(rules),
     weaponIndex,
     orderedSelectedItem(sheet, weaponIndex),
