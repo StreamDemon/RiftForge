@@ -1,0 +1,25 @@
+packages/backend/convex/characters.ts
+  s_902623fce1fa2f::t_c562b6e986a778 2,27,59-60,107,208,224-228,278,400-414,417-418,440,442-444,448-460,480,507,538,581,611-612
+  s_902623fce1fa2f::t_92b269e3a4d97c 447
+packages/backend/convex/character_state.ts
+  s_902623fce1fa2f::t_c562b6e986a778 19-24
+packages/backend/tests/characters.test.ts
+  s_902623fce1fa2f::t_ff7da93e12bc79 203-225,272-275,280-283,287-289,292-295,302-303,305-394,402,407-474,772,780
+  s_902623fce1fa2f::t_92b269e3a4d97c 395-401,403-406
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6d7d3aca0cef81a9cf97ef1375b642a5b78b9951",
+  "prompts": {},
+  "sessions": {
+    "s_902623fce1fa2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f83d5-22f2-7893-b392-5a45d1c9a01a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
