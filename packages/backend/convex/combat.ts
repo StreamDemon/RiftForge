@@ -196,7 +196,17 @@ export const declareAttack = mutation({
 
     const attackerSheet = deriveSheet(attacker);
     const defenderSheet = deriveSheet(defender);
+    if (attackerSheet.vitals.lifeState === "dead" || defenderSheet.vitals.lifeState === "dead") {
+      combatFailure("combatantDead", "Dead combatants cannot enter combat.");
+    }
     requireCombatReady(attackerSheet, "attackerNotReady");
+    const protection = deriveProtection(defenderSheet);
+    if (
+      protection.kind === "mdcArmor" &&
+      (protection.max === undefined || protection.current === undefined)
+    ) {
+      combatFailure("armorNotReady", "Roll the worn M.D.C. armor capacity before entering combat.");
+    }
     requireCombatReady(defenderSheet, "defenderNotReady");
 
     try {
@@ -215,13 +225,6 @@ export const declareAttack = mutation({
       );
     }
     const context = parseDeclaredContext(attack, args.context);
-    const protection = deriveProtection(defenderSheet);
-    if (protection.kind === "mdcArmor") {
-      combatFailure(
-        "unsupportedMdcProtection",
-        "M.D.C. protection requires the full M.D.C. combat follow-up.",
-      );
-    }
 
     const defenseOptions = deriveDefenseOptions(defenderSheet, attack, context);
     const attackerStateToken = attackerCombatStateToken(attackerSheet, args.weaponIndex);
@@ -407,16 +410,22 @@ export const targets = query({
         const ready =
           sheet.vitals.sdc.rolled !== undefined && sheet.vitals.hitPoints.rolled !== undefined;
         const protection = deriveProtection(sheet);
+        const disabledReason =
+          sheet.vitals.lifeState === "dead"
+            ? ("combatantDead" as const)
+            : protection.kind === "mdcArmor" &&
+                (protection.max === undefined || protection.current === undefined)
+              ? ("armorNotReady" as const)
+              : !ready
+                ? ("defenderNotReady" as const)
+                : undefined;
         return {
           id: doc._id,
           name: sheet.name,
           ready,
-          protection: protection.kind,
-          ...(ready
-            ? protection.kind === "mdcArmor"
-              ? { disabledReason: "unsupportedMdcProtection" as const }
-              : {}
-            : { disabledReason: "defenderNotReady" as const }),
+          lifeState: sheet.vitals.lifeState,
+          protection,
+          ...(disabledReason === undefined ? {} : { disabledReason }),
         };
       });
   },

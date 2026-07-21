@@ -383,7 +383,7 @@ describe("combat persistence compatibility", () => {
 });
 
 describe("combat target selector", () => {
-  test("excludes self, stays bounded, and safely classifies readiness and protection", async () => {
+  test("excludes self, stays bounded, and exposes exact combat readiness and protection", async () => {
     const t = convexTest(schema, modules);
 
     for (let index = 0; index < 52; index += 1) {
@@ -393,22 +393,39 @@ describe("combat target selector", () => {
         rolled: { hitPoints: 18, sdc: 20 },
       });
     }
-    const unreadyId = await t.mutation(api.characters.create, {
+    const sdcId = await t.mutation(api.characters.create, {
       ...character,
-      name: "Unready",
+      name: "S.D.C. target",
+      rolled: ready,
     });
-    const armoredId = await t.mutation(api.characters.create, {
+    const unreadyBodyId = await t.mutation(api.characters.create, {
       ...character,
-      name: "Armored",
-      rolled: { hitPoints: 18, sdc: 20 },
-      items: [{ itemId: "gladiator", worn: true }],
+      name: "Unready body",
     });
-    const depletedId = await t.mutation(api.characters.create, {
+    const intactMdcId = await t.mutation(api.characters.create, {
       ...character,
-      name: "Depleted",
-      rolled: { hitPoints: 18, sdc: 20 },
-      items: [{ itemId: "gladiator", worn: true }],
+      name: "Intact M.D.C.",
+      rolled: ready,
+      items: [{ itemId: "llw-concealed-light", worn: true, rolledMdc: 39 }],
+    });
+    const depletedMdcId = await t.mutation(api.characters.create, {
+      ...character,
+      name: "Depleted M.D.C.",
+      rolled: ready,
+      items: [{ itemId: "llw-concealed-light", worn: true, rolledMdc: 39 }],
       current: { armor: 0 },
+    });
+    const unreadyArmorId = await t.mutation(api.characters.create, {
+      ...character,
+      name: "Unready armor",
+      items: [{ itemId: "llw-concealed-light", worn: true }],
+    });
+    const deadId = await t.mutation(api.characters.create, {
+      ...character,
+      name: "Dead",
+      rolled: ready,
+      items: [{ itemId: "llw-concealed-light", worn: true }],
+      current: { hitPoints: -14, sdc: 0, lifeState: "dead" },
     });
     const attackerId = await t.mutation(api.characters.create, {
       ...character,
@@ -421,24 +438,69 @@ describe("combat target selector", () => {
     expect(targets).toHaveLength(49);
     expect(targets).not.toContainEqual(expect.objectContaining({ id: attackerId }));
     expect(targets).toContainEqual({
-      id: unreadyId,
-      name: "Unready",
+      id: sdcId,
+      name: "S.D.C. target",
+      ready: true,
+      lifeState: "alive",
+      protection: { kind: "none" },
+    });
+    expect(targets).toContainEqual({
+      id: unreadyBodyId,
+      name: "Unready body",
       ready: false,
-      protection: "none",
+      lifeState: "alive",
+      protection: { kind: "none" },
       disabledReason: "defenderNotReady",
     });
     expect(targets).toContainEqual({
-      id: armoredId,
-      name: "Armored",
+      id: intactMdcId,
+      name: "Intact M.D.C.",
       ready: true,
-      protection: "mdcArmor",
-      disabledReason: "unsupportedMdcProtection",
+      lifeState: "alive",
+      protection: {
+        kind: "mdcArmor",
+        itemId: "llw-concealed-light",
+        name: "Ley Line Walker Concealed Armor (Light)",
+        max: 39,
+        current: 39,
+      },
     });
     expect(targets).toContainEqual({
-      id: depletedId,
-      name: "Depleted",
+      id: depletedMdcId,
+      name: "Depleted M.D.C.",
       ready: true,
-      protection: "none",
+      lifeState: "alive",
+      protection: {
+        kind: "mdcArmor",
+        itemId: "llw-concealed-light",
+        name: "Ley Line Walker Concealed Armor (Light)",
+        max: 39,
+        current: 0,
+      },
+    });
+    expect(targets).toContainEqual({
+      id: unreadyArmorId,
+      name: "Unready armor",
+      ready: false,
+      lifeState: "alive",
+      protection: {
+        kind: "mdcArmor",
+        itemId: "llw-concealed-light",
+        name: "Ley Line Walker Concealed Armor (Light)",
+      },
+      disabledReason: "armorNotReady",
+    });
+    expect(targets).toContainEqual({
+      id: deadId,
+      name: "Dead",
+      ready: true,
+      lifeState: "dead",
+      protection: {
+        kind: "mdcArmor",
+        itemId: "llw-concealed-light",
+        name: "Ley Line Walker Concealed Armor (Light)",
+      },
+      disabledReason: "combatantDead",
     });
   });
 });
@@ -598,36 +660,127 @@ describe("combat attack declaration", () => {
     expect(await exchangeCount(t)).toBe(0);
   });
 
-  test("refuses M.D. weapons before any exchange is inserted", async () => {
-    const t = testDb();
-    const attackerId = await createCharacter(t, {
-      rolled: ready,
-      items: [{ itemId: "wilks-320-laser-pistol" }],
-    });
-    const defenderId = await createCharacter(t, { rolled: ready });
-    const random = vi.spyOn(Math, "random");
+  test.each([
+    ["energy pistol", "wilks-320-laser-pistol", "energyPistol", "1D6"],
+    ["energy rifle", "wilks-447-laser-rifle", "energyRifle", "3D6"],
+  ] as const)(
+    "persists a legal M.D. $0 declaration after exactly one strike roll",
+    async (_label, itemId, category, damageFormula) => {
+      const t = testDb();
+      const attacker: Character = {
+        ...character,
+        name: "M.D. attacker",
+        rolled: ready,
+        items: [{ itemId }],
+      };
+      const defender: Character = { ...character, name: "M.D. defender", rolled: ready };
+      const attackerId = await createCharacter(t, attacker);
+      const defenderId = await createCharacter(t, defender);
+      const random = vi.spyOn(Math, "random").mockReturnValue(0.5);
 
-    await expectCombatFailure(
-      t.mutation(api.combat.declareAttack, {
+      const exchange = await t.mutation(api.combat.declareAttack, {
         attackerId,
         defenderId,
         weaponIndex: 0,
-        expect: { itemId: "wilks-320-laser-pistol" },
+        expect: { itemId },
         context: {
           kind: "ranged",
           defenderAware: true,
           rangeBand: "normal",
         },
-      }),
-      "unsupportedMdWeapon",
-      "M.D. weapons require the full M.D.C. combat follow-up.",
-    );
-    expect(random).not.toHaveBeenCalled();
-    random.mockRestore();
-    expect(await exchangeCount(t)).toBe(0);
+      });
+
+      expect(random).toHaveBeenCalledTimes(1);
+      random.mockRestore();
+      expect(exchange).toMatchObject({
+        attackerId,
+        defenderId,
+        weapon: { index: 0, itemId, category },
+        attack: { kind: "ranged", damageFormula, damageType: "md" },
+        attackerStateToken: attackerCombatStateToken(deriveSheet(attacker), 0),
+        defenderStateToken: defenderCombatStateToken(deriveSheet(defender)),
+        strikeRoll: { die: 11, target: 8 },
+        status: "pendingDefense",
+      });
+      expect(await exchangeCount(t)).toBe(1);
+    },
+  );
+
+  test("allows intact and depleted M.D.C. protection at declaration", async () => {
+    const t = testDb();
+    const attackerId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "survival-knife" }],
+    });
+    const intactDefenderId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "gladiator", worn: true }],
+    });
+    const depletedDefenderId = await createCharacter(t, {
+      rolled: ready,
+      items: [{ itemId: "gladiator", worn: true }],
+      current: { armor: 0 },
+    });
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.5);
+
+    try {
+      for (const defenderId of [intactDefenderId, depletedDefenderId]) {
+        await t.mutation(api.combat.declareAttack, {
+          attackerId,
+          defenderId,
+          weaponIndex: 0,
+          expect: { itemId: "survival-knife" },
+          context: meleeContext,
+        });
+      }
+
+      expect(random).toHaveBeenCalledTimes(2);
+    } finally {
+      random.mockRestore();
+    }
+    expect(await exchangeCount(t)).toBe(2);
   });
 
-  test("refuses nondepleted M.D.C. protection before any exchange is inserted", async () => {
+  test.each(["attacker", "defender"] as const)(
+    "rejects a dead %s before dice or insertion",
+    async (deadRole) => {
+      const t = testDb();
+      const liveAttackerId = await createCharacter(t, {
+        rolled: ready,
+        items: [{ itemId: "survival-knife" }],
+      });
+      const deadId = await createCharacter(t, {
+        rolled: ready,
+        items:
+          deadRole === "attacker"
+            ? [{ itemId: "survival-knife" }]
+            : [{ itemId: "llw-concealed-light", worn: true }],
+        current: { hitPoints: -14, sdc: 0, lifeState: "dead" },
+      });
+      const liveDefenderId = await createCharacter(t, { rolled: ready });
+      const random = vi.spyOn(Math, "random");
+
+      try {
+        await expectCombatFailure(
+          t.mutation(api.combat.declareAttack, {
+            attackerId: deadRole === "attacker" ? deadId : liveAttackerId,
+            defenderId: deadRole === "defender" ? deadId : liveDefenderId,
+            weaponIndex: 0,
+            expect: { itemId: "survival-knife" },
+            context: meleeContext,
+          }),
+          "combatantDead",
+          "Dead combatants cannot enter combat.",
+        );
+        expect(random).not.toHaveBeenCalled();
+      } finally {
+        random.mockRestore();
+      }
+      expect(await exchangeCount(t)).toBe(0);
+    },
+  );
+
+  test("rejects missing M.D.C. armor capacity before dice or insertion", async () => {
     const t = testDb();
     const attackerId = await createCharacter(t, {
       rolled: ready,
@@ -635,23 +788,26 @@ describe("combat attack declaration", () => {
     });
     const defenderId = await createCharacter(t, {
       rolled: ready,
-      items: [{ itemId: "gladiator", worn: true }],
+      items: [{ itemId: "llw-concealed-light", worn: true }],
     });
     const random = vi.spyOn(Math, "random");
 
-    await expectCombatFailure(
-      t.mutation(api.combat.declareAttack, {
-        attackerId,
-        defenderId,
-        weaponIndex: 0,
-        expect: { itemId: "survival-knife" },
-        context: meleeContext,
-      }),
-      "unsupportedMdcProtection",
-      "M.D.C. protection requires the full M.D.C. combat follow-up.",
-    );
-    expect(random).not.toHaveBeenCalled();
-    random.mockRestore();
+    try {
+      await expectCombatFailure(
+        t.mutation(api.combat.declareAttack, {
+          attackerId,
+          defenderId,
+          weaponIndex: 0,
+          expect: { itemId: "survival-knife" },
+          context: meleeContext,
+        }),
+        "armorNotReady",
+        "Roll the worn M.D.C. armor capacity before entering combat.",
+      );
+      expect(random).not.toHaveBeenCalled();
+    } finally {
+      random.mockRestore();
+    }
     expect(await exchangeCount(t)).toBe(0);
   });
 
