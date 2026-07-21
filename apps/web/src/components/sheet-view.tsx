@@ -364,7 +364,7 @@ export function SheetView(props: {
   const s = () => props.sheet;
   return (
     <article class="sheet-reveal space-y-4">
-      <header class="flex gap-5">
+      <header class="flex flex-col gap-5 sm:flex-row">
         <PortraitFrame />
         <div class="min-w-0 flex-1">
           <MonoLabel>
@@ -384,7 +384,7 @@ export function SheetView(props: {
             </div>
           </Show>
         </div>
-        <div class="flex shrink-0 flex-col items-end gap-3">
+        <div class="flex shrink-0 flex-col items-start gap-3 sm:items-end">
           <Show when={s().alignment}>
             {(alignment) => (
               <span class="mt-1 inline-block rotate-2 border-2 border-blood px-3 py-0.5 font-display text-[15px] tracking-[0.12em] text-blood opacity-85">
@@ -397,7 +397,7 @@ export function SheetView(props: {
             // to show — hide the block unless at least one row has a value.
             when={APPEARANCE_ROWS.some(([field]) => s().narrative?.appearance?.[field])}
           >
-            <dl class="text-right font-mono text-[11.5px] leading-[1.9] text-muted">
+            <dl class="text-left font-mono text-[11.5px] leading-[1.9] text-muted sm:text-right">
               <For each={APPEARANCE_ROWS.filter(([field]) => s().narrative?.appearance?.[field])}>
                 {([field, label]) => (
                   <div>

@@ -12,6 +12,28 @@ function source(relative: string): string {
 
 const characterSheetSource = source("../src/pages/character-sheet.tsx");
 const sheetViewSource = source("../src/components/sheet-view.tsx");
+const appLayoutSource = source("../src/layouts/app.tsx");
+const indexHtmlSource = source("../index.html");
+
+describe("application shell", () => {
+  test("declares a favicon without an extra network request", () => {
+    expect(indexHtmlSource).toContain('<link rel="icon" href="data:," />');
+  });
+
+  test("stacks dossier hero metadata on narrow viewports", () => {
+    expect(appLayoutSource).toContain('class="flex flex-1 flex-col sm:flex-row"');
+    expect(appLayoutSource).toContain(
+      'class="w-full shrink-0 border-b border-line bg-surface py-4 sm:w-44 sm:border-r sm:border-b-0"',
+    );
+    expect(sheetViewSource).toContain('<header class="flex flex-col gap-5 sm:flex-row">');
+    expect(sheetViewSource).toContain(
+      'class="flex shrink-0 flex-col items-start gap-3 sm:items-end"',
+    );
+    expect(sheetViewSource).toContain(
+      'class="text-left font-mono text-[11.5px] leading-[1.9] text-muted sm:text-right"',
+    );
+  });
+});
 
 describe("terminal sheet dossier", () => {
   test("retains the dossier while disabling every gameplay roll with the terminal reason", () => {

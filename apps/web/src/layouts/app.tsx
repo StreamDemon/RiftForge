@@ -24,8 +24,8 @@ export function AppLayout(props: RouteSectionProps) {
         </span>
       </header>
 
-      <div class="flex flex-1">
-        <nav class="w-44 shrink-0 border-r border-line bg-surface py-4">
+      <div class="flex flex-1 flex-col sm:flex-row">
+        <nav class="w-full shrink-0 border-b border-line bg-surface py-4 sm:w-44 sm:border-r sm:border-b-0">
           <div class="px-4 pb-2 font-display text-[13px] tracking-[0.1em] text-muted">SYSTEM</div>
           {NAV.map((item) => (
             <A
@@ -53,7 +53,7 @@ export function AppLayout(props: RouteSectionProps) {
           </span>
         </nav>
 
-        <main class="min-w-0 flex-1 p-6">{props.children}</main>
+        <main class="min-w-0 flex-1 p-4 sm:p-6">{props.children}</main>
       </div>
 
       <footer class="flex gap-6 border-t border-line bg-surface px-4 py-1.5 font-mono text-[11.5px] text-muted">
