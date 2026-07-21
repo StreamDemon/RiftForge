@@ -15,7 +15,7 @@ import {
   type Weapon,
 } from "@riftforge/rules";
 import { createEffect, createSignal, For, on, onCleanup, Show, type JSX } from "solid-js";
-import { Button, Chip, DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
+import { Alert, Button, Chip, DataValue, MonoLabel, Panel, SectionTitle } from "./ui.tsx";
 
 function statRange(stat: StatValue): string {
   return `${stat.min}–${stat.max} (avg ${stat.average})`;
@@ -251,6 +251,7 @@ function EquipmentRow(props: {
   index: number;
   armor: SheetArmor | undefined;
   actions?: SheetActions;
+  gameplayDisabledReason?: string;
 }) {
   const item = () => props.entry.item;
   const value = () => equipmentValue(props.entry, props.armor);
@@ -274,9 +275,14 @@ function EquipmentRow(props: {
         >
           <button
             type="button"
-            title="Roll damage"
-            class="cursor-pointer font-data text-[12.5px] font-semibold hover:bg-amber/5 hover:text-amber"
-            onClick={() => props.actions!.rollWeapon(item() as Weapon)}
+            title={props.gameplayDisabledReason ?? "Roll damage"}
+            aria-disabled={props.gameplayDisabledReason !== undefined || undefined}
+            class="font-data text-[12.5px] font-semibold aria-disabled:cursor-not-allowed aria-disabled:text-dead [&:not([aria-disabled])]:cursor-pointer [&:not([aria-disabled])]:hover:bg-amber/5 [&:not([aria-disabled])]:hover:text-amber"
+            onClick={() => {
+              if (props.gameplayDisabledReason === undefined) {
+                props.actions!.rollWeapon(item() as Weapon);
+              }
+            }}
           >
             {value()}
           </button>
@@ -350,7 +356,11 @@ function AcquireControl(props: { onAcquire: (itemId: string) => void }) {
  * the live sheet page and the builder's review preview so they never drift.
  * With `actions`, saves/skills/spells/combat rows roll on click.
  */
-export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions }) {
+export function SheetView(props: {
+  sheet: CharacterSheet;
+  actions?: SheetActions;
+  gameplayDisabledReason?: string;
+}) {
   const s = () => props.sheet;
   return (
     <article class="sheet-reveal space-y-4">
@@ -400,6 +410,15 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
           </Show>
         </div>
       </header>
+
+      <Show when={props.gameplayDisabledReason}>
+        {(reason) => (
+          <Alert tone="danger">
+            <MonoLabel class="mr-2 !text-inherit">LIFE SIGNS TERMINATED</MonoLabel>
+            <span>{reason()}</span>
+          </Alert>
+        )}
+      </Show>
 
       <div class="grid gap-4 lg:grid-cols-2">
         <Panel class="p-4">
@@ -458,6 +477,8 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
                 onRoll={
                   props.actions && (() => props.actions!.rollCombat("strike", s().combat.strike))
                 }
+                disabled={props.gameplayDisabledReason !== undefined}
+                title={props.gameplayDisabledReason ?? "Roll"}
               />
               <StatRow
                 label="Parry"
@@ -465,6 +486,8 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
                 onRoll={
                   props.actions && (() => props.actions!.rollCombat("parry", s().combat.parry))
                 }
+                disabled={props.gameplayDisabledReason !== undefined}
+                title={props.gameplayDisabledReason ?? "Roll"}
               />
               <StatRow
                 label="Dodge"
@@ -472,6 +495,8 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
                 onRoll={
                   props.actions && (() => props.actions!.rollCombat("dodge", s().combat.dodge))
                 }
+                disabled={props.gameplayDisabledReason !== undefined}
+                title={props.gameplayDisabledReason ?? "Roll"}
               />
               <StatRow label="Damage Bonus" value={`+${s().combat.damageBonus}`} />
             </div>
@@ -499,6 +524,8 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
                     ? () => props.actions!.rollSave(name, save)
                     : undefined
                 }
+                disabled={props.gameplayDisabledReason !== undefined}
+                title={props.gameplayDisabledReason ?? "Roll"}
               />
             )}
           </For>
@@ -532,6 +559,8 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
                     </>
                   }
                   onRoll={props.actions && (() => props.actions!.rollSkill(skill))}
+                  disabled={props.gameplayDisabledReason !== undefined}
+                  title={props.gameplayDisabledReason ?? "Roll"}
                 />
               )}
             </For>
@@ -552,13 +581,14 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
                 // pay for (or can't measure, pre-roll) goes dead-steel.
                 const ppeLeft = () => s().ppe?.current;
                 const blocked = () =>
-                  props.actions === undefined
+                  props.gameplayDisabledReason ??
+                  (props.actions === undefined
                     ? undefined
                     : ppeLeft() === undefined
                       ? "Roll vitals to cast"
                       : spell.ppe > ppeLeft()!
                         ? "Insufficient P.P.E."
-                        : undefined;
+                        : undefined);
                 return (
                   <StatRow
                     label={
@@ -610,6 +640,7 @@ export function SheetView(props: { sheet: CharacterSheet; actions?: SheetActions
                 index={index()}
                 armor={s().armor}
                 actions={props.actions}
+                gameplayDisabledReason={props.gameplayDisabledReason}
               />
             )}
           </For>

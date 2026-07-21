@@ -13,7 +13,16 @@ import {
   type Weapon,
 } from "@riftforge/rules";
 import { useParams } from "@solidjs/router";
-import { createEffect, createSignal, Match, on, Show, Switch, type Accessor } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  Match,
+  on,
+  onCleanup,
+  Show,
+  Switch,
+  type Accessor,
+} from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import { CombatExchangePanel } from "../components/combat-exchange-panel.tsx";
 import { NarrativeFields } from "../components/narrative-fields.tsx";
@@ -25,6 +34,8 @@ import { createMutation, createQuery } from "../lib/convex.ts";
 import { fromNarrative, toNarrative } from "../lib/narrative.ts";
 import { createTelemetry, d20Line, machineName } from "../lib/telemetry.ts";
 
+const TERMINAL_GAMEPLAY_REASON = "Life signs terminated; gameplay actions are unavailable.";
+
 /** Edit the player-authored file fields in place; saves via updateNarrative. */
 function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | undefined }) {
   const updateNarrative = createMutation(convex, api.characters.updateNarrative);
@@ -32,6 +43,9 @@ function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | u
   const [form, setForm] = createStore(fromNarrative(props.narrative));
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<Error>();
+  let routeEpoch = 0;
+  const ownsRoute = (owner: { routeId: Id<"characters">; routeEpoch: number }) =>
+    owner.routeId === props.id && owner.routeEpoch === routeEpoch;
 
   // Never carry one character's draft into another's file: reset the form
   // whenever the route id changes, regardless of mount timing.
@@ -39,25 +53,33 @@ function NarrativeEditor(props: { id: Id<"characters">; narrative: Narrative | u
     on(
       () => props.id,
       () => {
+        routeEpoch += 1;
         setForm(reconcile(fromNarrative(props.narrative)));
         setOpen(false);
+        setSaving(false);
         setError(undefined);
       },
       { defer: true },
     ),
   );
+  onCleanup(() => {
+    routeEpoch += 1;
+  });
 
   const save = async () => {
     if (saving()) return;
+    const owner = { routeId: props.id, routeEpoch };
     setError(undefined);
     setSaving(true);
     try {
-      await updateNarrative({ id: props.id, narrative: toNarrative({ ...form }) });
+      await updateNarrative({ id: owner.routeId, narrative: toNarrative({ ...form }) });
+      if (!ownsRoute(owner)) return;
       setOpen(false);
     } catch (err) {
+      if (!ownsRoute(owner)) return;
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
-      setSaving(false);
+      if (ownsRoute(owner)) setSaving(false);
     }
   };
 
@@ -108,6 +130,8 @@ export function CharacterSheetPage() {
   // `characters.sheet` validates as `v.any()` (shape owned by @riftforge/rules),
   // so re-pin the rules-layer type here.
   const sheet = query.data as Accessor<CharacterSheet | null | undefined>;
+  const gameplayDisabledReason = () =>
+    sheet()?.vitals.lifeState === "dead" ? TERMINAL_GAMEPLAY_REASON : undefined;
   const rollVitals = createMutation(convex, api.characters.rollVitals);
   const castSpellMutation = createMutation(convex, api.characters.castSpell);
   const applyDamageMutation = createMutation(convex, api.characters.applyDamage);
@@ -139,6 +163,10 @@ export function CharacterSheetPage() {
   // requests and route changes bump it, so a stale settle can never release a
   // gate it no longer owns — not even back on the same dossier.
   let treatToken = 0;
+  let routeEpoch = 0;
+  const routeOwner = () => ({ routeId: id(), routeEpoch });
+  const ownsRoute = (owner: ReturnType<typeof routeOwner>) =>
+    owner.routeId === id() && owner.routeEpoch === routeEpoch;
 
   // A new dossier starts with a fresh log: rolls belong to the character
   // they were rolled for, not whoever the page shows next.
@@ -146,6 +174,7 @@ export function CharacterSheetPage() {
     on(
       id,
       () => {
+        routeEpoch += 1;
         telemetry.reset();
         setRollError(undefined);
         setDamageInput("");
@@ -160,6 +189,10 @@ export function CharacterSheetPage() {
       { defer: true },
     ),
   );
+  onCleanup(() => {
+    routeEpoch += 1;
+    treatToken += 1;
+  });
 
   /** Convex mutation errors carry an "Uncaught Error: …" preamble — strip to the message. */
   const reason = (error: unknown): string => {
@@ -174,7 +207,7 @@ export function CharacterSheetPage() {
   // character can't afford. Like all persisting actions, a result that comes
   // back after the dossier switched characters is dropped.
   const cast = async (spell: Spell) => {
-    const castFor = id();
+    const owner = routeOwner();
     // Exclusive either/or heals (Light Healing) need a pool choice: prefer
     // the wounded pool (H.P. if down, else S.D.C.) of the character the heal
     // LANDS on. Today that is always the caster (`sheet()`), and the only
@@ -189,11 +222,11 @@ export function CharacterSheetPage() {
     }
     try {
       const result = await castSpellMutation({
-        id: castFor,
+        id: owner.routeId,
         spellId: spell.id,
         ...(healPool !== undefined ? { healPool } : {}),
       });
-      if (id() !== castFor) return;
+      if (!ownsRoute(owner)) return;
       // Healing spells report what actually landed (post-clamp), per pool.
       const healed = result.healed
         ? ` → ${[
@@ -208,7 +241,7 @@ export function CharacterSheetPage() {
         "magic",
       );
     } catch (error) {
-      if (id() !== castFor) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> CAST :: ${spell.name.toUpperCase()} — REFUSED (${reason(error)})`, "bad");
     }
   };
@@ -226,33 +259,33 @@ export function CharacterSheetPage() {
       }
       return;
     }
-    const restedFor = id();
+    const owner = routeOwner();
     try {
-      const result = await restMutation({ id: restedFor, hours, mode });
-      if (id() !== restedFor) return;
+      const result = await restMutation({ id: owner.routeId, hours, mode });
+      if (!ownsRoute(owner)) return;
       setRestHours("");
       telemetry.log(
         `> ${verb} :: ${hours} HR — P.P.E. +${result.gained} [${result.ppe.current}/${result.ppe.max}]`,
         "magic",
       );
     } catch (error) {
-      if (id() !== restedFor) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> ${verb} :: REFUSED (${reason(error)})`, "bad");
     }
   };
 
   const leyDraw = async () => {
-    const drewFor = id();
+    const owner = routeOwner();
     const nexus = atNexus();
     try {
-      const result = await leyLineDrawMutation({ id: drewFor, melees: 1, atNexus: nexus });
-      if (id() !== drewFor) return;
+      const result = await leyLineDrawMutation({ id: owner.routeId, melees: 1, atNexus: nexus });
+      if (!ownsRoute(owner)) return;
       telemetry.log(
         `> LEY DRAW${nexus ? " (NEXUS)" : ""} :: +${result.gained} P.P.E. [${result.ppe.current}/${result.ppe.max}]`,
         "magic",
       );
     } catch (error) {
-      if (id() !== drewFor) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> LEY DRAW :: REFUSED (${reason(error)})`, "bad");
     }
   };
@@ -269,27 +302,27 @@ export function CharacterSheetPage() {
     }
     setTreating(true);
     const token = ++treatToken;
-    const treatedFor = id();
+    const owner = routeOwner();
     const pro = professional();
     try {
       const result = await treatMutation({
-        id: treatedFor,
+        id: owner.routeId,
         professional: pro,
         ...(override !== undefined ? { day: override } : {}),
       });
-      if (id() !== treatedFor) return;
+      if (!ownsRoute(owner)) return;
       setDayInput(""); // back to following the stored course
       telemetry.log(
         `> TREATMENT :: DAY ${result.day}${pro ? " (PRO)" : ""} — H.P. +${result.gained.hitPoints} · S.D.C. +${result.gained.sdc}`,
         "good",
       );
     } catch (error) {
-      if (id() !== treatedFor) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> TREATMENT :: REFUSED (${reason(error)})`, "bad");
     } finally {
       // Only the gate's current owner may release it: a stale settle must not
       // unlock a treat a newer request has in flight.
-      if (token === treatToken) setTreating(false);
+      if (ownsRoute(owner) && token === treatToken) setTreating(false);
     }
   };
 
@@ -302,15 +335,15 @@ export function CharacterSheetPage() {
       if (raw !== "") telemetry.log(`> DAMAGE :: REFUSED (not a whole number: "${raw}")`, "bad");
       return;
     }
-    const damagedFor = id();
+    const owner = routeOwner();
     const strikesArmor = toArmor();
     try {
       const next = await applyDamageMutation({
-        id: damagedFor,
+        id: owner.routeId,
         amount,
         ...(strikesArmor ? { toArmor: true } : {}),
       });
-      if (id() !== damagedFor) return;
+      if (!ownsRoute(owner)) return;
       setDamageInput("");
       telemetry.log(
         "armor" in next
@@ -319,7 +352,7 @@ export function CharacterSheetPage() {
         "bad",
       );
     } catch (error) {
-      if (id() !== damagedFor) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> DAMAGE :: REFUSED (${reason(error)})`, "bad");
     }
   };
@@ -327,18 +360,18 @@ export function CharacterSheetPage() {
   // Inventory writes persist; like every persisting action, a result that
   // arrives after the dossier switched characters is dropped.
   const acquire = async (itemId: string) => {
-    const forId = id();
+    const owner = routeOwner();
     const name = (getItem(itemId)?.name ?? itemId).toUpperCase();
     try {
-      const result = await addItemMutation({ id: forId, itemId });
-      if (id() !== forId) return;
+      const result = await addItemMutation({ id: owner.routeId, itemId });
+      if (!ownsRoute(owner)) return;
       // Dice-capacity suits (LLW concealed) are rated at acquisition.
       telemetry.log(
         `> ACQUIRE :: ${name}${result.rolledMdc !== undefined ? ` — SUIT RATED ${result.rolledMdc} M.D.C.` : ""}`,
         "good",
       );
     } catch (error) {
-      if (id() !== forId) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> ACQUIRE :: ${name} — REFUSED (${reason(error)})`, "bad");
     }
   };
@@ -352,45 +385,45 @@ export function CharacterSheetPage() {
   });
 
   const discard = async (index: number, entry: SheetEquipmentEntry) => {
-    const forId = id();
+    const owner = routeOwner();
     const name = entry.item.name.toUpperCase();
     try {
-      await removeItemMutation({ id: forId, index, expect: expectOf(entry) });
-      if (id() !== forId) return;
+      await removeItemMutation({ id: owner.routeId, index, expect: expectOf(entry) });
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> DISCARD :: ${name}`);
     } catch (error) {
-      if (id() !== forId) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> DISCARD :: ${name} — REFUSED (${reason(error)})`, "bad");
     }
   };
 
   const equip = async (index: number | null, entry?: SheetEquipmentEntry) => {
-    const forId = id();
+    const owner = routeOwner();
     const name = entry?.item.name.toUpperCase();
     try {
       // Wear and doff both name the instance the click saw: doffing verifies
       // the WORN suit, so a racing swap can't be unequipped blind.
       await equipArmorMutation({
-        id: forId,
+        id: owner.routeId,
         index,
         ...(entry !== undefined ? { expect: expectOf(entry) } : {}),
       });
-      if (id() !== forId) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(index === null ? "> DOFF :: ARMOR OFFLINE" : `> EQUIP :: ${name} — WORN`);
     } catch (error) {
-      if (id() !== forId) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> EQUIP :: ${name ?? "—"} — REFUSED (${reason(error)})`, "bad");
     }
   };
 
   const restore = async () => {
-    const restoredFor = id();
+    const owner = routeOwner();
     try {
-      await restoreVitals({ id: restoredFor });
-      if (id() !== restoredFor) return;
+      await restoreVitals({ id: owner.routeId });
+      if (!ownsRoute(owner)) return;
       telemetry.log("> RESTORE :: ALL POOLS FULL", "good");
     } catch (error) {
-      if (id() !== restoredFor) return;
+      if (!ownsRoute(owner)) return;
       telemetry.log(`> RESTORE :: REFUSED (${reason(error)})`, "bad");
     }
   };
@@ -440,16 +473,16 @@ export function CharacterSheetPage() {
   const roll = async () => {
     // If the dossier switches while the mutation is in flight, the result
     // belongs to the character it was rolled for — drop it silently.
-    const rolledFor = id();
+    const owner = routeOwner();
     setRollError(undefined);
     try {
-      const rolled = await rollVitals({ id: rolledFor });
-      if (id() !== rolledFor) return;
+      const rolled = await rollVitals({ id: owner.routeId });
+      if (!ownsRoute(owner)) return;
       telemetry.log(
         `> ROLL VITALS :: H.P. ${rolled.hitPoints} · S.D.C. ${rolled.sdc}${rolled.ppe !== undefined ? ` · P.P.E. ${rolled.ppe}` : ""} — LOCKED`,
       );
     } catch (error) {
-      if (id() !== rolledFor) return;
+      if (!ownsRoute(owner)) return;
       setRollError(error instanceof Error ? error : new Error(String(error)));
       telemetry.log("> ROLL VITALS :: WRITE FAILED", "bad");
     }
@@ -466,116 +499,140 @@ export function CharacterSheetPage() {
         </Match>
         <Match when={sheet() != null}>
           {/* Non-keyed on purpose: subscription updates flow through
-              fine-grained reactivity instead of remounting the sheet, so the
+            fine-grained reactivity instead of remounting the sheet, so the
               strike flash can see values change and editor state survives. */}
           <div class="gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
             <div class="min-w-0 space-y-4">
-              <SheetView sheet={sheet()!} actions={actions} />
+              <SheetView
+                sheet={sheet()!}
+                actions={actions}
+                gameplayDisabledReason={gameplayDisabledReason()}
+              />
               <NarrativeEditor id={id()} narrative={sheet()?.narrative} />
             </div>
             <aside class="min-w-0 space-y-3" aria-label="Dossier command rail">
               <CombatExchangePanel
                 characterId={id()}
                 sheet={sheet()!}
+                gameplayDisabledReason={gameplayDisabledReason()}
                 onTelemetry={telemetry.log}
               />
               <TelemetryRail
                 entries={telemetry.entries()}
                 actions={
-                  <div class="space-y-2">
-                    <Button variant="primary" class="w-full text-left" onClick={() => void roll()}>
-                      {"> Roll Vitals"}
-                    </Button>
-                    <Show when={rollError()}>
-                      {(err) => <Alert tone="danger">ROLL FAILED — {err().message}</Alert>}
-                    </Show>
-                    <div class="flex gap-2">
-                      <TextInput
-                        aria-label="Damage amount"
-                        inputmode="numeric"
-                        placeholder="DMG"
-                        class="w-16 min-w-0 px-2 py-1.5 text-center"
-                        value={damageInput()}
-                        onInput={(e) => setDamageInput(e.currentTarget.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") void damage();
-                        }}
-                      />
-                      <Button class="flex-1 px-2 text-left" onClick={() => void damage()}>
-                        {"> Damage"}
-                      </Button>
-                      <ToggleChip pressed={toArmor()} onToggle={() => setToArmor((v) => !v)}>
-                        Armor
-                      </ToggleChip>
-                    </div>
-                    <Button class="w-full text-left" onClick={() => void restore()}>
-                      {"> Full Restore"}
-                    </Button>
-                    <div class="space-y-2 border-t border-line pt-2">
-                      <MonoLabel class="block text-dead">RECOVERY</MonoLabel>
-                      <Show when={sheet()?.ppe}>
+                  <Show
+                    when={gameplayDisabledReason()}
+                    fallback={
+                      <div class="space-y-2">
+                        <Button
+                          variant="primary"
+                          class="w-full text-left"
+                          onClick={() => void roll()}
+                        >
+                          {"> Roll Vitals"}
+                        </Button>
+                        <Show when={rollError()}>
+                          {(err) => <Alert tone="danger">ROLL FAILED — {err().message}</Alert>}
+                        </Show>
                         <div class="flex gap-2">
                           <TextInput
-                            aria-label="Hours of rest"
+                            aria-label="Damage amount"
                             inputmode="numeric"
-                            placeholder="HRS"
-                            class="w-14 min-w-0 px-2 py-1.5 text-center"
-                            value={restHours()}
-                            onInput={(e) => setRestHours(e.currentTarget.value)}
+                            placeholder="DMG"
+                            class="w-16 min-w-0 px-2 py-1.5 text-center"
+                            value={damageInput()}
+                            onInput={(e) => setDamageInput(e.currentTarget.value)}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") void rest("rest");
+                              if (e.key === "Enter") void damage();
                             }}
                           />
-                          <Button class="flex-1 px-2 text-left" onClick={() => void rest("rest")}>
-                            {"> Rest"}
+                          <Button class="flex-1 px-2 text-left" onClick={() => void damage()}>
+                            {"> Damage"}
                           </Button>
-                          <Button
-                            class="shrink-0 px-2 text-left whitespace-nowrap"
-                            onClick={() => void rest("meditation")}
-                          >
-                            {"> Meditate"}
-                          </Button>
-                        </div>
-                        <div class="flex gap-2">
-                          <Button class="flex-1 px-2 text-left" onClick={() => void leyDraw()}>
-                            {"> Ley Draw"}
-                          </Button>
-                          <ToggleChip
-                            pressed={atNexus()}
-                            onToggle={() => setAtNexus((v) => !v)}
-                            tone="ley"
-                          >
-                            Nexus
+                          <ToggleChip pressed={toArmor()} onToggle={() => setToArmor((v) => !v)}>
+                            Armor
                           </ToggleChip>
                         </div>
-                      </Show>
-                      <div class="flex gap-2">
-                        <TextInput
-                          aria-label="Treatment day"
-                          inputmode="numeric"
-                          class="w-14 min-w-0 px-2 py-1.5 text-center"
-                          value={
-                            dayInput() !== ""
-                              ? dayInput()
-                              : String((sheet()?.vitals.treatmentDays ?? 0) + 1)
-                          }
-                          onInput={(e) => setDayInput(e.currentTarget.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") void treatDay();
-                          }}
-                        />
-                        <Button class="flex-1 px-2 text-left" onClick={() => void treatDay()}>
-                          {"> Treatment Day"}
+                        <Button class="w-full text-left" onClick={() => void restore()}>
+                          {"> Full Restore"}
                         </Button>
-                        <ToggleChip
-                          pressed={professional()}
-                          onToggle={() => setProfessional((v) => !v)}
-                        >
-                          Pro
-                        </ToggleChip>
+                        <div class="space-y-2 border-t border-line pt-2">
+                          <MonoLabel class="block text-dead">RECOVERY</MonoLabel>
+                          <Show when={sheet()?.ppe}>
+                            <div class="flex gap-2">
+                              <TextInput
+                                aria-label="Hours of rest"
+                                inputmode="numeric"
+                                placeholder="HRS"
+                                class="w-14 min-w-0 px-2 py-1.5 text-center"
+                                value={restHours()}
+                                onInput={(e) => setRestHours(e.currentTarget.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") void rest("rest");
+                                }}
+                              />
+                              <Button
+                                class="flex-1 px-2 text-left"
+                                onClick={() => void rest("rest")}
+                              >
+                                {"> Rest"}
+                              </Button>
+                              <Button
+                                class="shrink-0 px-2 text-left whitespace-nowrap"
+                                onClick={() => void rest("meditation")}
+                              >
+                                {"> Meditate"}
+                              </Button>
+                            </div>
+                            <div class="flex gap-2">
+                              <Button class="flex-1 px-2 text-left" onClick={() => void leyDraw()}>
+                                {"> Ley Draw"}
+                              </Button>
+                              <ToggleChip
+                                pressed={atNexus()}
+                                onToggle={() => setAtNexus((v) => !v)}
+                                tone="ley"
+                              >
+                                Nexus
+                              </ToggleChip>
+                            </div>
+                          </Show>
+                          <div class="flex gap-2">
+                            <TextInput
+                              aria-label="Treatment day"
+                              inputmode="numeric"
+                              class="w-14 min-w-0 px-2 py-1.5 text-center"
+                              value={
+                                dayInput() !== ""
+                                  ? dayInput()
+                                  : String((sheet()?.vitals.treatmentDays ?? 0) + 1)
+                              }
+                              onInput={(e) => setDayInput(e.currentTarget.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") void treatDay();
+                              }}
+                            />
+                            <Button class="flex-1 px-2 text-left" onClick={() => void treatDay()}>
+                              {"> Treatment Day"}
+                            </Button>
+                            <ToggleChip
+                              pressed={professional()}
+                              onToggle={() => setProfessional((v) => !v)}
+                            >
+                              Pro
+                            </ToggleChip>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    }
+                  >
+                    {(reason) => (
+                      <Alert tone="danger">
+                        <MonoLabel class="mr-2 !text-inherit">LIFE SIGNS TERMINATED</MonoLabel>
+                        {reason()}
+                      </Alert>
+                    )}
+                  </Show>
                 }
               />
             </aside>

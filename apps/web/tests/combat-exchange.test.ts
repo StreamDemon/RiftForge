@@ -632,6 +632,41 @@ describe("combat errors", () => {
 });
 
 describe("combat exchange component contract", () => {
+  test("suppresses terminal declaration and response controls while retaining cancellation and history", () => {
+    expect(panelSource).toContain("gameplayDisabledReason?: string;");
+    expect(panelSource).toContain(
+      "const gameplayEnabled = () => props.gameplayDisabledReason === undefined",
+    );
+    expect(panelSource).toContain("LIFE SIGNS TERMINATED");
+    expect(panelSource).toContain('<Alert tone="danger">');
+    expect(panelSource).toContain("<Show when={gameplayEnabled()}>");
+
+    const panelStart = panelSource.indexOf('<Panel class="space-y-3 p-3">');
+    const declarationGate = panelSource.indexOf("<Show when={gameplayEnabled()}>", panelStart);
+    const incomingGate = panelSource.indexOf(
+      "<Show when={gameplayEnabled()}>",
+      declarationGate + 1,
+    );
+    const declaration = panelSource.indexOf('{busy() ? "> TRANSMITTING…" : "> DECLARE ATTACK"}');
+    const incoming = panelSource.indexOf("<IncomingExchangeRow", incomingGate);
+    const outgoing = panelSource.indexOf("<OutgoingExchangeRow", incomingGate);
+    const cancellation = panelSource.indexOf('{busy() ? "> CANCELLING…" : "> CANCEL"}');
+    const recent = panelSource.indexOf('id="combat-recent-history"');
+    expect(panelStart).toBeGreaterThanOrEqual(0);
+    expect(declarationGate).toBeGreaterThan(panelStart);
+    expect(incomingGate).toBeGreaterThan(declarationGate);
+    expect(declaration).toBeGreaterThanOrEqual(0);
+    expect(incoming).toBeGreaterThanOrEqual(0);
+    expect(outgoing).toBeGreaterThanOrEqual(0);
+    expect(cancellation).toBeGreaterThanOrEqual(0);
+    expect(recent).toBeGreaterThanOrEqual(0);
+    expect(declaration).toBeGreaterThan(declarationGate);
+    expect(declaration).toBeLessThan(incomingGate);
+    expect(incoming).toBeGreaterThan(incomingGate);
+    expect(incoming).toBeLessThan(outgoing);
+    expect(outgoing).toBeLessThan(recent);
+  });
+
   test("shares native select and toggle primitives without rounded or decorative styling", () => {
     expect(uiSource).toContain('export function SelectInput(props: ComponentProps<"select">)');
     expect(uiSource).toContain("notch-8 border border-line bg-noir");
