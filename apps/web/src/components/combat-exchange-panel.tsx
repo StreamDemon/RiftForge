@@ -24,6 +24,7 @@ import {
   combatErrorMessage,
   combatTargetDisabledReason,
   combatWeaponChoices,
+  exchangeResultLabel,
   exchangeTone,
   formatExchangeSummary,
   ownsAsyncResult,
@@ -723,7 +724,8 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
                       exchange.status === "resolved" && flashingIds().has(String(exchange._id)),
                   }}
                 >
-                  {formatExchangeSummary(exchange)}
+                  <MonoLabel class="block text-inherit">{exchangeResultLabel(exchange)}</MonoLabel>
+                  <span class="block">{formatExchangeSummary(exchange)}</span>
                 </li>
               )}
             </For>
