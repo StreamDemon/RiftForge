@@ -1,7 +1,7 @@
 # Full M.D.C. Combat Exchange Design
 
 **Date:** 2026-07-21
-**Status:** Draft PR #55 open; Cubic review pending
+**Status:** PR #55 ready; CodeRabbit approved; human merge pending
 **Branch:** `feat/mdc-combat-exchange`
 **Primary issue:** [#51 — Full M.D.C. combat](https://github.com/StreamDemon/RiftForge/issues/51)
 
@@ -604,7 +604,7 @@ not timeless project totals.
 | `git diff --check`                           | exit 0; no output                                                                                                          |
 | `git status --short --branch`                | `feat/mdc-combat-exchange`; only README, this design, and the implementation plan modified before the documentation commit |
 
-### Draft review publication
+### Review publication
 
 - Draft PR [#55](https://github.com/StreamDemon/RiftForge/pull/55) opened against
   `main` on **2026-07-22 01:51:21 +08:00 (Asia/Singapore)** from published head
@@ -612,8 +612,12 @@ not timeless project totals.
 - Issue #51 received the verified delivery evidence and draft-PR link at
   **2026-07-22 01:51:57 +08:00 (Asia/Singapore)** in
   [issue comment 5037268203](https://github.com/StreamDemon/RiftForge/issues/51#issuecomment-5037268203).
-- The PR is deliberately draft. Cubic review and any resulting fixes remain
-  pending; the human maintainer retains sole merge authority.
+- Cubic exhausted its monthly review allowance and is unavailable until
+  2026-08-01. The maintainer designated CodeRabbit as the active reviewer until
+  Cubic returns and marked PR #55 ready for review.
+- CodeRabbit reviewed the complete `3067c99..4e0afc5` change set and submitted
+  `APPROVED` at **2026-07-22 03:04:16 +08:00 (Asia/Singapore)** with zero inline
+  threads. The human maintainer retains sole merge authority.
 
 ### Live Convex and browser acceptance
 
@@ -660,8 +664,9 @@ invented rules content was introduced to manufacture those scenarios.
 - Update README/current-status wording once M.D.C. exchanges are live.
 - Record explicit exclusions and final validation evidence in the PR and Issue
   #51.
-- Follow branch -> PR -> Cubic review -> human merge. Never merge the PR from the
-  agent workflow.
+- Follow branch -> PR -> active automated review -> human merge. CodeRabbit is
+  the temporary review gate while Cubic is quota-blocked. Never merge the PR from
+  the agent workflow.
 
 ## Success criteria
 
@@ -675,4 +680,5 @@ Issue #51 is complete when:
 - terminal death cannot be bypassed by existing mutations;
 - the SolidJS rail presents all new route evidence and terminal state;
 - package, root, diff, and live-browser gates pass; and
-- the branch is published as a PR for Cubic and human review.
+- the branch is published as a PR, the active automated reviewer approves it,
+  and the human maintainer retains merge authority.

@@ -465,7 +465,7 @@ git commit -m "docs: record mega-damage combat delivery"
 
 - [x] Push `feat/mdc-combat-exchange` and open draft PR [#55](https://github.com/StreamDemon/RiftForge/pull/55) to `main` summarizing architecture, compatibility, fatal boundary, automation, and live evidence. Link `Closes #51`, `Follow-up #54`, and `Roadmap #53`; no AI attribution; never merge.
 - [x] Comment on #51 with verified time-scoped evidence/PR link: [issue comment 5037268203](https://github.com/StreamDemon/RiftForge/issues/51#issuecomment-5037268203). Do not close it manually.
-- [ ] Wait for Cubic. Reproduce every finding; fix real root causes with tests or explain invalid findings with evidence; rerun affected gates after each push. Stop ready for human merge.
+- [x] Use CodeRabbit as the temporary review gate while Cubic is quota-blocked until 2026-08-01. CodeRabbit reviewed `3067c99..4e0afc5`, submitted `APPROVED` with zero inline threads, and left no finding to reproduce or fix. Stop ready for human merge.
 
 ---
 
@@ -479,4 +479,4 @@ git commit -m "docs: record mega-damage combat delivery"
 - [x] Dead dossiers remain readable/accessibly terminal; route navigation owns async results.
 - [x] Rules/backend/web package gates and root gates pass with fresh evidence.
 - [x] Live desktop/narrow acceptance passes with clean console.
-- [x] README, #51, #54, #53, design, plan, and draft PR agree; human retains merge authority.
+- [x] README, #51, #54, #53, design, plan, and ready PR agree; human retains merge authority.
