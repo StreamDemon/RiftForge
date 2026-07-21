@@ -69,8 +69,10 @@ export type CombatResponseInput = z.infer<typeof combatResponseInputSchema>;
 
 export const combatExchangeErrorCodeSchema = z.enum([
   "selfTarget",
+  "combatantDead",
   "attackerNotReady",
   "defenderNotReady",
+  "armorNotReady",
   "weaponMissingOrChanged",
   "unsupportedWeaponMode",
   "unsupportedMdWeapon",

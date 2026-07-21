@@ -3,6 +3,7 @@ import {
   attackerCombatStateToken,
   armorSchema,
   authorizeCombatResponse,
+  combatExchangeErrorCodeSchema,
   combatExchangeRules,
   combatExchangeRulesSchema,
   defenderCombatStateToken,
@@ -153,6 +154,15 @@ describe("combat exchange constants", () => {
   ])("rejects an altered %s literal", (_name, candidate) => {
     expect(combatExchangeRulesSchema.safeParse(candidate).success).toBe(false);
   });
+
+  test("accepts new readiness errors while retaining legacy unsupported errors", () => {
+    expect(combatExchangeErrorCodeSchema.parse("combatantDead")).toBe("combatantDead");
+    expect(combatExchangeErrorCodeSchema.parse("armorNotReady")).toBe("armorNotReady");
+    expect(combatExchangeErrorCodeSchema.parse("unsupportedMdWeapon")).toBe("unsupportedMdWeapon");
+    expect(combatExchangeErrorCodeSchema.parse("unsupportedMdcProtection")).toBe(
+      "unsupportedMdcProtection",
+    );
+  });
 });
 
 describe("combat-state tokens", () => {
@@ -220,7 +230,7 @@ describe("combat-state tokens", () => {
       ],
     ]);
     expect(JSON.parse(defenderCombatStateToken(first))).toEqual([
-      "defender-v1",
+      "defender-v2",
       first.level,
       [
         first.attributes.IQ,
@@ -248,8 +258,9 @@ describe("combat-state tokens", () => {
         first.vitals.hitPoints.rolled,
         first.vitals.hitPoints.current,
         first.vitals.comaDeathFloor,
+        first.vitals.lifeState,
       ],
-      [armor.item.id, "mdc", null, armor.max, armor.current],
+      [armor.item.id, "mdc", true, null, armor.max, armor.current],
     ]);
   });
 
@@ -328,7 +339,7 @@ describe("combat-state tokens", () => {
     );
   });
 
-  test("fingerprints selected weapon mechanics, attack sources, and page-stamped rules", () => {
+  test("fingerprints selected weapon tier, mechanics, attack sources, and page-stamped rules", () => {
     const base = tokenSheet();
     const selected = base.equipment[0]!;
     if (selected.item.kind !== "weapon")
@@ -413,7 +424,7 @@ describe("combat-state tokens", () => {
     }
   });
 
-  test("stales defenses for every rolled/current body pool and the coma floor", () => {
+  test("stales defenses for every rolled/current body pool, life state, and the coma floor", () => {
     const base = tokenSheet();
     const baseToken = defenderCombatStateToken(base);
     const changedVitals = [
@@ -428,6 +439,7 @@ describe("combat-state tokens", () => {
         hitPoints: { ...base.vitals.hitPoints, current: base.vitals.hitPoints.current! - 1 },
       },
       { ...base.vitals, comaDeathFloor: base.vitals.comaDeathFloor - 1 },
+      { ...base.vitals, lifeState: "coma" as const },
     ];
 
     for (const vitals of changedVitals) {
@@ -480,6 +492,28 @@ describe("combat-state tokens", () => {
       expect(defenderCombatStateToken({ ...armored, armor })).not.toBe(baseToken);
     }
   });
+
+  test("stales defenses for M.D.C. readiness, maximum, and current capacity", () => {
+    const ready = tokenSheet();
+    const baseToken = defenderCombatStateToken(ready);
+    const bodyCurrent = { hitPoints: 16, sdc: 18, ppe: 70 } as const;
+    const variants = [
+      tokenSheet({
+        items: [tokenItems[0], { itemId: "llw-concealed-light", worn: true }],
+        current: bodyCurrent,
+      }),
+      tokenSheet({
+        items: [tokenItems[0], { itemId: "llw-concealed-light", worn: true, rolledMdc: 41 }],
+        current: { ...bodyCurrent, armor: 36 },
+      }),
+      tokenSheet({ current: { ...tokenCurrent, armor: 35 } }),
+      tokenSheet({ current: { ...tokenCurrent, armor: 0 } }),
+    ];
+
+    for (const variant of variants) {
+      expect(defenderCombatStateToken(variant)).not.toBe(baseToken);
+    }
+  });
 });
 
 describe("weapon attack profiles", () => {
@@ -510,15 +544,43 @@ describe("weapon attack profiles", () => {
     });
   });
 
-  test("refuses M.D. weapons and non-weapons without inventing modes", () => {
+  test("authorizes catalog M.D. energy pistols and rifles with their printed profiles", () => {
     const sheet = combatSheet({
-      items: [{ itemId: "wilks-320-laser-pistol" }, { itemId: "canteen" }],
+      items: [{ itemId: "wilks-320-laser-pistol" }, { itemId: "wilks-447-laser-rifle" }],
     });
     expect(deriveAttackProfile(sheet, 0)).toMatchObject({
-      supported: false,
-      reason: "unsupportedMdWeapon",
+      supported: true,
+      kind: "ranged",
+      minimumStrikeTotal: 8,
+      strikeBonus: 0,
+      proficiencyBonus: 0,
+      damageFormula: "1D6",
+      damageBonus: 0,
+      criticalOn: 20,
+      damageType: "md",
+      weapon: { category: "energyPistol" },
     });
     expect(deriveAttackProfile(sheet, 1)).toMatchObject({
+      supported: true,
+      kind: "ranged",
+      minimumStrikeTotal: 8,
+      strikeBonus: 0,
+      proficiencyBonus: 0,
+      damageFormula: "3D6",
+      damageBonus: 0,
+      criticalOn: 20,
+      damageType: "md",
+      weapon: { category: "energyRifle" },
+    });
+  });
+
+  test("refuses non-weapons and missing instances without inventing modes", () => {
+    const sheet = combatSheet({ items: [{ itemId: "canteen" }] });
+    expect(deriveAttackProfile(sheet, 1)).toMatchObject({
+      supported: false,
+      reason: "weaponMissingOrChanged",
+    });
+    expect(deriveAttackProfile(sheet, 0)).toMatchObject({
       supported: false,
       reason: "unsupportedWeaponMode",
     });
@@ -861,16 +923,30 @@ describe("protection classification", () => {
     expect(deriveProtection(combatSheet({ items: [] }))).toEqual({ kind: "none" });
   });
 
-  test("classifies fixed and unrolled dice-capacity M.D.C. suits without conversion", () => {
-    expect(deriveProtection(combatSheet({ items: [{ itemId: "gladiator", worn: true }] }))).toEqual(
-      {
+  test.each([
+    ["full", undefined, 70],
+    ["partial", 35, 35],
+    ["depleted", 0, 0],
+  ] as const)(
+    "preserves %s fixed-capacity M.D.C. armor as protection",
+    (_state, current, expected) => {
+      const sheet = deriveSheet({
+        ...combatant,
+        items: [{ itemId: "gladiator", worn: true }],
+        ...(current === undefined ? {} : { current: { armor: current } }),
+      });
+
+      expect(deriveProtection(sheet)).toEqual({
         kind: "mdcArmor",
         itemId: "gladiator",
         name: "Gladiator Full Environmental Body Armor",
         max: 70,
-        current: 70,
-      },
-    );
+        current: expected,
+      });
+    },
+  );
+
+  test("preserves unrolled dice-capacity M.D.C. armor with absent pools", () => {
     expect(
       deriveProtection(combatSheet({ items: [{ itemId: "llw-concealed-light", worn: true }] })),
     ).toEqual({
@@ -878,6 +954,24 @@ describe("protection classification", () => {
       itemId: "llw-concealed-light",
       name: "Ley Line Walker Concealed Armor (Light)",
     });
+  });
+
+  test("continues to collapse depleted S.D.C. armor to no protection", () => {
+    const fixture = armorSchema.parse({
+      kind: "armor",
+      id: "depleted-sdc-armor",
+      name: "Depleted S.D.C. Armor",
+      ar: 12,
+      sdc: 30,
+      page: 287,
+    });
+
+    expect(
+      deriveProtection({
+        ...combatSheet({ items: [] }),
+        armor: { item: fixture, max: 30, current: 0 },
+      }),
+    ).toEqual({ kind: "none" });
   });
 });
 

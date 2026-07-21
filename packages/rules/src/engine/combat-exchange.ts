@@ -124,7 +124,7 @@ export function attackerCombatStateToken(
 
 export function defenderCombatStateToken(sheet: CharacterSheet): string {
   return JSON.stringify([
-    "defender-v1",
+    "defender-v2",
     sheet.level,
     orderedAttributes(sheet),
     [
@@ -143,12 +143,14 @@ export function defenderCombatStateToken(sheet: CharacterSheet): string {
       sheet.vitals.hitPoints.rolled ?? null,
       sheet.vitals.hitPoints.current ?? null,
       sheet.vitals.comaDeathFloor,
+      sheet.vitals.lifeState,
     ],
     sheet.armor === undefined
       ? null
       : [
           sheet.armor.item.id,
           sheet.armor.item.mdc === undefined ? "sdc" : "mdc",
+          sheet.armor.max !== undefined && sheet.armor.current !== undefined,
           sheet.armor.item.ar ?? null,
           sheet.armor.max ?? null,
           sheet.armor.current ?? null,
@@ -185,7 +187,7 @@ export type AttackProfile =
       damageFormula: string;
       damageBonus: number;
       criticalOn: number;
-      damageType: "sdc";
+      damageType: "sdc" | "md";
       weapon: WeaponInstanceSnapshot & { name: string; category: WeaponCategory };
     };
 
@@ -298,10 +300,6 @@ export function deriveAttackProfile(sheet: CharacterSheet, weaponIndex: number):
   if (entry.item.kind !== "weapon") {
     return { supported: false, reason: "unsupportedWeaponMode", weapon: snapshot };
   }
-  if (entry.item.damage.type === "md") {
-    return { supported: false, reason: "unsupportedMdWeapon", weapon: snapshot };
-  }
-
   const kind: AttackKind = meleeCategories.has(entry.item.category) ? "melee" : "ranged";
   const strikeBonusSources: ModifierSource[] =
     kind === "melee"
@@ -331,7 +329,7 @@ export function deriveAttackProfile(sheet: CharacterSheet, weaponIndex: number):
     damageFormula: entry.item.damage.formula,
     damageBonus: kind === "melee" ? sheet.combat.damageBonus : 0,
     criticalOn: kind === "melee" ? sheet.combat.criticalStrikeOn : 20,
-    damageType: "sdc",
+    damageType: entry.item.damage.type,
     weapon: { ...snapshot, category: entry.item.category },
   };
 }
@@ -436,7 +434,6 @@ export function deriveProtection(sheet: CharacterSheet): ProtectionState {
   const armor = sheet.armor;
   if (armor === undefined) return { kind: "none" };
   if (armor.item.mdc !== undefined) {
-    if (armor.current === 0) return { kind: "none" };
     return {
       kind: "mdcArmor",
       itemId: armor.item.id,
