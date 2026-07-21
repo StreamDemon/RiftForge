@@ -591,18 +591,18 @@ Captured **2026-07-22 01:44:28 +08:00 (Asia/Singapore)** with package task
 caching explicitly disabled. Counts are observations from this branch revision,
 not timeless project totals.
 
-| Command | Fresh result |
-| ------- | ------------ |
-| `vp run --no-cache @riftforge/rules#check` | exit 0; 60/60 files formatted; 46/46 files free of warnings, lint errors, and type errors |
-| `vp run --no-cache @riftforge/rules#test` | exit 0; 17/17 files; 358/358 tests |
-| `vp run --no-cache @riftforge/backend#check` | exit 0; 13/13 files formatted; 15/15 files free of warnings, lint errors, and type errors |
-| `vp run --no-cache @riftforge/backend#test` | exit 0; 3/3 files; 128/128 tests |
-| `vp run --no-cache @riftforge/web#check` | exit 0; 37/37 files formatted; 33/33 files free of warnings, lint errors, and type errors |
-| `vp run --no-cache @riftforge/web#test` | exit 0; 3/3 files; 52/52 tests |
-| `vp check` | exit 0; 130/130 files formatted; 95/95 files free of warnings, lint errors, and type errors |
-| `vp test` | exit 0; 23/23 files; 538/538 tests |
-| `git diff --check` | exit 0; no output |
-| `git status --short --branch` | `feat/mdc-combat-exchange`; only README, this design, and the implementation plan modified before the documentation commit |
+| Command                                      | Fresh result                                                                                                               |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `vp run --no-cache @riftforge/rules#check`   | exit 0; 60/60 files formatted; 46/46 files free of warnings, lint errors, and type errors                                  |
+| `vp run --no-cache @riftforge/rules#test`    | exit 0; 17/17 files; 358/358 tests                                                                                         |
+| `vp run --no-cache @riftforge/backend#check` | exit 0; 13/13 files formatted; 15/15 files free of warnings, lint errors, and type errors                                  |
+| `vp run --no-cache @riftforge/backend#test`  | exit 0; 3/3 files; 128/128 tests                                                                                           |
+| `vp run --no-cache @riftforge/web#check`     | exit 0; 37/37 files formatted; 33/33 files free of warnings, lint errors, and type errors                                  |
+| `vp run --no-cache @riftforge/web#test`      | exit 0; 3/3 files; 52/52 tests                                                                                             |
+| `vp check`                                   | exit 0; 130/130 files formatted; 95/95 files free of warnings, lint errors, and type errors                                |
+| `vp test`                                    | exit 0; 23/23 files; 538/538 tests                                                                                         |
+| `git diff --check`                           | exit 0; no output                                                                                                          |
+| `git status --short --branch`                | `feat/mdc-combat-exchange`; only README, this design, and the implementation plan modified before the documentation commit |
 
 ### Draft review publication
 
