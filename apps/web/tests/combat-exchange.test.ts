@@ -8,6 +8,7 @@ import {
   combatErrorMessage,
   combatTargetDisabledReason,
   combatWeaponChoices,
+  exchangeResultLabel,
   exchangeTone,
   formatExchangeSummary,
   ownsAsyncResult,
@@ -17,8 +18,15 @@ import {
 
 function source(relative: string): string {
   const url = new URL(relative, import.meta.url);
-  return existsSync(url) ? readFileSync(url, "utf8") : "";
+  if (!existsSync(url)) throw new Error(`Missing source under test: ${relative}`);
+  return readFileSync(url, "utf8");
 }
+
+test("fails loudly when a source contract points at a missing file", () => {
+  expect(() => source("../src/definitely-missing-combat-source.tsx")).toThrow(
+    "Missing source under test: ../src/definitely-missing-combat-source.tsx",
+  );
+});
 
 const panelSource = source("../src/components/combat-exchange-panel.tsx");
 const uiSource = source("../src/components/ui.tsx");
@@ -214,8 +222,152 @@ function armorHitExchange(): Extract<ExchangeSummary, { status: "resolved" }> {
   };
 }
 
+type ResolvedExchange = Extract<ExchangeSummary, { status: "resolved" }>;
+type HitResolution = Extract<ResolvedExchange["resolution"], { outcome: "hit" }>;
+type TieredRoute = Extract<HitResolution["route"], { routingVersion: 2 }>;
+
+function tieredHitExchange(route: TieredRoute): ResolvedExchange {
+  return {
+    ...exchangeBase,
+    attack: {
+      ...exchangeBase.attack,
+      damageType: route.nativeDamage.type,
+    },
+    status: "resolved",
+    resolution: {
+      outcome: "hit",
+      reason: "unopposed",
+      response: {
+        kind: "none",
+        bonus: 0,
+        actionCost: 0,
+        explanation: "Take the hit.",
+        defenseModifier: 0,
+        totalBonus: 0,
+      },
+      critical: false,
+      damageMultiplier: 1,
+      damageRoll: { dice: [5], bonus: 1, total: 6 },
+      totalDamage: route.nativeDamage.value,
+      route,
+    },
+  };
+}
+
+const unchangedBody = {
+  before: { sdc: 20, hitPoints: 18 },
+  after: { sdc: 20, hitPoints: 18 },
+};
+
+const stoppedMdcExchange = tieredHitExchange({
+  routingVersion: 2,
+  kind: "stopped",
+  reason: "intactMdcImpervious",
+  nativeDamage: { type: "sdc", value: 96 },
+  armor: {
+    kind: "mdcArmor",
+    itemId: "gladiator",
+    name: "Gladiator Full Environmental Body Armor",
+    before: 10,
+    after: 10,
+  },
+  body: unchangedBody,
+});
+
+const convertedMdcArmorExchange = tieredHitExchange({
+  routingVersion: 2,
+  kind: "armor",
+  nativeDamage: { type: "sdc", value: 496 },
+  convertedDamage: { type: "md", value: 4 },
+  armor: {
+    kind: "mdcArmor",
+    itemId: "gladiator",
+    name: "Gladiator Full Environmental Body Armor",
+    before: 10,
+    after: 6,
+  },
+  body: unchangedBody,
+  finalBlastAbsorbed: false,
+});
+
+const nativeMdcArmorExchange = tieredHitExchange({
+  routingVersion: 2,
+  kind: "armor",
+  nativeDamage: { type: "md", value: 6 },
+  armor: {
+    kind: "mdcArmor",
+    itemId: "gladiator",
+    name: "Gladiator Full Environmental Body Armor",
+    before: 10,
+    after: 4,
+  },
+  body: unchangedBody,
+  finalBlastAbsorbed: false,
+});
+
+const finalBlastExchange = tieredHitExchange({
+  routingVersion: 2,
+  kind: "armor",
+  nativeDamage: { type: "md", value: 21 },
+  armor: {
+    kind: "mdcArmor",
+    itemId: "gladiator",
+    name: "Gladiator Full Environmental Body Armor",
+    before: 3,
+    after: 0,
+  },
+  body: unchangedBody,
+  finalBlastAbsorbed: true,
+});
+
+const depletedShellBodyExchange = tieredHitExchange({
+  routingVersion: 2,
+  kind: "body",
+  nativeDamage: { type: "md", value: 1 },
+  convertedDamage: { type: "sdc", value: 100 },
+  armor: {
+    kind: "mdcArmor",
+    itemId: "gladiator",
+    name: "Gladiator Full Environmental Body Armor",
+    before: 0,
+    after: 0,
+  },
+  body: {
+    before: { sdc: 120, hitPoints: 18 },
+    after: { sdc: 20, hitPoints: 18 },
+  },
+  lifeState: { before: "alive", after: "alive" },
+});
+
+const depletedShellStoppedExchange = tieredHitExchange({
+  routingVersion: 2,
+  kind: "stopped",
+  reason: "depletedMdcShell",
+  nativeDamage: { type: "sdc", value: 5 },
+  armor: {
+    kind: "mdcArmor",
+    itemId: "gladiator",
+    name: "Gladiator Full Environmental Body Armor",
+    before: 0,
+    after: 0,
+  },
+  body: unchangedBody,
+});
+
+const fatalExchange = tieredHitExchange({
+  routingVersion: 2,
+  kind: "fatal",
+  nativeDamage: { type: "md", value: 1 },
+  convertedDamage: { type: "sdc", value: 100 },
+  body: {
+    before: { sdc: 20, hitPoints: 18 },
+    after: { sdc: 0, hitPoints: -14 },
+  },
+  lifeState: { before: "alive", after: "dead" },
+});
+
 describe("combat weapon choices", () => {
-  test("shows only owned weapons and keeps the full M.D.C. boundary visible", () => {
+  test("shows only owned weapons and enables legal catalog M.D. attacks", () => {
     const sheet = deriveSheet({
       ...combatant,
       items: [
@@ -253,66 +405,119 @@ describe("combat weapon choices", () => {
         index: 5,
         itemId: "wilks-320-laser-pistol",
         label: "Wilk's 320 Laser Pistol — 1D6 M.D.",
-        supported: false,
-        disabledReason: "Full M.D.C. combat is follow-up work.",
+        supported: true,
       },
       {
         index: 6,
         itemId: "wilks-447-laser-rifle",
         label: "Wilk's 447 Laser Rifle — 3D6 M.D.",
-        supported: false,
-        disabledReason: "Full M.D.C. combat is follow-up work.",
+        supported: true,
       },
     ]);
+  });
+
+  test("retains generic invalid-mode copy without the obsolete M.D. refusal", () => {
+    const combatExchangeSource = source("../src/lib/combat-exchange.ts");
+    expect(combatExchangeSource).toContain("This weapon mode is not supported.");
+    expect(combatExchangeSource).not.toContain("Full M.D.C. combat is follow-up work.");
   });
 });
 
 describe("combat target choices", () => {
   const targetId = "target-1" as CombatTargetSummary["id"];
 
-  test("explains unready and M.D.C.-protected targets precisely", () => {
-    expect(
-      combatTargetDisabledReason({
+  test.each([
+    [
+      "unrolled body",
+      {
         id: targetId,
-        name: "Unready",
+        name: "Unrolled body",
         ready: false,
-        protection: "none",
+        lifeState: "alive",
+        protection: { kind: "none" },
         disabledReason: "defenderNotReady",
-      }),
-    ).toBe("Roll this target's H.P. and S.D.C. first.");
+      },
+      "Roll this target's H.P. and S.D.C. first.",
+    ],
+    [
+      "unrolled armor",
+      {
+        id: targetId,
+        name: "Unrolled armor",
+        ready: false,
+        lifeState: "alive",
+        protection: {
+          kind: "mdcArmor",
+          itemId: "llw-concealed-light",
+          name: "Ley Line Walker Concealed Armor (Light)",
+        },
+        disabledReason: "armorNotReady",
+      },
+      "Roll this target's worn armor M.D.C. first.",
+    ],
+    [
+      "dead combatant",
+      {
+        id: targetId,
+        name: "Dead combatant",
+        ready: true,
+        lifeState: "dead",
+        protection: { kind: "none" },
+        disabledReason: "combatantDead",
+      },
+      "Life signs terminated; this target cannot enter combat.",
+    ],
+  ] satisfies ReadonlyArray<readonly [string, CombatTargetSummary, string]>)(
+    "maps the server's $0 reason to exact disabled copy",
+    (_label, target, expected) => {
+      expect(combatTargetDisabledReason(target)).toBe(expected);
+    },
+  );
+
+  test.each([
+    ["intact", 39],
+    ["depleted", 0],
+  ] as const)("keeps $0 M.D.C. protection enabled", (_label, current) => {
     expect(
       combatTargetDisabledReason({
         id: targetId,
-        name: "M.D.C. Target",
+        name: "M.D.C. target",
         ready: true,
-        protection: "mdcArmor",
-        disabledReason: "unsupportedMdcProtection",
-      }),
-    ).toBe("Full M.D.C. combat is follow-up work.");
-    expect(
-      combatTargetDisabledReason({
-        id: targetId,
-        name: "Ready",
-        ready: true,
-        protection: "sdcArmor",
+        lifeState: "alive",
+        protection: {
+          kind: "mdcArmor",
+          itemId: "llw-concealed-light",
+          name: "Ley Line Walker Concealed Armor (Light)",
+          max: 39,
+          current,
+        },
       }),
     ).toBeUndefined();
   });
 });
 
 describe("combat exchange presentation", () => {
-  test("maps combat state to Ley Terminal tones without a cyan state", () => {
+  test("maps every result route to its semantic Ley Terminal tone", () => {
     const tones = [
-      exchangeTone(pendingExchange()),
-      exchangeTone(staleExchange()),
+      exchangeTone(stoppedMdcExchange),
+      exchangeTone(nativeMdcArmorExchange),
+      exchangeTone(depletedShellBodyExchange),
+      exchangeTone(fatalExchange),
       exchangeTone(cancelledExchange()),
-      exchangeTone(missedExchange()),
       exchangeTone(defendedExchange()),
-      exchangeTone(bodyHitExchange()),
     ];
 
-    expect(tones).toEqual(["warn", "warn", "dim", "dim", "good", "bad"]);
+    expect(tones).toEqual(["warn", "warn", "bad", "bad", "dim", "good"]);
     expect(tones).not.toContain("cyan");
+  });
+
+  test("retains pending, stale, miss, and legacy body tone compatibility", () => {
+    expect([
+      exchangeTone(pendingExchange()),
+      exchangeTone(staleExchange()),
+      exchangeTone(missedExchange()),
+      exchangeTone(bodyHitExchange()),
+    ]).toEqual(["warn", "warn", "dim", "bad"]);
   });
 
   test("formats pending, stale, cancelled, and miss summaries without invented result fields", () => {
@@ -355,6 +560,55 @@ describe("combat exchange presentation", () => {
     expect(summary).not.toContain("BODY S.D.C.");
     expect(summary).not.toContain("CRITICAL");
   });
+
+  test.each([
+    [
+      "stopped S.D.C. against intact M.D.C.",
+      stoppedMdcExchange,
+      "96 S.D.C. -> M.D.C. ARMOR IMPERVIOUS — NO EFFECT :: ARMOR 10 M.D.C. -> 10 M.D.C.",
+    ],
+    [
+      "persisted S.D.C.-to-M.D. conversion",
+      convertedMdcArmorExchange,
+      "496 S.D.C. -> 4 M.D. :: ARMOR 10 M.D.C. -> 6 M.D.C.",
+    ],
+    ["native M.D. armor ablation", nativeMdcArmorExchange, "6 M.D. :: ARMOR 10 M.D.C. -> 4 M.D.C."],
+    [
+      "final armor blast",
+      finalBlastExchange,
+      "21 M.D. :: ARMOR 3 M.D.C. -> 0 M.D.C. :: FINAL BLAST ABSORBED",
+    ],
+    [
+      "M.D.-to-body conversion through a depleted shell",
+      depletedShellBodyExchange,
+      "1 M.D. -> 100 S.D.C. :: DEPLETED M.D.C. SHELL BYPASSED :: ARMOR 0 M.D.C. -> 0 M.D.C. :: BODY S.D.C. 120 -> 20 / H.P. 18 -> 18 :: LIFE ALIVE -> ALIVE",
+    ],
+    [
+      "depleted shell stopping S.D.C.",
+      depletedShellStoppedExchange,
+      "5 S.D.C. -> DEPLETED M.D.C. SHELL STOPPED STRIKE :: ARMOR 0 M.D.C. -> 0 M.D.C.",
+    ],
+    [
+      "fatal termination",
+      fatalExchange,
+      "1 M.D. -> 100 S.D.C. :: UNPROTECTED BODY :: BODY S.D.C. 20 -> 0 / H.P. 18 -> -14 :: LIFE ALIVE -> DEAD :: FATAL — LIFE SIGNS TERMINATED",
+    ],
+  ] as const)("formats $0 from persisted route evidence", (_label, exchange, routeSummary) => {
+    expect(formatExchangeSummary(exchange)).toBe(
+      `Vesper → Deadboy :: Survival Knife :: d20[12]+3 = 15 :: 1D6 [5]+1 = 6 ${exchange.attack.damageType === "md" ? "M.D." : "S.D.C."} RAW :: ×1 :: ${routeSummary}`,
+    );
+  });
+
+  test("labels each exchange result by persisted route or terminal exchange state", () => {
+    expect([
+      exchangeResultLabel(stoppedMdcExchange),
+      exchangeResultLabel(nativeMdcArmorExchange),
+      exchangeResultLabel(depletedShellBodyExchange),
+      exchangeResultLabel(fatalExchange),
+      exchangeResultLabel(defendedExchange()),
+      exchangeResultLabel(cancelledExchange()),
+    ]).toEqual(["STOPPED", "ARMOR", "BODY", "FATAL", "DEFENDED", "CANCELLED"]);
+  });
 });
 
 describe("async result ownership", () => {
@@ -385,6 +639,41 @@ describe("combat errors", () => {
 });
 
 describe("combat exchange component contract", () => {
+  test("suppresses terminal declaration and response controls while retaining cancellation and history", () => {
+    expect(panelSource).toContain("gameplayDisabledReason?: string;");
+    expect(panelSource).toContain(
+      "const gameplayEnabled = () => props.gameplayDisabledReason === undefined",
+    );
+    expect(panelSource).toContain("LIFE SIGNS TERMINATED");
+    expect(panelSource).toContain('<Alert tone="danger">');
+    expect(panelSource).toContain("<Show when={gameplayEnabled()}>");
+
+    const panelStart = panelSource.indexOf('<Panel class="space-y-3 p-3">');
+    const declarationGate = panelSource.indexOf("<Show when={gameplayEnabled()}>", panelStart);
+    const incomingGate = panelSource.indexOf(
+      "<Show when={gameplayEnabled()}>",
+      declarationGate + 1,
+    );
+    const declaration = panelSource.indexOf('{busy() ? "> TRANSMITTING…" : "> DECLARE ATTACK"}');
+    const incoming = panelSource.indexOf("<IncomingExchangeRow", incomingGate);
+    const outgoing = panelSource.indexOf("<OutgoingExchangeRow", incomingGate);
+    const cancellation = panelSource.indexOf('{busy() ? "> CANCELLING…" : "> CANCEL"}');
+    const recent = panelSource.indexOf('id="combat-recent-history"');
+    expect(panelStart).toBeGreaterThanOrEqual(0);
+    expect(declarationGate).toBeGreaterThan(panelStart);
+    expect(incomingGate).toBeGreaterThan(declarationGate);
+    expect(declaration).toBeGreaterThanOrEqual(0);
+    expect(incoming).toBeGreaterThanOrEqual(0);
+    expect(outgoing).toBeGreaterThanOrEqual(0);
+    expect(cancellation).toBeGreaterThanOrEqual(0);
+    expect(recent).toBeGreaterThanOrEqual(0);
+    expect(declaration).toBeGreaterThan(declarationGate);
+    expect(declaration).toBeLessThan(incomingGate);
+    expect(incoming).toBeGreaterThan(incomingGate);
+    expect(incoming).toBeLessThan(outgoing);
+    expect(outgoing).toBeLessThan(recent);
+  });
+
   test("shares native select and toggle primitives without rounded or decorative styling", () => {
     expect(uiSource).toContain('export function SelectInput(props: ComponentProps<"select">)');
     expect(uiSource).toContain("notch-8 border border-line bg-noir");
@@ -498,6 +787,10 @@ describe("combat exchange component contract", () => {
 
   test("keeps persisted combat history bounded and uses no magic signal tone", () => {
     expect(panelSource).toContain("formatExchangeSummary(exchange)");
+    expect(panelSource).toContain("exchangeResultLabel(exchange)");
+    expect(panelSource).toMatch(
+      /<MonoLabel[^>]*>\s*\{exchangeResultLabel\(exchange\)\}\s*<\/MonoLabel>/,
+    );
     expect(panelSource).toContain("exchangeTone(exchange)");
     expect(panelSource).toContain("recent.data()?.slice(0, 20)");
     expect(panelSource).toContain('dim: "border-dead text-muted"');
@@ -505,6 +798,15 @@ describe("combat exchange component contract", () => {
     expect(panelSource).toContain('bad: "border-blood text-blood-text"');
     expect(panelSource).toContain('good: "border-ok text-ok"');
     expect(panelSource).not.toMatch(/border-ley|text-ley/);
+  });
+
+  test("forces result labels to inherit the semantic row tone over MonoLabel muted text", () => {
+    expect(uiSource).toContain(
+      'font-mono text-[11.5px] tracking-[0.14em] text-muted uppercase ${own.class ?? ""}',
+    );
+    expect(panelSource).toContain(
+      '<MonoLabel class="block !text-inherit">{exchangeResultLabel(exchange)}</MonoLabel>',
+    );
   });
 
   test("associates the recent-history disclosure with its controlled list", () => {

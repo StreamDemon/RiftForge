@@ -10,7 +10,7 @@ import {
 import type { WeaponCategory } from "../schema/items.ts";
 import type { DefenseKind } from "../schema/strike-resolution.ts";
 import type { CharacterSheet, SheetEquipmentEntry } from "./character.ts";
-import { applyDamage, type VitalsPool } from "./combat.ts";
+import { applyBodyDamage, type VitalsPool } from "./combat.ts";
 import { parseDice } from "./dice.ts";
 import { damageArmor } from "./items.ts";
 import type { D20Roll, DamageRoll } from "./rolls.ts";
@@ -27,12 +27,20 @@ function orderedCombatExchangeRules(rules: typeof combatExchangeRules) {
     rules.book,
     [
       rules.pages.armorAndVitals,
+      rules.pages.megaDamageIntro,
       rules.pages.sdcCombat,
       rules.pages.defense,
       rules.pages.damage,
       rules.pages.automaticDodge,
+      rules.pages.megaDamageCombat,
       rules.pages.modernWeapons,
       rules.pages.rangedDodging,
+    ],
+    [
+      rules.rules.sdcPerMd,
+      rules.rules.minimumSdcToDamageMdc,
+      rules.rules.depletedMdcArmorBypassStrike,
+      rules.rules.finalMdcAbsorbsDestroyingBlast,
     ],
     [rules.minimumStrikeTotal.melee, rules.minimumStrikeTotal.ranged],
     [
@@ -115,6 +123,7 @@ export function attackerCombatStateToken(
       sheet.combat.strikeGuns,
       sheet.combat.criticalStrikeOn,
     ],
+    sheet.vitals.lifeState,
     orderedCombatExchangeRules(rules),
     weaponIndex,
     orderedSelectedItem(sheet, weaponIndex),
@@ -124,7 +133,7 @@ export function attackerCombatStateToken(
 
 export function defenderCombatStateToken(sheet: CharacterSheet): string {
   return JSON.stringify([
-    "defender-v1",
+    "defender-v2",
     sheet.level,
     orderedAttributes(sheet),
     [
@@ -143,12 +152,14 @@ export function defenderCombatStateToken(sheet: CharacterSheet): string {
       sheet.vitals.hitPoints.rolled ?? null,
       sheet.vitals.hitPoints.current ?? null,
       sheet.vitals.comaDeathFloor,
+      sheet.vitals.lifeState,
     ],
     sheet.armor === undefined
       ? null
       : [
           sheet.armor.item.id,
           sheet.armor.item.mdc === undefined ? "sdc" : "mdc",
+          sheet.armor.max !== undefined && sheet.armor.current !== undefined,
           sheet.armor.item.ar ?? null,
           sheet.armor.max ?? null,
           sheet.armor.current ?? null,
@@ -172,7 +183,7 @@ export interface WeaponInstanceSnapshot {
 export type AttackProfile =
   | {
       supported: false;
-      reason: "weaponMissingOrChanged" | "unsupportedWeaponMode" | "unsupportedMdWeapon";
+      reason: "weaponMissingOrChanged" | "unsupportedWeaponMode";
       weapon?: WeaponInstanceSnapshot & { name: string };
     }
   | {
@@ -185,7 +196,7 @@ export type AttackProfile =
       damageFormula: string;
       damageBonus: number;
       criticalOn: number;
-      damageType: "sdc";
+      damageType: "sdc" | "md";
       weapon: WeaponInstanceSnapshot & { name: string; category: WeaponCategory };
     };
 
@@ -237,6 +248,55 @@ export type SdcDamageRoute =
     }
   | { kind: "unsupportedMdcProtection" };
 
+export type DamageAmount = { type: "sdc" | "md"; value: number };
+
+export type ProtectionDamageSnapshot = {
+  kind: "sdcArmor" | "mdcArmor";
+  itemId: string;
+  name: string;
+  before: number;
+  after: number;
+};
+
+export type BodyDamageSnapshot = { before: VitalsPool; after: VitalsPool };
+
+export type TieredDamageRoute =
+  | {
+      routingVersion: 2;
+      kind: "stopped";
+      reason: "intactMdcImpervious" | "depletedMdcShell";
+      nativeDamage: DamageAmount;
+      armor: ProtectionDamageSnapshot;
+      body: BodyDamageSnapshot;
+    }
+  | {
+      routingVersion: 2;
+      kind: "armor";
+      nativeDamage: DamageAmount;
+      convertedDamage?: DamageAmount;
+      armor: ProtectionDamageSnapshot;
+      body: BodyDamageSnapshot;
+      finalBlastAbsorbed: boolean;
+    }
+  | {
+      routingVersion: 2;
+      kind: "body";
+      nativeDamage: DamageAmount;
+      convertedDamage?: DamageAmount;
+      armor?: ProtectionDamageSnapshot;
+      body: BodyDamageSnapshot;
+      lifeState: { before: "alive" | "coma"; after: "alive" | "coma" };
+    }
+  | {
+      routingVersion: 2;
+      kind: "fatal";
+      nativeDamage: DamageAmount;
+      convertedDamage?: DamageAmount;
+      armor?: ProtectionDamageSnapshot;
+      body: BodyDamageSnapshot;
+      lifeState: { before: "alive" | "coma"; after: "dead" };
+    };
+
 export type CombatExchangeResolution =
   | {
       outcome: "miss";
@@ -261,7 +321,7 @@ export type CombatExchangeResolution =
       damageMultiplier: 1 | 2;
       damageRoll: DamageRoll;
       totalDamage: number;
-      route: Exclude<SdcDamageRoute, { kind: "unsupportedMdcProtection" }>;
+      route: TieredDamageRoute;
     };
 
 export interface ResolveCombatExchangeInput {
@@ -298,10 +358,6 @@ export function deriveAttackProfile(sheet: CharacterSheet, weaponIndex: number):
   if (entry.item.kind !== "weapon") {
     return { supported: false, reason: "unsupportedWeaponMode", weapon: snapshot };
   }
-  if (entry.item.damage.type === "md") {
-    return { supported: false, reason: "unsupportedMdWeapon", weapon: snapshot };
-  }
-
   const kind: AttackKind = meleeCategories.has(entry.item.category) ? "melee" : "ranged";
   const strikeBonusSources: ModifierSource[] =
     kind === "melee"
@@ -331,7 +387,7 @@ export function deriveAttackProfile(sheet: CharacterSheet, weaponIndex: number):
     damageFormula: entry.item.damage.formula,
     damageBonus: kind === "melee" ? sheet.combat.damageBonus : 0,
     criticalOn: kind === "melee" ? sheet.combat.criticalStrikeOn : 20,
-    damageType: "sdc",
+    damageType: entry.item.damage.type,
     weapon: { ...snapshot, category: entry.item.category },
   };
 }
@@ -436,7 +492,6 @@ export function deriveProtection(sheet: CharacterSheet): ProtectionState {
   const armor = sheet.armor;
   if (armor === undefined) return { kind: "none" };
   if (armor.item.mdc !== undefined) {
-    if (armor.current === 0) return { kind: "none" };
     return {
       kind: "mdcArmor",
       itemId: armor.item.id,
@@ -472,39 +527,163 @@ export function evaluateDeclaration(
     : { status: "pendingDefense" };
 }
 
-export function routeSdcHit(input: {
+const sdcToMd = (value: number): DamageAmount => ({
+  type: "md",
+  value: Math.floor(value / combatExchangeRules.rules.sdcPerMd),
+});
+
+const mdToSdc = (value: number): DamageAmount => ({
+  type: "sdc",
+  value: value * combatExchangeRules.rules.sdcPerMd,
+});
+
+function protectionSnapshot(
+  protection: Extract<ProtectionState, { kind: "sdcArmor" | "mdcArmor" }>,
+  before: number,
+  after: number,
+): ProtectionDamageSnapshot {
+  return {
+    kind: protection.kind,
+    itemId: protection.itemId,
+    name: protection.name,
+    before,
+    after,
+  };
+}
+
+function routeBodyDamage(input: {
+  nativeDamage: DamageAmount;
+  appliedDamage: DamageAmount;
+  armor?: ProtectionDamageSnapshot;
+  body: VitalsPool;
+  comaDeathFloor: number;
+}): Extract<TieredDamageRoute, { kind: "body" | "fatal" }> {
+  const before = { ...input.body };
+  const result = applyBodyDamage(input.body, input.appliedDamage.value, input.comaDeathFloor);
+  const beforeLifeState = before.hitPoints <= 0 ? "coma" : "alive";
+  const common = {
+    routingVersion: 2 as const,
+    nativeDamage: input.nativeDamage,
+    ...(input.nativeDamage.type === input.appliedDamage.type
+      ? {}
+      : { convertedDamage: input.appliedDamage }),
+    ...(input.armor === undefined ? {} : { armor: input.armor }),
+    body: { before, after: result.after },
+  };
+  return result.lifeState === "dead"
+    ? { ...common, kind: "fatal", lifeState: { before: beforeLifeState, after: "dead" } }
+    : {
+        ...common,
+        kind: "body",
+        lifeState: { before: beforeLifeState, after: result.lifeState },
+      };
+}
+
+export function routeCombatHit(input: {
   strikeTotal: number;
-  damage: number;
+  damage: DamageAmount;
   protection: ProtectionState;
   body: VitalsPool;
   comaDeathFloor: number;
-}): SdcDamageRoute {
-  if (input.protection.kind === "mdcArmor") {
-    return { kind: "unsupportedMdcProtection" };
-  }
+}): TieredDamageRoute {
+  const nativeDamage = input.damage;
   const before = { ...input.body };
-  if (
-    input.protection.kind === "sdcArmor" &&
-    input.protection.current > 0 &&
-    input.strikeTotal <= input.protection.ar
-  ) {
-    return {
-      kind: "armor",
-      armor: {
-        before: input.protection.current,
-        after: damageArmor(input.protection.current, input.damage),
-      },
-      body: { before, after: { ...before } },
-    };
+
+  if (input.protection.kind === "sdcArmor") {
+    const appliedDamage = nativeDamage.type === "md" ? mdToSdc(nativeDamage.value) : nativeDamage;
+    const armor = protectionSnapshot(
+      input.protection,
+      input.protection.current,
+      input.protection.current,
+    );
+    if (input.protection.current > 0 && input.strikeTotal <= input.protection.ar) {
+      const after = damageArmor(input.protection.current, appliedDamage.value);
+      return {
+        routingVersion: 2,
+        kind: "armor",
+        nativeDamage,
+        ...(nativeDamage.type === "md" ? { convertedDamage: appliedDamage } : {}),
+        armor: { ...armor, after },
+        body: { before, after: { ...before } },
+        finalBlastAbsorbed: after === 0,
+      };
+    }
+    return routeBodyDamage({
+      nativeDamage,
+      appliedDamage,
+      armor,
+      body: input.body,
+      comaDeathFloor: input.comaDeathFloor,
+    });
   }
-  const after = applyDamage(input.body, input.damage, input.comaDeathFloor);
-  return {
-    kind: "body",
-    ...(input.protection.kind === "sdcArmor"
-      ? { armor: { before: input.protection.current, after: input.protection.current } }
-      : {}),
-    body: { before, after },
-  };
+
+  if (input.protection.kind === "mdcArmor") {
+    if (input.protection.current === undefined) {
+      throw new Error("armorNotReady: M.D.C. protection requires a current capacity.");
+    }
+    if (input.protection.current > 0) {
+      const armor = protectionSnapshot(
+        input.protection,
+        input.protection.current,
+        input.protection.current,
+      );
+      if (
+        nativeDamage.type === "sdc" &&
+        nativeDamage.value < combatExchangeRules.rules.minimumSdcToDamageMdc
+      ) {
+        return {
+          routingVersion: 2,
+          kind: "stopped",
+          reason: "intactMdcImpervious",
+          nativeDamage,
+          armor,
+          body: { before, after: { ...before } },
+        };
+      }
+      const appliedDamage =
+        nativeDamage.type === "sdc" ? sdcToMd(nativeDamage.value) : nativeDamage;
+      const after = damageArmor(input.protection.current, appliedDamage.value);
+      return {
+        routingVersion: 2,
+        kind: "armor",
+        nativeDamage,
+        ...(nativeDamage.type === "sdc" ? { convertedDamage: appliedDamage } : {}),
+        armor: { ...armor, after },
+        body: { before, after: { ...before } },
+        finalBlastAbsorbed: after === 0,
+      };
+    }
+    const armor = protectionSnapshot(input.protection, 0, 0);
+    if (
+      nativeDamage.type === "sdc" &&
+      input.strikeTotal < combatExchangeRules.rules.depletedMdcArmorBypassStrike
+    ) {
+      return {
+        routingVersion: 2,
+        kind: "stopped",
+        reason: "depletedMdcShell",
+        nativeDamage,
+        armor,
+        body: { before, after: { ...before } },
+      };
+    }
+    const appliedDamage = nativeDamage.type === "md" ? mdToSdc(nativeDamage.value) : nativeDamage;
+    return routeBodyDamage({
+      nativeDamage,
+      appliedDamage,
+      armor,
+      body: input.body,
+      comaDeathFloor: input.comaDeathFloor,
+    });
+  }
+
+  const appliedDamage = nativeDamage.type === "md" ? mdToSdc(nativeDamage.value) : nativeDamage;
+  return routeBodyDamage({
+    nativeDamage,
+    appliedDamage,
+    body: input.body,
+    comaDeathFloor: input.comaDeathFloor,
+  });
 }
 
 function assertDamageRoll(
@@ -532,9 +711,6 @@ function assertDamageRoll(
 
 export function resolveCombatExchange(input: ResolveCombatExchangeInput): CombatExchangeResolution {
   validateCombatContext(input.attack, input.context);
-  if (input.protection.kind === "mdcArmor") {
-    throw new Error("unsupportedMdcProtection: full M.D.C. resolution is out of scope.");
-  }
   const expectedStrikeBonus = input.attack.strikeBonus + (input.context.strikeModifier ?? 0);
   if (input.strikeRoll.bonus !== expectedStrikeBonus) {
     throw new Error(`Strike bonus must be ${expectedStrikeBonus}.`);
@@ -574,7 +750,7 @@ export function resolveCombatExchange(input: ResolveCombatExchangeInput): Combat
           },
         }),
     allowedDefenses: takesHit ? [] : [input.response.kind as DefenseKind],
-    damageType: "sdc",
+    damageType: input.attack.damageType,
     criticalOn: input.attack.criticalOn,
   });
   if (strike.outcome !== "hit") {
@@ -595,16 +771,13 @@ export function resolveCombatExchange(input: ResolveCombatExchangeInput): Combat
   }
   assertDamageRoll(input.attack, input.damageRoll);
   const totalDamage = input.damageRoll.total * strike.damageMultiplier;
-  const route = routeSdcHit({
+  const route = routeCombatHit({
     strikeTotal: input.strikeRoll.total,
-    damage: totalDamage,
+    damage: { type: input.attack.damageType, value: totalDamage },
     protection: input.protection,
     body: input.body,
     comaDeathFloor: input.comaDeathFloor,
   });
-  if (route.kind === "unsupportedMdcProtection") {
-    throw new Error("unsupportedMdcProtection: full M.D.C. resolution is out of scope.");
-  }
   return {
     outcome: "hit",
     reason: strike.reason as "unopposed" | "strikeWon",

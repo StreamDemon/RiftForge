@@ -146,6 +146,9 @@ export const characterSchema = z.object({
        * fresh course. When a NEW course starts within one set of pools is
        * GM adjudication (the treat mutation's explicit `day` override). */
       treatmentDays: z.number().int().nonnegative().optional(),
+      /** Persisted only for the terminal state. Alive/coma are derived from
+       * live H.P.; `deriveSheet` validates that dead agrees with the pools. */
+      lifeState: z.literal("dead").optional(),
     })
     .optional(),
   /** Optional player-authored identity; passed through to the sheet untouched. */

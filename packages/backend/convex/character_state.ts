@@ -16,6 +16,12 @@ export async function loadCharacter(ctx: MutationCtx, id: Id<"characters">): Pro
   return characterSchema.parse(stored);
 }
 
+export function requireLiving(character: Character, action: string): void {
+  if (character.current?.lifeState === "dead") {
+    throw new Error(`Life signs terminated — dead characters cannot ${action}.`);
+  }
+}
+
 export async function patchCurrent(
   ctx: MutationCtx,
   id: Id<"characters">,

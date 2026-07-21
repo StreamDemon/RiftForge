@@ -93,7 +93,7 @@ const exchangeBase = {
     damageFormula: v.string(),
     damageBonus: v.number(),
     criticalOn: v.number(),
-    damageType: v.literal("sdc"),
+    damageType: v.union(v.literal("sdc"), v.literal("md")),
   }),
   context: combatContextValidator,
   attackerStateToken: v.string(),
@@ -101,23 +101,89 @@ const exchangeBase = {
   strikeRoll: d20RollValidator,
 };
 
-const routeValidator = v.union(
+const vitalsPoolValidator = v.object({ sdc: v.number(), hitPoints: v.number() });
+
+const bodyDamageSnapshotValidator = v.object({
+  before: vitalsPoolValidator,
+  after: vitalsPoolValidator,
+});
+
+const legacySdcDamageRouteValidator = v.union(
   v.object({
     kind: v.literal("armor"),
     armor: v.object({ before: v.number(), after: v.number() }),
-    body: v.object({
-      before: v.object({ sdc: v.number(), hitPoints: v.number() }),
-      after: v.object({ sdc: v.number(), hitPoints: v.number() }),
-    }),
+    body: bodyDamageSnapshotValidator,
   }),
   v.object({
     kind: v.literal("body"),
     armor: v.optional(v.object({ before: v.number(), after: v.number() })),
-    body: v.object({
-      before: v.object({ sdc: v.number(), hitPoints: v.number() }),
-      after: v.object({ sdc: v.number(), hitPoints: v.number() }),
-    }),
+    body: bodyDamageSnapshotValidator,
   }),
+);
+
+const damageAmountValidator = v.object({
+  type: v.union(v.literal("sdc"), v.literal("md")),
+  value: v.number(),
+});
+
+const protectionDamageSnapshotValidator = v.object({
+  kind: v.union(v.literal("sdcArmor"), v.literal("mdcArmor")),
+  itemId: v.string(),
+  name: v.string(),
+  before: v.number(),
+  after: v.number(),
+});
+
+const stoppedDamageRouteValidator = v.object({
+  routingVersion: v.literal(2),
+  kind: v.literal("stopped"),
+  reason: v.union(v.literal("intactMdcImpervious"), v.literal("depletedMdcShell")),
+  nativeDamage: damageAmountValidator,
+  armor: protectionDamageSnapshotValidator,
+  body: bodyDamageSnapshotValidator,
+});
+
+const armorDamageRouteValidator = v.object({
+  routingVersion: v.literal(2),
+  kind: v.literal("armor"),
+  nativeDamage: damageAmountValidator,
+  convertedDamage: v.optional(damageAmountValidator),
+  armor: protectionDamageSnapshotValidator,
+  body: bodyDamageSnapshotValidator,
+  finalBlastAbsorbed: v.boolean(),
+});
+
+const bodyDamageRouteValidator = v.object({
+  routingVersion: v.literal(2),
+  kind: v.literal("body"),
+  nativeDamage: damageAmountValidator,
+  convertedDamage: v.optional(damageAmountValidator),
+  armor: v.optional(protectionDamageSnapshotValidator),
+  body: bodyDamageSnapshotValidator,
+  lifeState: v.object({
+    before: v.union(v.literal("alive"), v.literal("coma")),
+    after: v.union(v.literal("alive"), v.literal("coma")),
+  }),
+});
+
+const fatalDamageRouteValidator = v.object({
+  routingVersion: v.literal(2),
+  kind: v.literal("fatal"),
+  nativeDamage: damageAmountValidator,
+  convertedDamage: v.optional(damageAmountValidator),
+  armor: v.optional(protectionDamageSnapshotValidator),
+  body: bodyDamageSnapshotValidator,
+  lifeState: v.object({
+    before: v.union(v.literal("alive"), v.literal("coma")),
+    after: v.literal("dead"),
+  }),
+});
+
+const tieredDamageRouteValidator = v.union(
+  stoppedDamageRouteValidator,
+  armorDamageRouteValidator,
+  bodyDamageRouteValidator,
+  fatalDamageRouteValidator,
 );
 
 export const resolvedResultValidator = v.union(
@@ -144,7 +210,7 @@ export const resolvedResultValidator = v.union(
     damageMultiplier: v.union(v.literal(1), v.literal(2)),
     damageRoll: damageRollValidator,
     totalDamage: v.number(),
-    route: routeValidator,
+    route: v.union(legacySdcDamageRouteValidator, tieredDamageRouteValidator),
   }),
 );
 

@@ -196,7 +196,17 @@ export const declareAttack = mutation({
 
     const attackerSheet = deriveSheet(attacker);
     const defenderSheet = deriveSheet(defender);
+    if (attackerSheet.vitals.lifeState === "dead" || defenderSheet.vitals.lifeState === "dead") {
+      combatFailure("combatantDead", "Dead combatants cannot enter combat.");
+    }
     requireCombatReady(attackerSheet, "attackerNotReady");
+    const protection = deriveProtection(defenderSheet);
+    if (
+      protection.kind === "mdcArmor" &&
+      (protection.max === undefined || protection.current === undefined)
+    ) {
+      combatFailure("armorNotReady", "Roll the worn M.D.C. armor capacity before entering combat.");
+    }
     requireCombatReady(defenderSheet, "defenderNotReady");
 
     try {
@@ -207,21 +217,9 @@ export const declareAttack = mutation({
 
     const attack = deriveAttackProfile(attackerSheet, args.weaponIndex);
     if (!attack.supported) {
-      combatFailure(
-        attack.reason,
-        attack.reason === "unsupportedMdWeapon"
-          ? "M.D. weapons require the full M.D.C. combat follow-up."
-          : "The selected item is not a supported weapon mode.",
-      );
+      combatFailure(attack.reason, "The selected item is not a supported weapon mode.");
     }
     const context = parseDeclaredContext(attack, args.context);
-    const protection = deriveProtection(defenderSheet);
-    if (protection.kind === "mdcArmor") {
-      combatFailure(
-        "unsupportedMdcProtection",
-        "M.D.C. protection requires the full M.D.C. combat follow-up.",
-      );
-    }
 
     const defenseOptions = deriveDefenseOptions(defenderSheet, attack, context);
     const attackerStateToken = attackerCombatStateToken(attackerSheet, args.weaponIndex);
@@ -311,9 +309,6 @@ export const respondToAttack = mutation({
       return finalizeStale(ctx, pending);
     }
     const protection = deriveProtection(defenderSheet);
-    if (protection.kind === "mdcArmor") {
-      return finalizeStale(ctx, pending);
-    }
     let options: DefenseOption[];
     try {
       options = deriveDefenseOptions(defenderSheet, attack, context);
@@ -339,13 +334,14 @@ export const respondToAttack = mutation({
         ? {}
         : { defense: { kind: response.kind as DefenseKind, roll: defenseRoll } }),
       allowedDefenses: defenseRoll === undefined ? [] : [response.kind as DefenseKind],
-      damageType: "sdc",
+      damageType: stored.attack.damageType,
       criticalOn: attack.criticalOn,
     });
     const damageRoll =
       opposed.outcome === "hit" ? rollDamage(attack.damageFormula, attack.damageBonus) : undefined;
+    const attackForResolution = { ...attack, damageType: stored.attack.damageType };
     const resolution = resolveCombatExchange({
-      attack,
+      attack: attackForResolution,
       context,
       strikeRoll: stored.strikeRoll,
       response,
@@ -360,15 +356,32 @@ export const respondToAttack = mutation({
     });
 
     if (resolution.outcome === "hit") {
-      const current =
-        resolution.route.kind === "armor"
-          ? { ...defender.current, armor: resolution.route.armor.after }
-          : {
-              ...defender.current,
-              sdc: resolution.route.body.after.sdc,
-              hitPoints: resolution.route.body.after.hitPoints,
-            };
-      await patchCurrent(ctx, stored.defenderId, defender, current);
+      let current: Character["current"] | undefined;
+      switch (resolution.route.kind) {
+        case "stopped":
+          break;
+        case "armor":
+          current = { ...defender.current, armor: resolution.route.armor.after };
+          break;
+        case "body":
+          current = {
+            ...defender.current,
+            sdc: resolution.route.body.after.sdc,
+            hitPoints: resolution.route.body.after.hitPoints,
+          };
+          break;
+        case "fatal":
+          current = {
+            ...defender.current,
+            sdc: resolution.route.body.after.sdc,
+            hitPoints: resolution.route.body.after.hitPoints,
+            lifeState: "dead",
+          };
+          break;
+      }
+      if (current !== undefined) {
+        await patchCurrent(ctx, stored.defenderId, defender, current);
+      }
     }
     await ctx.db.replace(pending.id, { ...pending.base, status: "resolved", resolution });
     return (await ctx.db.get(pending.id))!;
@@ -407,16 +420,22 @@ export const targets = query({
         const ready =
           sheet.vitals.sdc.rolled !== undefined && sheet.vitals.hitPoints.rolled !== undefined;
         const protection = deriveProtection(sheet);
+        const disabledReason =
+          sheet.vitals.lifeState === "dead"
+            ? ("combatantDead" as const)
+            : protection.kind === "mdcArmor" &&
+                (protection.max === undefined || protection.current === undefined)
+              ? ("armorNotReady" as const)
+              : !ready
+                ? ("defenderNotReady" as const)
+                : undefined;
         return {
           id: doc._id,
           name: sheet.name,
           ready,
-          protection: protection.kind,
-          ...(ready
-            ? protection.kind === "mdcArmor"
-              ? { disabledReason: "unsupportedMdcProtection" as const }
-              : {}
-            : { disabledReason: "defenderNotReady" as const }),
+          lifeState: sheet.vitals.lifeState,
+          protection,
+          ...(disabledReason === undefined ? {} : { disabledReason }),
         };
       });
   },

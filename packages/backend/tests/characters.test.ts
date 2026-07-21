@@ -200,6 +200,29 @@ describe("living vitals — current vs. max (#38)", () => {
     return id;
   }
 
+  async function markDead(
+    t: ReturnType<typeof convexTest>,
+    id: Awaited<ReturnType<typeof savedVesper>>,
+  ) {
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, {
+        current: { sdc: 0, hitPoints: -14, lifeState: "dead" },
+      });
+    });
+  }
+
+  async function savedHealingVesper(t: ReturnType<typeof convexTest>, name: string) {
+    const id = await t.mutation(api.characters.create, {
+      ...vesper,
+      name,
+      spellIds: [...vesper.spellIds, "heal-wounds"],
+    });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(id, { rolled: { hitPoints: 18, sdc: 20, ppe: 84 } });
+    });
+    return id;
+  }
+
   test("castSpell spends the spell's printed cost, floor at the server", async () => {
     const t = convexTest(schema, modules);
     const id = await savedVesper(t);
@@ -246,25 +269,209 @@ describe("living vitals — current vs. max (#38)", () => {
     const id = await savedVesper(t);
 
     expect(await t.mutation(api.characters.applyDamage, { id, amount: 7 })).toEqual({
+      before: { sdc: 20, hitPoints: 18 },
+      after: { sdc: 13, hitPoints: 18 },
+      amount: 7,
+      lifeState: "alive",
       sdc: 13,
       hitPoints: 18,
     });
     expect(await t.mutation(api.characters.applyDamage, { id, amount: 20 })).toEqual({
+      before: { sdc: 13, hitPoints: 18 },
+      after: { sdc: 0, hitPoints: 11 },
+      amount: 20,
+      lifeState: "alive",
       sdc: 0,
       hitPoints: 11,
     });
+    await expect(t.mutation(api.characters.applyDamage, { id, amount: -5 })).rejects.toThrow(
+      /non-negative/,
+    );
     // Overkill clamps at -(P.E.), the coma/death floor.
     expect(await t.mutation(api.characters.applyDamage, { id, amount: 999 })).toEqual({
+      before: { sdc: 0, hitPoints: 11 },
+      after: { sdc: 0, hitPoints: -14 },
+      amount: 999,
+      lifeState: "dead",
       sdc: 0,
       hitPoints: -14,
     });
     const sheet = await t.query(api.characters.sheet, { id });
     expect(sheet?.vitals.hitPoints).toMatchObject({ rolled: 18, current: -14 });
     expect(sheet?.vitals.sdc).toMatchObject({ rolled: 20, current: 0 });
+    expect(sheet?.vitals.lifeState).toBe("dead");
+  });
 
-    await expect(t.mutation(api.characters.applyDamage, { id, amount: -5 })).rejects.toThrow(
-      /non-negative/,
-    );
+  test.each([
+    { amount: 11, lifeState: "coma" as const, marker: undefined },
+    { amount: 12, lifeState: "dead" as const, marker: "dead" as const },
+  ])(
+    "manual damage at the P.E. floor stores $lifeState without raw overflow",
+    async ({ amount, lifeState, marker }) => {
+      const t = convexTest(schema, modules);
+      const id = await t.mutation(api.characters.create, {
+        ...vesper,
+        attributes: { ...vesper.attributes, PE: 10 },
+        rolled: { hitPoints: 11, sdc: 20, ppe: 84 },
+        current: { sdc: 0, hitPoints: 1 },
+      });
+
+      expect(await t.mutation(api.characters.applyDamage, { id, amount })).toEqual({
+        before: { sdc: 0, hitPoints: 1 },
+        after: { sdc: 0, hitPoints: -10 },
+        amount,
+        lifeState,
+        sdc: 0,
+        hitPoints: -10,
+      });
+      expect((await t.query(api.characters.get, { id }))?.current).toEqual({
+        sdc: 0,
+        hitPoints: -10,
+        ...(marker === undefined ? {} : { lifeState: marker }),
+      });
+    },
+  );
+
+  const terminalActions = [
+    {
+      name: "full update",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.update, {
+          id,
+          character: {
+            ...vesper,
+            name: "Resurrected by replacement",
+            attributes: { ...vesper.attributes, PE: -3 },
+          },
+        }),
+    },
+    {
+      name: "vitals roll",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.rollVitals, { id }),
+    },
+    {
+      name: "vitals restore",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.restoreVitals, { id }),
+    },
+    {
+      name: "further damage",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.applyDamage, { id, amount: 1 }),
+    },
+    {
+      name: "manual healing",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.heal, { id, hitPoints: 1 }),
+    },
+    {
+      name: "rest",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.rest, { id, hours: 1, mode: "rest" }),
+    },
+    {
+      name: "meditation",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.rest, { id, hours: 1, mode: "meditation" }),
+    },
+    {
+      name: "treatment",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.treat, { id, professional: true }),
+    },
+    {
+      name: "ley draw",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.leyLineDraw, { id, melees: 1, atNexus: false }),
+    },
+    {
+      name: "spell casting",
+      run: (t: ReturnType<typeof convexTest>, id: Awaited<ReturnType<typeof savedVesper>>) =>
+        t.mutation(api.characters.castSpell, { id, spellId: "energy-bolt" }),
+    },
+  ];
+
+  test.each(terminalActions)(
+    "dead characters reject $name without state change",
+    async ({ run }) => {
+      const t = convexTest(schema, modules);
+      const id = await savedVesper(t);
+      await markDead(t, id);
+      const before = await t.query(api.characters.get, { id });
+
+      await expect(run(t, id)).rejects.toThrow(/Life signs terminated/);
+      expect(await t.query(api.characters.get, { id })).toEqual(before);
+    },
+  );
+
+  test("cross-character healing guards both a dead caster and a dead target atomically", async () => {
+    const t = convexTest(schema, modules);
+    const deadCaster = await savedHealingVesper(t, "Dead caster");
+    const livingTarget = await savedHealingVesper(t, "Living target");
+    await markDead(t, deadCaster);
+    const deadCasterBefore = await t.query(api.characters.get, { id: deadCaster });
+    const livingTargetBefore = await t.query(api.characters.get, { id: livingTarget });
+
+    await expect(
+      t.mutation(api.characters.castSpell, {
+        id: deadCaster,
+        spellId: "heal-wounds",
+        targetId: livingTarget,
+      }),
+    ).rejects.toThrow(/Life signs terminated/);
+    expect(await t.query(api.characters.get, { id: deadCaster })).toEqual(deadCasterBefore);
+    expect(await t.query(api.characters.get, { id: livingTarget })).toEqual(livingTargetBefore);
+
+    const livingCaster = await savedHealingVesper(t, "Living caster");
+    const deadTarget = await savedHealingVesper(t, "Dead target");
+    await markDead(t, deadTarget);
+    const livingCasterBefore = await t.query(api.characters.get, { id: livingCaster });
+    const deadTargetBefore = await t.query(api.characters.get, { id: deadTarget });
+
+    await expect(
+      t.mutation(api.characters.castSpell, {
+        id: livingCaster,
+        spellId: "heal-wounds",
+        targetId: deadTarget,
+      }),
+    ).rejects.toThrow(/Life signs terminated/);
+    expect(await t.query(api.characters.get, { id: livingCaster })).toEqual(livingCasterBefore);
+    expect(await t.query(api.characters.get, { id: deadTarget })).toEqual(deadTargetBefore);
+  });
+
+  test("dead characters may edit narrative and manage inventory without losing the marker", async () => {
+    const t = convexTest(schema, modules);
+    const id = await savedVesper(t);
+    await markDead(t, id);
+
+    await t.mutation(api.characters.updateNarrative, {
+      id,
+      narrative: { epithet: "Remembered at the ley line." },
+    });
+    expect((await t.query(api.characters.get, { id }))?.current?.lifeState).toBe("dead");
+
+    expect(await t.mutation(api.characters.addItem, { id, itemId: "gladiator" })).toEqual({
+      index: 0,
+    });
+    expect((await t.query(api.characters.get, { id }))?.current?.lifeState).toBe("dead");
+
+    await t.mutation(api.characters.equipArmor, {
+      id,
+      index: 0,
+      expect: { itemId: "gladiator" },
+    });
+    expect((await t.query(api.characters.get, { id }))?.current?.lifeState).toBe("dead");
+
+    await t.mutation(api.characters.removeItem, {
+      id,
+      index: 0,
+      expect: { itemId: "gladiator", worn: true },
+    });
+    const stored = await t.query(api.characters.get, { id });
+    expect(stored?.narrative?.epithet).toBe("Remembered at the ley line.");
+    expect(stored?.items).toEqual([]);
+    expect(stored?.current).toEqual({ sdc: 0, hitPoints: -14, lifeState: "dead" });
   });
 
   test("heal recovers points, clamped at the rolled maximums", async () => {
@@ -562,7 +769,7 @@ describe("living vitals — current vs. max (#38)", () => {
 
     // "Subtract the damage from the armor's S.D.C." (RUE p.287).
     expect(await t.mutation(api.characters.applyDamage, { id, amount: 30, toArmor: true })).toEqual(
-      { armor: 40 },
+      { armor: 40, amount: 30, lifeState: "alive" },
     );
     await expect(
       t.mutation(api.characters.applyDamage, { id, amount: -5, toArmor: true }),
@@ -570,7 +777,7 @@ describe("living vitals — current vs. max (#38)", () => {
     // The depleting hit is fully absorbed — the body pools stay untouched
     // (only FUTURE attacks reach the body once the suit reads 0).
     expect(await t.mutation(api.characters.applyDamage, { id, amount: 99, toArmor: true })).toEqual(
-      { armor: 0 },
+      { armor: 0, amount: 99, lifeState: "alive" },
     );
     const sheet = await t.query(api.characters.sheet, { id });
     expect(sheet?.armor).toMatchObject({ max: 70, current: 0 });

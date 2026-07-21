@@ -24,6 +24,7 @@ import {
   combatErrorMessage,
   combatTargetDisabledReason,
   combatWeaponChoices,
+  exchangeResultLabel,
   exchangeTone,
   formatExchangeSummary,
   ownsAsyncResult,
@@ -302,6 +303,7 @@ function OutgoingExchangeRow(props: {
 export interface CombatExchangePanelProps {
   characterId: Id<"characters">;
   sheet: CharacterSheet;
+  gameplayDisabledReason?: string;
   onTelemetry: (text: string, tone?: TelemetryTone) => void;
 }
 
@@ -331,6 +333,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
   const [notice, setNotice] = createSignal<DeclarationNotice>();
   const [historyExpanded, setHistoryExpanded] = createSignal(false);
   const [flashingIds, setFlashingIds] = createSignal<ReadonlySet<string>>(new Set());
+  const gameplayEnabled = () => props.gameplayDisabledReason === undefined;
   const choices = createMemo(() => combatWeaponChoices(props.sheet));
   const selectedIndex = createMemo(() => {
     const raw = weaponIndex();
@@ -352,6 +355,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
     const attack = selectedSupportedAttack();
     const modifier = modifierValue();
     return (
+      gameplayEnabled() &&
       !busy() &&
       target !== undefined &&
       combatTargetDisabledReason(target) === undefined &&
@@ -521,147 +525,162 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
   return (
     <Panel class="space-y-3 p-3">
       <SectionTitle>COMBAT EXCHANGE</SectionTitle>
-      <div class="space-y-2 border-t border-line pt-2">
-        <label class="block space-y-1">
-          <MonoLabel class="block">TARGET</MonoLabel>
-          <SelectInput
-            class="w-full"
-            value={targetId()}
-            onChange={(event) => setTargetId(event.currentTarget.value)}
-          >
-            <option value="">SELECT DOSSIER</option>
-            <For each={targets.data()}>
-              {(target) => (
-                <option
-                  value={target.id}
-                  disabled={combatTargetDisabledReason(target) !== undefined}
-                >
-                  {target.name}
-                  {combatTargetDisabledReason(target)
-                    ? ` — ${combatTargetDisabledReason(target)}`
-                    : ""}
-                </option>
-              )}
-            </For>
-          </SelectInput>
-        </label>
-        <label class="block space-y-1">
-          <MonoLabel class="block">WEAPON</MonoLabel>
-          <SelectInput
-            class="w-full"
-            value={weaponIndex()}
-            onChange={(event) => setWeaponIndex(event.currentTarget.value)}
-          >
-            <option value="">SELECT WEAPON</option>
-            <For each={choices()}>
-              {(choice) => (
-                <option value={choice.index} disabled={!choice.supported}>
-                  {choice.label}
-                  {choice.disabledReason ? ` — ${choice.disabledReason}` : ""}
-                </option>
-              )}
-            </For>
-          </SelectInput>
-        </label>
-        <div class="flex items-end gap-2">
-          <ToggleChip pressed={aware()} onToggle={() => setAware((value) => !value)}>
-            AWARE
-          </ToggleChip>
-          <Show when={selectedSupportedAttack()?.kind === "melee"}>
-            <label class="min-w-0 flex-1 space-y-1">
-              <MonoLabel class="block">PARRY MODE</MonoLabel>
-              <SelectInput
-                class="w-full"
-                value={parryMode()}
-                onChange={(event) => setParryMode(event.currentTarget.value as ParryMode)}
-              >
-                <option value="unavailable">UNAVAILABLE</option>
-                <option value="standard">STANDARD</option>
-                <option value="bareHanded">BARE-HANDED</option>
-              </SelectInput>
-            </label>
-          </Show>
-          <Show when={selectedSupportedAttack()?.kind === "ranged"}>
-            <label class="min-w-0 flex-1 space-y-1">
-              <MonoLabel class="block">RANGE BAND</MonoLabel>
-              <SelectInput
-                class="w-full"
-                value={rangeBand()}
-                onChange={(event) => setRangeBand(event.currentTarget.value as RangeBand)}
-              >
-                <option value="pointBlank">POINT-BLANK</option>
-                <option value="close">CLOSE</option>
-                <option value="normal">NORMAL</option>
-              </SelectInput>
-            </label>
-          </Show>
-        </div>
-        <div class="grid grid-cols-[72px_minmax(0,1fr)] gap-2">
-          <label class="space-y-1">
-            <MonoLabel class="block">MOD</MonoLabel>
-            <TextInput
-              aria-label="Strike modifier"
-              inputmode="numeric"
-              class="w-full"
-              value={strikeModifier()}
-              onInput={(event) => setStrikeModifier(event.currentTarget.value)}
-            />
-          </label>
-          <label class="space-y-1">
-            <MonoLabel class="block">REASON</MonoLabel>
-            <TextInput
-              aria-label="Strike modifier reason"
-              class="w-full"
-              value={strikeReason()}
-              onInput={(event) => setStrikeReason(event.currentTarget.value)}
-            />
-          </label>
-        </div>
-        <Button
-          variant="primary"
-          class="w-full text-left"
-          disabled={!canDeclare()}
-          onClick={() => void submitDeclaration()}
-        >
-          {busy() ? "> TRANSMITTING…" : "> DECLARE ATTACK"}
-        </Button>
-        <Show when={notice()}>
-          {(message) => <Alert tone={message().tone}>{message().text}</Alert>}
-        </Show>
-        <Show when={error()}>{(message) => <Alert tone="danger">{message()}</Alert>}</Show>
-        <Show when={targets.error()}>
-          {(queryError) => <Alert tone="danger">TARGET LINK FAILED — {queryError().message}</Alert>}
-        </Show>
-      </div>
+      <Show when={props.gameplayDisabledReason}>
+        {(reason) => (
+          <Alert tone="danger">
+            <MonoLabel class="mr-2 !text-inherit">LIFE SIGNS TERMINATED</MonoLabel>
+            {reason()}
+          </Alert>
+        )}
+      </Show>
 
-      <section class="border-t border-line pt-2" aria-labelledby="combat-incoming-title">
-        <MonoLabel class="block text-dead" id="combat-incoming-title">
-          INCOMING
-        </MonoLabel>
-        <Show
-          when={incomingIds().length > 0}
-          fallback={<p class="mt-1 font-mono text-[11.5px] text-dead">// NO PENDING STRIKES</p>}
-        >
-          <ol class="mt-2 space-y-2">
-            <For each={incomingIds()}>
-              {(exchangeId) => (
-                <IncomingExchangeRow
-                  exchangeId={exchangeId}
-                  exchange={() => incomingById(exchangeId)}
-                  characterId={props.characterId}
-                  routeEpoch={() => routeEpoch}
-                  onTelemetry={props.onTelemetry}
-                />
-              )}
-            </For>
-          </ol>
-        </Show>
-        <Show when={incoming.error()}>
-          {(queryError) => (
-            <Alert tone="danger">INCOMING LINK FAILED — {queryError().message}</Alert>
-          )}
-        </Show>
-      </section>
+      <Show when={gameplayEnabled()}>
+        <div class="space-y-2 border-t border-line pt-2">
+          <label class="block space-y-1">
+            <MonoLabel class="block">TARGET</MonoLabel>
+            <SelectInput
+              class="w-full"
+              value={targetId()}
+              onChange={(event) => setTargetId(event.currentTarget.value)}
+            >
+              <option value="">SELECT DOSSIER</option>
+              <For each={targets.data()}>
+                {(target) => (
+                  <option
+                    value={target.id}
+                    disabled={combatTargetDisabledReason(target) !== undefined}
+                  >
+                    {target.name}
+                    {combatTargetDisabledReason(target)
+                      ? ` — ${combatTargetDisabledReason(target)}`
+                      : ""}
+                  </option>
+                )}
+              </For>
+            </SelectInput>
+          </label>
+          <label class="block space-y-1">
+            <MonoLabel class="block">WEAPON</MonoLabel>
+            <SelectInput
+              class="w-full"
+              value={weaponIndex()}
+              onChange={(event) => setWeaponIndex(event.currentTarget.value)}
+            >
+              <option value="">SELECT WEAPON</option>
+              <For each={choices()}>
+                {(choice) => (
+                  <option value={choice.index} disabled={!choice.supported}>
+                    {choice.label}
+                    {choice.disabledReason ? ` — ${choice.disabledReason}` : ""}
+                  </option>
+                )}
+              </For>
+            </SelectInput>
+          </label>
+          <div class="flex items-end gap-2">
+            <ToggleChip pressed={aware()} onToggle={() => setAware((value) => !value)}>
+              AWARE
+            </ToggleChip>
+            <Show when={selectedSupportedAttack()?.kind === "melee"}>
+              <label class="min-w-0 flex-1 space-y-1">
+                <MonoLabel class="block">PARRY MODE</MonoLabel>
+                <SelectInput
+                  class="w-full"
+                  value={parryMode()}
+                  onChange={(event) => setParryMode(event.currentTarget.value as ParryMode)}
+                >
+                  <option value="unavailable">UNAVAILABLE</option>
+                  <option value="standard">STANDARD</option>
+                  <option value="bareHanded">BARE-HANDED</option>
+                </SelectInput>
+              </label>
+            </Show>
+            <Show when={selectedSupportedAttack()?.kind === "ranged"}>
+              <label class="min-w-0 flex-1 space-y-1">
+                <MonoLabel class="block">RANGE BAND</MonoLabel>
+                <SelectInput
+                  class="w-full"
+                  value={rangeBand()}
+                  onChange={(event) => setRangeBand(event.currentTarget.value as RangeBand)}
+                >
+                  <option value="pointBlank">POINT-BLANK</option>
+                  <option value="close">CLOSE</option>
+                  <option value="normal">NORMAL</option>
+                </SelectInput>
+              </label>
+            </Show>
+          </div>
+          <div class="grid grid-cols-[72px_minmax(0,1fr)] gap-2">
+            <label class="space-y-1">
+              <MonoLabel class="block">MOD</MonoLabel>
+              <TextInput
+                aria-label="Strike modifier"
+                inputmode="numeric"
+                class="w-full"
+                value={strikeModifier()}
+                onInput={(event) => setStrikeModifier(event.currentTarget.value)}
+              />
+            </label>
+            <label class="space-y-1">
+              <MonoLabel class="block">REASON</MonoLabel>
+              <TextInput
+                aria-label="Strike modifier reason"
+                class="w-full"
+                value={strikeReason()}
+                onInput={(event) => setStrikeReason(event.currentTarget.value)}
+              />
+            </label>
+          </div>
+          <Button
+            variant="primary"
+            class="w-full text-left"
+            disabled={!canDeclare()}
+            onClick={() => void submitDeclaration()}
+          >
+            {busy() ? "> TRANSMITTING…" : "> DECLARE ATTACK"}
+          </Button>
+          <Show when={notice()}>
+            {(message) => <Alert tone={message().tone}>{message().text}</Alert>}
+          </Show>
+          <Show when={error()}>{(message) => <Alert tone="danger">{message()}</Alert>}</Show>
+          <Show when={targets.error()}>
+            {(queryError) => (
+              <Alert tone="danger">TARGET LINK FAILED — {queryError().message}</Alert>
+            )}
+          </Show>
+        </div>
+      </Show>
+
+      <Show when={gameplayEnabled()}>
+        <section class="border-t border-line pt-2" aria-labelledby="combat-incoming-title">
+          <MonoLabel class="block text-dead" id="combat-incoming-title">
+            INCOMING
+          </MonoLabel>
+          <Show
+            when={incomingIds().length > 0}
+            fallback={<p class="mt-1 font-mono text-[11.5px] text-dead">// NO PENDING STRIKES</p>}
+          >
+            <ol class="mt-2 space-y-2">
+              <For each={incomingIds()}>
+                {(exchangeId) => (
+                  <IncomingExchangeRow
+                    exchangeId={exchangeId}
+                    exchange={() => incomingById(exchangeId)}
+                    characterId={props.characterId}
+                    routeEpoch={() => routeEpoch}
+                    onTelemetry={props.onTelemetry}
+                  />
+                )}
+              </For>
+            </ol>
+          </Show>
+          <Show when={incoming.error()}>
+            {(queryError) => (
+              <Alert tone="danger">INCOMING LINK FAILED — {queryError().message}</Alert>
+            )}
+          </Show>
+        </section>
+      </Show>
 
       <section class="border-t border-line pt-2" aria-labelledby="combat-outgoing-title">
         <MonoLabel class="block text-dead" id="combat-outgoing-title">
@@ -723,7 +742,8 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
                       exchange.status === "resolved" && flashingIds().has(String(exchange._id)),
                   }}
                 >
-                  {formatExchangeSummary(exchange)}
+                  <MonoLabel class="block !text-inherit">{exchangeResultLabel(exchange)}</MonoLabel>
+                  <span class="block">{formatExchangeSummary(exchange)}</span>
                 </li>
               )}
             </For>

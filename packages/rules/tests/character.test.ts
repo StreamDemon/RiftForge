@@ -92,6 +92,79 @@ describe("deriveSheet — a level-1 Ley Line Walker", () => {
 });
 
 describe("deriveSheet — edge cases", () => {
+  test("derives alive from positive H.P. and coma from zero through the floor", () => {
+    const rolled = { hitPoints: 18, sdc: 20 };
+
+    expect(
+      deriveSheet({
+        ...leyLineWalker,
+        rolled,
+        current: { hitPoints: 1, sdc: 0 },
+      }).vitals.lifeState,
+    ).toBe("alive");
+
+    for (const hitPoints of [0, -7, -14]) {
+      expect(
+        deriveSheet({
+          ...leyLineWalker,
+          rolled,
+          current: { hitPoints, sdc: 0 },
+        }).vitals.lifeState,
+      ).toBe("coma");
+    }
+  });
+
+  test("accepts a dead marker only at the terminal rolled-vitals state", () => {
+    const sheet = deriveSheet({
+      ...leyLineWalker,
+      rolled: { hitPoints: 18, sdc: 20 },
+      current: { hitPoints: -14, sdc: 0, lifeState: "dead" },
+    });
+
+    expect(sheet.vitals.lifeState).toBe("dead");
+  });
+
+  test("rejects unrolled or contradictory dead markers", () => {
+    expect(() => deriveSheet({ ...leyLineWalker, current: { lifeState: "dead" } })).toThrow(
+      /rolled vitals/i,
+    );
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        rolled: { hitPoints: 18, sdc: 20 },
+        current: { hitPoints: -14, sdc: 1, lifeState: "dead" },
+      }),
+    ).toThrow(/S\.D\.C\./);
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        rolled: { hitPoints: 18, sdc: 20 },
+        current: { hitPoints: 0, sdc: 0, lifeState: "dead" },
+      }),
+    ).toThrow(/coma\/death floor/i);
+  });
+
+  test("does not treat a root lifeState property as the persisted marker", () => {
+    const rootMarker = {
+      ...leyLineWalker,
+      rolled: { hitPoints: 18, sdc: 20 },
+      current: { hitPoints: -14, sdc: 0 },
+      lifeState: "dead",
+    };
+
+    expect(deriveSheet(rootMarker).vitals.lifeState).toBe("coma");
+  });
+
+  test("legacy marker-absent documents remain valid", () => {
+    const sheet = deriveSheet({
+      ...leyLineWalker,
+      rolled: { hitPoints: 18, sdc: 20 },
+      current: { hitPoints: -14, sdc: 0 },
+    });
+
+    expect(sheet.vitals.lifeState).toBe("coma");
+  });
+
   test("a recorded H.P. roll shows as `rolled`, with `current` defaulting to it", () => {
     const sheet = deriveSheet({ ...leyLineWalker, rolled: { hitPoints: 18 } });
     expect(sheet.vitals.hitPoints.rolled).toBe(18);

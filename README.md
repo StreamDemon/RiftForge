@@ -29,13 +29,16 @@ apps/web/
 
 The engine is isomorphic: the Convex backend derives sheets at query time, and the
 client imports the same package for ephemeral rolls. The runtime never parses the
-source book. Combat APIs now support persisted, server-rolled S.D.C. weapon
-exchanges with engine-authorized defense choices, immutable history, and atomic
-body S.D.C.-then-Hit-Point routing. Artificial S.D.C. armor A.R. and ablation
-routing are pure-tested and ready for page-stamped production content. Natural
-A.R. is intentionally absent per RUE p.339; full M.D.C. interaction remains
-follow-up work. Spell APIs expose load-validated structured damage, derivation,
-and injected-RNG rolling.
+source book. Combat APIs support persisted, server-rolled S.D.C. and M.D. weapon
+exchanges through one engine-authorized protocol. The delivered core covers
+critical-before-conversion damage, S.D.C./M.D.C. cross-tier routing, S.D.C. armor
+A.R. and ablation, intact and depleted M.D.C. armor, final-blast absorption with
+no spill, immutable route evidence, atomic body damage, and explicit terminal
+death. Legacy S.D.C. exchange history remains readable without migration.
+Natural A.R. is intentionally absent per RUE p.339. The optional near-fatal M.D.
+injury and survival procedure remains deferred to issue #54, and a generic
+page-stamped effects pipeline remains roadmap work in issue #53. Spell APIs expose
+load-validated structured damage, derivation, and injected-RNG rolling.
 
 ### Current status
 

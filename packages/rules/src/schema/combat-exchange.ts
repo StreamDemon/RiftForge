@@ -69,8 +69,10 @@ export type CombatResponseInput = z.infer<typeof combatResponseInputSchema>;
 
 export const combatExchangeErrorCodeSchema = z.enum([
   "selfTarget",
+  "combatantDead",
   "attackerNotReady",
   "defenderNotReady",
+  "armorNotReady",
   "weaponMissingOrChanged",
   "unsupportedWeaponMode",
   "unsupportedMdWeapon",
@@ -88,12 +90,20 @@ export const combatExchangeRulesSchema = z.object({
   book: z.string().min(1),
   pages: z.object({
     armorAndVitals: z.literal(287),
+    megaDamageIntro: z.literal(288),
     sdcCombat: z.literal(339),
     defense: z.literal(340),
     damage: z.literal(341),
     automaticDodge: z.literal(344),
+    megaDamageCombat: z.literal(355),
     modernWeapons: z.literal(360),
     rangedDodging: z.literal(361),
+  }),
+  rules: z.object({
+    sdcPerMd: z.literal(100),
+    minimumSdcToDamageMdc: z.literal(100),
+    depletedMdcArmorBypassStrike: z.literal(8),
+    finalMdcAbsorbsDestroyingBlast: z.literal(true),
   }),
   minimumStrikeTotal: z.object({ melee: z.literal(5), ranged: z.literal(8) }),
   rangedDodgeModifier: z.object({

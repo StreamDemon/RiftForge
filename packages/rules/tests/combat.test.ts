@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vite-plus/test";
 import {
+  applyBodyDamage,
   applyDamage,
   attacksPerMelee,
   combatProfile,
@@ -67,6 +68,39 @@ describe("applyDamage — S.D.C. before H.P. (RUE p.347), coma floor (p.287)", (
     expect(applyDamage({ sdc: 5, hitPoints: 18 }, 0, floor)).toEqual({ sdc: 5, hitPoints: 18 });
     expect(() => applyDamage({ sdc: 5, hitPoints: 18 }, -3, floor)).toThrow(/non-negative/);
     expect(() => applyDamage({ sdc: 5, hitPoints: 18 }, 2.5, floor)).toThrow(/non-negative/);
+  });
+});
+
+describe("applyBodyDamage — fatal-aware body damage", () => {
+  const pool = { sdc: 0, hitPoints: 1 };
+  const floor = -10;
+
+  test.each([
+    { damage: 1, hitPoints: 0, rawHitPoints: 0, lifeState: "coma" as const },
+    { damage: 11, hitPoints: -10, rawHitPoints: -10, lifeState: "coma" as const },
+    { damage: 12, hitPoints: -10, rawHitPoints: -11, lifeState: "dead" as const },
+  ])(
+    "damage $damage derives $lifeState and clamps H.P. to $hitPoints",
+    ({ damage, hitPoints, rawHitPoints, lifeState }) => {
+      expect(applyBodyDamage(pool, damage, floor)).toEqual({
+        before: pool,
+        after: { sdc: 0, hitPoints },
+        rawHitPoints,
+        lifeState,
+      });
+    },
+  );
+
+  test("S.D.C. drains before H.P.", () => {
+    expect(applyBodyDamage({ sdc: 5, hitPoints: 1 }, 5, floor)).toMatchObject({
+      after: { sdc: 0, hitPoints: 1 },
+      rawHitPoints: 1,
+      lifeState: "alive",
+    });
+  });
+
+  test("applyDamage remains a clamped-pool compatibility wrapper", () => {
+    expect(applyDamage(pool, 12, floor)).toEqual({ sdc: 0, hitPoints: -10 });
   });
 });
 

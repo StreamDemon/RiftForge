@@ -1,8 +1,7 @@
 import {
-  applyDamage as damagePools,
+  applyBodyDamage,
   armorMaxPool,
   armorNeedsRoll,
-  comaDeathFloor,
   damageArmor,
   deriveSheet,
   getItem,
@@ -25,6 +24,7 @@ import {
   loadCharacter,
   patchCurrent,
   requireItemAt,
+  requireLiving,
   validateCharacter,
 } from "./character_state";
 import { characterFields } from "./schema";
@@ -56,6 +56,8 @@ export const update = mutation({
   args: { id: v.id("characters"), character: v.object(characterInputFields) },
   returns: v.null(),
   handler: async (ctx, { id, character }) => {
+    const existing = await loadCharacter(ctx, id);
+    requireLiving(existing, "be updated");
     await ctx.db.replace(id, validateCharacter(character));
     return null;
   },
@@ -102,6 +104,7 @@ export const rollVitals = mutation({
   }),
   handler: async (ctx, { id }) => {
     const character = await loadCharacter(ctx, id);
+    requireLiving(character, "roll vitals");
     const occ = getOcc(character.occId);
     if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
     const pe = character.attributes.PE;
@@ -202,6 +205,7 @@ export const castSpell = mutation({
   }),
   handler: async (ctx, { id, spellId, targetId, healPool }) => {
     const character = await loadCharacter(ctx, id);
+    requireLiving(character, "cast spells");
     if (!character.spellIds.includes(spellId)) {
       throw new Error(`Character does not know the spell "${spellId}".`);
     }
@@ -216,6 +220,11 @@ export const castSpell = mutation({
     }
     if (spell.healing?.othersOnly && !aimedAtOther) {
       throw new Error(`${spell.name} cannot be used on oneself.`);
+    }
+    let healingTarget: Character | undefined;
+    if (spell.healing !== undefined && aimedAtOther) {
+      healingTarget = await loadCharacter(ctx, targetId!);
+      requireLiving(healingTarget, "receive magical healing");
     }
     const max = character.rolled?.ppe;
     if (max === undefined) throw new Error("Roll vitals before casting — no P.P.E. to spend.");
@@ -266,7 +275,7 @@ export const castSpell = mutation({
     }
     // Cross-document: spend on the caster, heal the target — one transaction,
     // the first table-shaped interaction (VTT groundwork).
-    const target = await loadCharacter(ctx, targetId);
+    const target = healingTarget!;
     const amounts = resolve(target);
     const { current: targetCurrent, gained } = healPools(target, amounts);
     await patchCurrent(ctx, id, character, spentCurrent);
@@ -388,13 +397,25 @@ export const equipArmor = mutation({
  */
 export const applyDamage = mutation({
   args: { id: v.id("characters"), amount: v.number(), toArmor: v.optional(v.boolean()) },
-  returns: v.object({
-    sdc: v.optional(v.number()),
-    hitPoints: v.optional(v.number()),
-    armor: v.optional(v.number()),
-  }),
+  returns: v.union(
+    v.object({
+      sdc: v.number(),
+      hitPoints: v.number(),
+      before: v.object({ sdc: v.number(), hitPoints: v.number() }),
+      after: v.object({ sdc: v.number(), hitPoints: v.number() }),
+      amount: v.number(),
+      lifeState: v.union(v.literal("alive"), v.literal("coma"), v.literal("dead")),
+    }),
+    v.object({
+      armor: v.number(),
+      amount: v.number(),
+      lifeState: v.union(v.literal("alive"), v.literal("coma"), v.literal("dead")),
+    }),
+  ),
   handler: async (ctx, { id, amount, toArmor }) => {
     const character = await loadCharacter(ctx, id);
+    requireLiving(character, "take damage");
+    const sheet = deriveSheet(character);
     if (toArmor === true) {
       const worn = character.items.find((e) => e.worn === true);
       if (worn === undefined) throw new Error("No armor is worn — nothing to strike.");
@@ -416,19 +437,28 @@ export const applyDamage = mutation({
       // `damageArmor` rejects amounts that aren't whole, non-negative counts.
       const next = damageArmor(pool, amount);
       await patchCurrent(ctx, id, character, { ...character.current, armor: next });
-      return { armor: next };
+      return { armor: next, amount, lifeState: sheet.vitals.lifeState };
     }
-    const rolled = character.rolled;
-    if (rolled?.hitPoints === undefined || rolled.sdc === undefined) {
+    const sdc = sheet.vitals.sdc.current;
+    const hitPoints = sheet.vitals.hitPoints.current;
+    if (sdc === undefined || hitPoints === undefined) {
       throw new Error("Roll vitals before applying damage — no pools to deplete.");
     }
-    const pool = {
-      sdc: character.current?.sdc ?? rolled.sdc,
-      hitPoints: character.current?.hitPoints ?? rolled.hitPoints,
+    const result = applyBodyDamage({ sdc, hitPoints }, amount, sheet.vitals.comaDeathFloor);
+    const current = {
+      ...character.current,
+      sdc: result.after.sdc,
+      hitPoints: result.after.hitPoints,
+      ...(result.lifeState === "dead" ? { lifeState: "dead" as const } : {}),
     };
-    const next = damagePools(pool, amount, comaDeathFloor(character.attributes.PE));
-    await patchCurrent(ctx, id, character, { ...character.current, ...next });
-    return next;
+    await patchCurrent(ctx, id, character, current);
+    return {
+      ...result.after,
+      before: result.before,
+      after: result.after,
+      amount,
+      lifeState: result.lifeState,
+    };
   },
 });
 
@@ -447,6 +477,7 @@ export const heal = mutation({
   returns: v.null(),
   handler: async (ctx, { id, ...amounts }) => {
     const character = await loadCharacter(ctx, id);
+    requireLiving(character, "receive healing");
     const { current } = healPools(character, amounts);
     await patchCurrent(ctx, id, character, current);
     return null;
@@ -473,6 +504,7 @@ export const rest = mutation({
   }),
   handler: async (ctx, { id, hours, mode }) => {
     const character = await loadCharacter(ctx, id);
+    requireLiving(character, mode === "meditation" ? "meditate" : "rest");
     const occ = getOcc(character.occId);
     if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
     const max = character.rolled?.ppe;
@@ -503,6 +535,7 @@ export const leyLineDraw = mutation({
   }),
   handler: async (ctx, { id, melees, atNexus }) => {
     const character = await loadCharacter(ctx, id);
+    requireLiving(character, "draw from a ley line");
     const occ = getOcc(character.occId);
     if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
     if (occ.ppe === undefined) {
@@ -545,6 +578,7 @@ export const treat = mutation({
   }),
   handler: async (ctx, { id, professional, day }) => {
     const character = await loadCharacter(ctx, id);
+    requireLiving(character, "receive treatment");
     const rolled = character.rolled;
     if (rolled?.hitPoints === undefined || rolled.sdc === undefined) {
       throw new Error("Roll vitals before treatment — no pools to recover.");
@@ -574,7 +608,8 @@ export const restoreVitals = mutation({
   args: { id: v.id("characters") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    await loadCharacter(ctx, id); // existence check
+    const character = await loadCharacter(ctx, id);
+    requireLiving(character, "restore vitals");
     await ctx.db.patch(id, { current: undefined });
     return null;
   },
