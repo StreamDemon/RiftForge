@@ -183,7 +183,7 @@ export interface WeaponInstanceSnapshot {
 export type AttackProfile =
   | {
       supported: false;
-      reason: "weaponMissingOrChanged" | "unsupportedWeaponMode" | "unsupportedMdWeapon";
+      reason: "weaponMissingOrChanged" | "unsupportedWeaponMode";
       weapon?: WeaponInstanceSnapshot & { name: string };
     }
   | {

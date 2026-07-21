@@ -217,12 +217,7 @@ export const declareAttack = mutation({
 
     const attack = deriveAttackProfile(attackerSheet, args.weaponIndex);
     if (!attack.supported) {
-      combatFailure(
-        attack.reason,
-        attack.reason === "unsupportedMdWeapon"
-          ? "M.D. weapons require the full M.D.C. combat follow-up."
-          : "The selected item is not a supported weapon mode.",
-      );
+      combatFailure(attack.reason, "The selected item is not a supported weapon mode.");
     }
     const context = parseDeclaredContext(attack, args.context);
 

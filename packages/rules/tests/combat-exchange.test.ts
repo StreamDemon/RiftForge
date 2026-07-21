@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vite-plus/test";
+import { describe, expect, expectTypeOf, test } from "vite-plus/test";
 import {
   attackerCombatStateToken,
   armorSchema,
@@ -601,6 +601,14 @@ describe("combat-state tokens", () => {
 });
 
 describe("weapon attack profiles", () => {
+  test("exposes only currently reachable unsupported attack reasons", () => {
+    type UnsupportedAttackReason = Extract<AttackProfile, { supported: false }>["reason"];
+
+    expectTypeOf<UnsupportedAttackReason>().toEqualTypeOf<
+      "weaponMissingOrChanged" | "unsupportedWeaponMode"
+    >();
+  });
+
   test("classifies real S.D.C. melee and firearm instances", () => {
     const sheet = combatSheet({
       items: [{ itemId: "survival-knife" }, { itemId: "automatic-pistol" }],
