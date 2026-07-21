@@ -724,7 +724,7 @@ export function CombatExchangePanel(props: CombatExchangePanelProps): JSX.Elemen
                       exchange.status === "resolved" && flashingIds().has(String(exchange._id)),
                   }}
                 >
-                  <MonoLabel class="block text-inherit">{exchangeResultLabel(exchange)}</MonoLabel>
+                  <MonoLabel class="block !text-inherit">{exchangeResultLabel(exchange)}</MonoLabel>
                   <span class="block">{formatExchangeSummary(exchange)}</span>
                 </li>
               )}

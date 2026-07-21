@@ -758,6 +758,15 @@ describe("combat exchange component contract", () => {
     expect(panelSource).not.toMatch(/border-ley|text-ley/);
   });
 
+  test("forces result labels to inherit the semantic row tone over MonoLabel muted text", () => {
+    expect(uiSource).toContain(
+      'font-mono text-[11.5px] tracking-[0.14em] text-muted uppercase ${own.class ?? ""}',
+    );
+    expect(panelSource).toContain(
+      '<MonoLabel class="block !text-inherit">{exchangeResultLabel(exchange)}</MonoLabel>',
+    );
+  });
+
   test("associates the recent-history disclosure with its controlled list", () => {
     expect(panelSource).toContain('aria-controls="combat-recent-history"');
     expect(panelSource).toContain('<ol id="combat-recent-history"');
