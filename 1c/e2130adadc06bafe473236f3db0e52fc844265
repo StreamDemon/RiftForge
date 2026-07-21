@@ -1,0 +1,30 @@
+README.md
+  s_902623fce1fa2f::t_2b0d5db782dfd7 32-41
+.codex/superpowers/specs/2026-07-21-mdc-combat-exchange-design.md
+  s_902623fce1fa2f::t_0afa0c82cad973 29-39
+  s_902623fce1fa2f::t_38de3b0a38c97e 588-606
+  s_902623fce1fa2f::t_2b0d5db782dfd7 4
+  s_902623fce1fa2f::t_3d5d9a3aaa2129 581-587,607-643
+.codex/superpowers/plans/2026-07-21-mdc-combat-exchange.md
+  s_902623fce1fa2f::t_9610450d15847f 92-96,128-131,145-147,162-169,205-213,226-229
+  s_902623fce1fa2f::t_7e718d3ee6043a 350-355,365-367,382-391,404,410,421-422,432,434,442-448
+  s_902623fce1fa2f::t_61b464c7d046b4 433
+  s_902623fce1fa2f::t_cddb904dc6eedf 456-459,474-481
+  s_902623fce1fa2f::t_3538a975a9935c 244-250,272-277,291-292,307-313,326-337
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "1ce2130adadc06bafe473236f3db0e52fc844265",
+  "prompts": {},
+  "sessions": {
+    "s_902623fce1fa2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f83d5-22f2-7893-b392-5a45d1c9a01a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
