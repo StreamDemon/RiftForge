@@ -314,9 +314,6 @@ export const respondToAttack = mutation({
       return finalizeStale(ctx, pending);
     }
     const protection = deriveProtection(defenderSheet);
-    if (protection.kind === "mdcArmor") {
-      return finalizeStale(ctx, pending);
-    }
     let options: DefenseOption[];
     try {
       options = deriveDefenseOptions(defenderSheet, attack, context);
@@ -342,13 +339,14 @@ export const respondToAttack = mutation({
         ? {}
         : { defense: { kind: response.kind as DefenseKind, roll: defenseRoll } }),
       allowedDefenses: defenseRoll === undefined ? [] : [response.kind as DefenseKind],
-      damageType: "sdc",
+      damageType: stored.attack.damageType,
       criticalOn: attack.criticalOn,
     });
     const damageRoll =
       opposed.outcome === "hit" ? rollDamage(attack.damageFormula, attack.damageBonus) : undefined;
+    const attackForResolution = { ...attack, damageType: stored.attack.damageType };
     const resolution = resolveCombatExchange({
-      attack,
+      attack: attackForResolution,
       context,
       strikeRoll: stored.strikeRoll,
       response,
@@ -363,15 +361,32 @@ export const respondToAttack = mutation({
     });
 
     if (resolution.outcome === "hit") {
-      const current =
-        resolution.route.kind === "armor"
-          ? { ...defender.current, armor: resolution.route.armor.after }
-          : {
-              ...defender.current,
-              sdc: resolution.route.body.after.sdc,
-              hitPoints: resolution.route.body.after.hitPoints,
-            };
-      await patchCurrent(ctx, stored.defenderId, defender, current);
+      let current: Character["current"] | undefined;
+      switch (resolution.route.kind) {
+        case "stopped":
+          break;
+        case "armor":
+          current = { ...defender.current, armor: resolution.route.armor.after };
+          break;
+        case "body":
+          current = {
+            ...defender.current,
+            sdc: resolution.route.body.after.sdc,
+            hitPoints: resolution.route.body.after.hitPoints,
+          };
+          break;
+        case "fatal":
+          current = {
+            ...defender.current,
+            sdc: resolution.route.body.after.sdc,
+            hitPoints: resolution.route.body.after.hitPoints,
+            lifeState: "dead",
+          };
+          break;
+      }
+      if (current !== undefined) {
+        await patchCurrent(ctx, stored.defenderId, defender, current);
+      }
     }
     await ctx.db.replace(pending.id, { ...pending.base, status: "resolved", resolution });
     return (await ctx.db.get(pending.id))!;
