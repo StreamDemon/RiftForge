@@ -1,0 +1,27 @@
+apps/web/src/layouts/app.tsx
+  s_902623fce1fa2f::t_62d0f09c63e0d2 27-28,56
+apps/web/index.html
+  s_902623fce1fa2f::t_b742c304117f19 7
+apps/web/tests/character-sheet.test.ts
+  s_902623fce1fa2f::t_68a7569cfe8bdb 22-23,28-35
+  s_902623fce1fa2f::t_5058280649b29a 16-21,36
+  s_902623fce1fa2f::t_ebce49c2d8191d 15,24-27
+apps/web/src/components/sheet-view.tsx
+  s_902623fce1fa2f::t_7686286983c91a 367,387,400
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f67236e2badbb539dcd3b866ed5fb9ace1e915b6",
+  "prompts": {},
+  "sessions": {
+    "s_902623fce1fa2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f83d5-22f2-7893-b392-5a45d1c9a01a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
