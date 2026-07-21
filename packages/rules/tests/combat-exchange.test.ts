@@ -13,7 +13,7 @@ import {
   deriveSheet,
   evaluateDeclaration,
   resolveCombatExchange,
-  routeSdcHit,
+  routeCombatHit,
   validateCombatContext,
   type AttackProfile,
   type CharacterInput,
@@ -1048,7 +1048,7 @@ describe("protection classification", () => {
   });
 });
 
-describe("S.D.C. hit routing", () => {
+describe("tiered hit routing", () => {
   const fixture = armorSchema.parse({
     kind: "armor",
     id: "test-sdc-armor",
@@ -1066,80 +1066,329 @@ describe("S.D.C. hit routing", () => {
     current: 5,
   };
 
-  test("a strike at A.R. ablates armor without spilling destruction damage", () => {
-    expect(
-      routeSdcHit({
-        strikeTotal: 12,
-        damage: 9,
-        protection: armor,
-        body: { sdc: 10, hitPoints: 20 },
-        comaDeathFloor: -10,
-      }),
-    ).toEqual({
-      kind: "armor",
-      armor: { before: 5, after: 0 },
-      body: {
-        before: { sdc: 10, hitPoints: 20 },
-        after: { sdc: 10, hitPoints: 20 },
-      },
-    });
-  });
+  test.each([
+    ["S.D.C. below", 11, { type: "sdc", value: 9 }, undefined],
+    ["S.D.C. at", 12, { type: "sdc", value: 9 }, undefined],
+    ["M.D. below", 11, { type: "md", value: 1 }, { type: "sdc", value: 100 }],
+    ["M.D. at", 12, { type: "md", value: 1 }, { type: "sdc", value: 100 }],
+  ] as const)(
+    "a %s A.R. strike ablates S.D.C. armor without spilling",
+    (_case, strikeTotal, damage, convertedDamage) => {
+      expect(
+        routeCombatHit({
+          strikeTotal,
+          damage,
+          protection: armor,
+          body: { sdc: 10, hitPoints: 20 },
+          comaDeathFloor: -10,
+        }),
+      ).toEqual({
+        routingVersion: 2,
+        kind: "armor",
+        nativeDamage: damage,
+        ...(convertedDamage === undefined ? {} : { convertedDamage }),
+        armor: {
+          kind: "sdcArmor",
+          itemId: fixture.id,
+          name: fixture.name,
+          before: 5,
+          after: 0,
+        },
+        body: {
+          before: { sdc: 10, hitPoints: 20 },
+          after: { sdc: 10, hitPoints: 20 },
+        },
+        finalBlastAbsorbed: true,
+      });
+    },
+  );
 
-  test("a strike above A.R. routes the full hit to the body without changing armor", () => {
-    expect(
-      routeSdcHit({
-        strikeTotal: 13,
-        damage: 9,
-        protection: armor,
-        body: { sdc: 10, hitPoints: 20 },
-        comaDeathFloor: -10,
-      }),
-    ).toEqual({
-      kind: "body",
-      armor: { before: 5, after: 5 },
-      body: {
-        before: { sdc: 10, hitPoints: 20 },
-        after: { sdc: 1, hitPoints: 20 },
-      },
-    });
-  });
+  test.each([
+    ["S.D.C.", { type: "sdc", value: 9 }, undefined, { sdc: 1, hitPoints: 20 }],
+    ["M.D.", { type: "md", value: 1 }, { type: "sdc", value: 100 }, { sdc: 0, hitPoints: -10 }],
+  ] as const)(
+    "a %s strike above A.R. routes the full hit to the body without changing armor",
+    (_tier, damage, convertedDamage, after) => {
+      expect(
+        routeCombatHit({
+          strikeTotal: 13,
+          damage,
+          protection: armor,
+          body: { sdc: 10, hitPoints: 20 },
+          comaDeathFloor: -10,
+        }),
+      ).toEqual({
+        routingVersion: 2,
+        kind: damage.type === "md" ? "fatal" : "body",
+        nativeDamage: damage,
+        ...(convertedDamage === undefined ? {} : { convertedDamage }),
+        armor: {
+          kind: "sdcArmor",
+          itemId: fixture.id,
+          name: fixture.name,
+          before: 5,
+          after: 5,
+        },
+        body: {
+          before: { sdc: 10, hitPoints: 20 },
+          after,
+        },
+        lifeState: {
+          before: "alive",
+          after: damage.type === "md" ? "dead" : "alive",
+        },
+      });
+    },
+  );
 
   test("depleted armor routes future hits through body S.D.C. before Hit Points", () => {
     expect(
-      routeSdcHit({
+      routeCombatHit({
         strikeTotal: 12,
-        damage: 5,
+        damage: { type: "sdc", value: 5 },
         protection: { ...armor, current: 0 },
         body: { sdc: 3, hitPoints: 20 },
         comaDeathFloor: -10,
       }),
     ).toEqual({
+      routingVersion: 2,
       kind: "body",
-      armor: { before: 0, after: 0 },
+      nativeDamage: { type: "sdc", value: 5 },
+      armor: {
+        kind: "sdcArmor",
+        itemId: fixture.id,
+        name: fixture.name,
+        before: 0,
+        after: 0,
+      },
       body: {
         before: { sdc: 3, hitPoints: 20 },
         after: { sdc: 0, hitPoints: 18 },
       },
+      lifeState: { before: "alive", after: "alive" },
     });
   });
 
-  test("refuses M.D.C. protection instead of converting the hit", () => {
-    expect(
-      routeSdcHit({
+  const mdcArmor: ProtectionState = {
+    kind: "mdcArmor",
+    itemId: "gladiator",
+    name: "Gladiator Full Environmental Body Armor",
+    max: 70,
+    current: 10,
+  };
+
+  test.each([
+    [99, "stopped", undefined, 10],
+    [100, "armor", 1, 9],
+    [199, "armor", 1, 9],
+    [200, "armor", 2, 8],
+    [450, "armor", 4, 6],
+    [496, "armor", 4, 6],
+  ] as const)(
+    "routes %i S.D.C. against intact M.D.C. armor as %s",
+    (value, kind, convertedValue, after) => {
+      const result = routeCombatHit({
         strikeTotal: 20,
-        damage: 100,
-        protection: {
-          kind: "mdcArmor",
-          itemId: "gladiator",
-          name: "Gladiator Full Environmental Body Armor",
-          max: 70,
-          current: 70,
-        },
+        damage: { type: "sdc", value },
+        protection: mdcArmor,
         body: { sdc: 10, hitPoints: 20 },
         comaDeathFloor: -10,
+      });
+
+      expect(result).toEqual(
+        kind === "stopped"
+          ? {
+              routingVersion: 2,
+              kind: "stopped",
+              reason: "intactMdcImpervious",
+              nativeDamage: { type: "sdc", value },
+              armor: {
+                kind: "mdcArmor",
+                itemId: mdcArmor.itemId,
+                name: mdcArmor.name,
+                before: 10,
+                after: 10,
+              },
+              body: {
+                before: { sdc: 10, hitPoints: 20 },
+                after: { sdc: 10, hitPoints: 20 },
+              },
+            }
+          : {
+              routingVersion: 2,
+              kind: "armor",
+              nativeDamage: { type: "sdc", value },
+              convertedDamage: { type: "md", value: convertedValue },
+              armor: {
+                kind: "mdcArmor",
+                itemId: mdcArmor.itemId,
+                name: mdcArmor.name,
+                before: 10,
+                after,
+              },
+              body: {
+                before: { sdc: 10, hitPoints: 20 },
+                after: { sdc: 10, hitPoints: 20 },
+              },
+              finalBlastAbsorbed: false,
+            },
+      );
+    },
+  );
+
+  test.each([
+    [
+      { type: "sdc", value: 200 },
+      { type: "md", value: 2 },
+    ],
+    [{ type: "md", value: 21 }, undefined],
+  ] as const)(
+    "absorbs the full %s final M.D.C. blast without body spill",
+    (damage, convertedDamage) => {
+      expect(
+        routeCombatHit({
+          strikeTotal: 20,
+          damage,
+          protection: { ...mdcArmor, current: 1 },
+          body: { sdc: 10, hitPoints: 20 },
+          comaDeathFloor: -10,
+        }),
+      ).toEqual({
+        routingVersion: 2,
+        kind: "armor",
+        nativeDamage: damage,
+        ...(convertedDamage === undefined ? {} : { convertedDamage }),
+        armor: {
+          kind: "mdcArmor",
+          itemId: mdcArmor.itemId,
+          name: mdcArmor.name,
+          before: 1,
+          after: 0,
+        },
+        body: {
+          before: { sdc: 10, hitPoints: 20 },
+          after: { sdc: 10, hitPoints: 20 },
+        },
+        finalBlastAbsorbed: true,
+      });
+    },
+  );
+
+  test("a depleted M.D.C. shell stops an S.D.C. strike total of 7", () => {
+    expect(
+      routeCombatHit({
+        strikeTotal: 7,
+        damage: { type: "sdc", value: 5 },
+        protection: { ...mdcArmor, current: 0 },
+        body: { sdc: 120, hitPoints: 20 },
+        comaDeathFloor: -10,
       }),
-    ).toEqual({ kind: "unsupportedMdcProtection" });
+    ).toEqual({
+      routingVersion: 2,
+      kind: "stopped",
+      reason: "depletedMdcShell",
+      nativeDamage: { type: "sdc", value: 5 },
+      armor: {
+        kind: "mdcArmor",
+        itemId: mdcArmor.itemId,
+        name: mdcArmor.name,
+        before: 0,
+        after: 0,
+      },
+      body: {
+        before: { sdc: 120, hitPoints: 20 },
+        after: { sdc: 120, hitPoints: 20 },
+      },
+    });
   });
+
+  test.each([
+    [8, { type: "sdc", value: 5 }, undefined, { sdc: 115, hitPoints: 20 }],
+    [7, { type: "md", value: 1 }, { type: "sdc", value: 100 }, { sdc: 20, hitPoints: 20 }],
+  ] as const)(
+    "a depleted M.D.C. shell admits strike %i with %s damage",
+    (strikeTotal, damage, convertedDamage, after) => {
+      expect(
+        routeCombatHit({
+          strikeTotal,
+          damage,
+          protection: { ...mdcArmor, current: 0 },
+          body: { sdc: 120, hitPoints: 20 },
+          comaDeathFloor: -10,
+        }),
+      ).toEqual({
+        routingVersion: 2,
+        kind: "body",
+        nativeDamage: damage,
+        ...(convertedDamage === undefined ? {} : { convertedDamage }),
+        armor: {
+          kind: "mdcArmor",
+          itemId: mdcArmor.itemId,
+          name: mdcArmor.name,
+          before: 0,
+          after: 0,
+        },
+        body: {
+          before: { sdc: 120, hitPoints: 20 },
+          after,
+        },
+        lifeState: { before: "alive", after: "alive" },
+      });
+    },
+  );
+
+  test.each([
+    [
+      "S.D.C. before Hit Points",
+      { type: "sdc", value: 5 },
+      undefined,
+      { sdc: 3, hitPoints: 5 },
+      -5,
+      "body",
+      { sdc: 0, hitPoints: 3 },
+      "alive",
+    ],
+    [
+      "exact coma floor",
+      { type: "md", value: 1 },
+      { type: "sdc", value: 100 },
+      { sdc: 90, hitPoints: 5 },
+      -5,
+      "body",
+      { sdc: 0, hitPoints: -5 },
+      "coma",
+    ],
+    [
+      "fatal overflow",
+      { type: "md", value: 1 },
+      { type: "sdc", value: 100 },
+      { sdc: 89, hitPoints: 5 },
+      -5,
+      "fatal",
+      { sdc: 0, hitPoints: -5 },
+      "dead",
+    ],
+  ] as const)(
+    "routes no-armor damage through %s",
+    (_case, damage, convertedDamage, before, comaDeathFloor, kind, after, lifeAfter) => {
+      expect(
+        routeCombatHit({
+          strikeTotal: 20,
+          damage,
+          protection: { kind: "none" },
+          body: before,
+          comaDeathFloor,
+        }),
+      ).toEqual({
+        routingVersion: 2,
+        kind,
+        nativeDamage: damage,
+        ...(convertedDamage === undefined ? {} : { convertedDamage }),
+        body: { before, after },
+        lifeState: { before: "alive", after: lifeAfter },
+      });
+    },
+  );
 });
 
 describe("completed pure combat exchanges", () => {
@@ -1236,11 +1485,14 @@ describe("completed pure combat exchanges", () => {
       damageRoll,
       totalDamage: 5,
       route: {
+        routingVersion: 2,
         kind: "body",
+        nativeDamage: { type: "sdc", value: 5 },
         body: {
           before: { sdc: 10, hitPoints: 20 },
           after: { sdc: 5, hitPoints: 20 },
         },
+        lifeState: { before: "alive", after: "alive" },
       },
     });
   });
@@ -1252,15 +1504,23 @@ describe("completed pure combat exchanges", () => {
         strikeRoll: d20(20, meleeAttack.strikeBonus),
         damageRoll,
       }),
-    ).toMatchObject({
+    ).toEqual({
       outcome: "hit",
+      reason: "unopposed",
+      response: noneResponse,
       critical: true,
       damageMultiplier: 2,
-      damageRoll: { dice: [4], bonus: 1, total: 5 },
+      damageRoll,
       totalDamage: 10,
       route: {
+        routingVersion: 2,
         kind: "body",
-        body: { after: { sdc: 0, hitPoints: 20 } },
+        nativeDamage: { type: "sdc", value: 10 },
+        body: {
+          before: { sdc: 10, hitPoints: 20 },
+          after: { sdc: 0, hitPoints: 20 },
+        },
+        lifeState: { before: "alive", after: "alive" },
       },
     });
   });
@@ -1290,11 +1550,71 @@ describe("completed pure combat exchanges", () => {
         body: { sdc: 20, hitPoints: 20 },
         comaDeathFloor: -10,
       }),
-    ).toMatchObject({
+    ).toEqual({
       outcome: "hit",
-      damageRoll: { bonus: 0 },
+      reason: "unopposed",
+      response,
+      critical: false,
+      damageMultiplier: 1,
+      damageRoll: firearmDamage,
       totalDamage: 10,
-      route: { body: { after: { sdc: 10, hitPoints: 20 } } },
+      route: {
+        routingVersion: 2,
+        kind: "body",
+        nativeDamage: { type: "sdc", value: 10 },
+        body: {
+          before: { sdc: 20, hitPoints: 20 },
+          after: { sdc: 10, hitPoints: 20 },
+        },
+        lifeState: { before: "alive", after: "alive" },
+      },
+    });
+  });
+
+  test("multiplies a critical M.D. roll before converting body damage", () => {
+    const attack = requireSupported(
+      deriveAttackProfile(combatSheet({ items: [{ itemId: "wilks-320-laser-pistol" }] }), 0),
+    );
+    const context = {
+      kind: "ranged",
+      defenderAware: false,
+      rangeBand: "normal",
+    } as const;
+    const response = authorizeCombatResponse(deriveDefenseOptions(defender, attack, context), {
+      kind: "none",
+    });
+    const mdDamage: DamageRoll = { dice: [4], bonus: 0, total: 4 };
+
+    expect(
+      resolveCombatExchange({
+        attack,
+        context,
+        strikeRoll: d20(20, attack.strikeBonus),
+        response,
+        damageRoll: mdDamage,
+        protection: { kind: "none" },
+        body: { sdc: 1_000, hitPoints: 20 },
+        comaDeathFloor: -10,
+      }),
+    ).toEqual({
+      outcome: "hit",
+      reason: "unopposed",
+      response,
+      critical: true,
+      damageMultiplier: 2,
+      damageRoll: mdDamage,
+      totalDamage: 8,
+      route: {
+        routingVersion: 2,
+        kind: "body",
+        nativeDamage: { type: "md", value: 8 },
+        convertedDamage: { type: "sdc", value: 800 },
+        body: {
+          before: { sdc: 1_000, hitPoints: 20 },
+          after: { sdc: 200, hitPoints: 20 },
+        },
+        lifeState: { before: "alive", after: "alive" },
+      },
     });
   });
 
@@ -1386,10 +1706,11 @@ describe("completed pure combat exchanges", () => {
     ).toThrow(/Damage total must be 5/i);
   });
 
-  test("rejects M.D.C. protection before producing an S.D.C. route", () => {
-    expect(() =>
+  test("emits a v2 stopped route instead of unsupported M.D.C. protection", () => {
+    expect(
       resolveCombatExchange({
         ...unopposedMelee,
+        damageRoll,
         protection: {
           kind: "mdcArmor",
           itemId: "gladiator",
@@ -1398,6 +1719,31 @@ describe("completed pure combat exchanges", () => {
           current: 70,
         },
       }),
-    ).toThrow(/unsupportedMdcProtection.*out of scope/i);
+    ).toEqual({
+      outcome: "hit",
+      reason: "unopposed",
+      response: noneResponse,
+      critical: false,
+      damageMultiplier: 1,
+      damageRoll,
+      totalDamage: 5,
+      route: {
+        routingVersion: 2,
+        kind: "stopped",
+        reason: "intactMdcImpervious",
+        nativeDamage: { type: "sdc", value: 5 },
+        armor: {
+          kind: "mdcArmor",
+          itemId: "gladiator",
+          name: "Gladiator Full Environmental Body Armor",
+          before: 70,
+          after: 70,
+        },
+        body: {
+          before: { sdc: 10, hitPoints: 20 },
+          after: { sdc: 10, hitPoints: 20 },
+        },
+      },
+    });
   });
 });
