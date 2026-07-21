@@ -169,7 +169,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
   const sdc = withRolled(physicalSdcRange(), character.rolled?.sdc, character.current?.sdc);
 
   let lifeState: LifeState;
-  if (character.lifeState === "dead") {
+  if (character.current?.lifeState === "dead") {
     if (hitPoints.rolled === undefined || sdc.rolled === undefined) {
       throw new Error("lifeState dead requires rolled vitals for H.P. and S.D.C.");
     }

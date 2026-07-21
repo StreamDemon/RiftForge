@@ -118,31 +118,41 @@ describe("deriveSheet — edge cases", () => {
     const sheet = deriveSheet({
       ...leyLineWalker,
       rolled: { hitPoints: 18, sdc: 20 },
-      current: { hitPoints: -14, sdc: 0 },
-      lifeState: "dead",
+      current: { hitPoints: -14, sdc: 0, lifeState: "dead" },
     });
 
     expect(sheet.vitals.lifeState).toBe("dead");
   });
 
   test("rejects unrolled or contradictory dead markers", () => {
-    expect(() => deriveSheet({ ...leyLineWalker, lifeState: "dead" })).toThrow(/rolled vitals/i);
+    expect(() => deriveSheet({ ...leyLineWalker, current: { lifeState: "dead" } })).toThrow(
+      /rolled vitals/i,
+    );
     expect(() =>
       deriveSheet({
         ...leyLineWalker,
         rolled: { hitPoints: 18, sdc: 20 },
-        current: { hitPoints: -14, sdc: 1 },
-        lifeState: "dead",
+        current: { hitPoints: -14, sdc: 1, lifeState: "dead" },
       }),
     ).toThrow(/S\.D\.C\./);
     expect(() =>
       deriveSheet({
         ...leyLineWalker,
         rolled: { hitPoints: 18, sdc: 20 },
-        current: { hitPoints: 0, sdc: 0 },
-        lifeState: "dead",
+        current: { hitPoints: 0, sdc: 0, lifeState: "dead" },
       }),
     ).toThrow(/coma\/death floor/i);
+  });
+
+  test("does not treat a root lifeState property as the persisted marker", () => {
+    const rootMarker = {
+      ...leyLineWalker,
+      rolled: { hitPoints: 18, sdc: 20 },
+      current: { hitPoints: -14, sdc: 0 },
+      lifeState: "dead",
+    };
+
+    expect(deriveSheet(rootMarker).vitals.lifeState).toBe("coma");
   });
 
   test("legacy marker-absent documents remain valid", () => {
