@@ -1,0 +1,29 @@
+packages/backend/tests/characters.test.ts
+  s_77333ca00ccc9c::t_ea5bdf1d517fdf 15,29-76
+  s_77333ca00ccc9c::t_437c568dbcad1d 355-356,363-364,370,374
+  s_77333ca00ccc9c::t_a999df660106c5 378
+packages/backend/tests/healing-cast.test.ts
+  s_77333ca00ccc9c::t_ea5bdf1d517fdf 17
+packages/backend/tests/combat.test.ts
+  s_77333ca00ccc9c::t_ea5bdf1d517fdf 25
+packages/backend/convex/schema.ts
+  s_77333ca00ccc9c::t_01ef3a7ca3caa2 15-16
+packages/backend/convex/characters.ts
+  s_77333ca00ccc9c::t_01ef3a7ca3caa2 47-51,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "bfbb3ea8c1e69c479148b636b6ed21da133efc5e",
+  "prompts": {},
+  "sessions": {
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
