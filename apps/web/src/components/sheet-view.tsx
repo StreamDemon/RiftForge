@@ -368,7 +368,8 @@ export function SheetView(props: {
         <PortraitFrame />
         <div class="min-w-0 flex-1">
           <MonoLabel>
-            LEVEL {s().level} // {s().occ.name.toUpperCase()} // {s().occ.category.toUpperCase()}
+            LEVEL {s().level} // {s().species.name.toUpperCase()} // {s().occ.name.toUpperCase()} //{" "}
+            {s().occ.category.toUpperCase()}
           </MonoLabel>
           <h1 class="font-display text-5xl leading-none tracking-[0.02em]">{s().name}</h1>
           <Show when={s().narrative?.epithet}>
