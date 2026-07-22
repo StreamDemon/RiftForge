@@ -94,6 +94,8 @@ export type Narrative = z.infer<typeof narrativeSchema>;
 export const characterSchema = z.object({
   name: z.string().min(1),
   occId: z.string().min(1),
+  /** Explicit for new characters; missing legacy documents derive as Human. */
+  speciesId: z.string().min(1).default("human"),
   /** One of the seven canonical alignments (RUE pp.289-292). Optional because
    * characters stored before the alignment step existed have none; resolved
    * (and unknown ids rejected) in `deriveSheet`, like occ/skill/spell ids. */

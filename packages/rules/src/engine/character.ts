@@ -7,6 +7,7 @@ import type { Spell } from "../schema/spells.ts";
 import { getAlignment } from "./alignments.ts";
 import { deriveAttributeBonuses } from "./attributes.ts";
 import { diceMax, diceMin } from "./dice.ts";
+import { describeOccEligibilityFailure, validateOccEligibility } from "./eligibility.ts";
 import { armorMaxPool, armorNeedsRoll, getItem } from "./items.ts";
 import {
   combatProfile,
@@ -60,6 +61,10 @@ export interface SheetArmor {
 export interface CharacterSheet {
   name: string;
   occ: { id: string; name: string; category: string };
+  species: {
+    id: string;
+    name: string;
+  };
   /** Present when the character has picked an alignment. */
   alignment?: Alignment;
   /** Player-authored identity, passed through untouched (never affects numbers). */
@@ -116,6 +121,15 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
   const character = characterSchema.parse(input);
   const occ = getOcc(character.occId);
   if (!occ) throw new Error(`Unknown O.C.C. "${character.occId}".`);
+
+  const eligibility = validateOccEligibility(occ, character.speciesId, character.attributes);
+  if (!eligibility.ok || eligibility.species === undefined) {
+    throw new Error(
+      eligibility.failures.map(describeOccEligibilityFailure).join(" ") ||
+        "O.C.C. eligibility could not be resolved.",
+    );
+  }
+  const species = eligibility.species;
 
   let alignment: Alignment | undefined;
   if (character.alignmentId !== undefined) {
@@ -300,6 +314,7 @@ export function deriveSheet(input: CharacterInput): CharacterSheet {
   return {
     name: character.name,
     occ: { id: occ.id, name: occ.name, category: occ.category },
+    species: { id: species.id, name: species.name },
     alignment,
     narrative: character.narrative,
     level,

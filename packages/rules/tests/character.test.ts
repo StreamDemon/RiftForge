@@ -4,6 +4,7 @@ import { deriveSheet, type CharacterInput } from "../src/index.ts";
 const leyLineWalker: CharacterInput = {
   name: "Vesper",
   occId: "ley-line-walker",
+  speciesId: "human",
   level: 1,
   attributes: { IQ: 18, ME: 16, MA: 12, PS: 16, PP: 20, PE: 14, PB: 11, Spd: 12 },
   hthType: "basic",
@@ -88,6 +89,36 @@ describe("deriveSheet — a level-1 Ley Line Walker", () => {
   test("known spells resolve", () => {
     expect(sheet.spells.count).toBe(3);
     expect(sheet.spells.known.map((s) => s.id)).toContain("armor-of-ithan");
+  });
+});
+
+describe("deriveSheet — species and O.C.C. eligibility", () => {
+  test("projects explicit Human identity onto the sheet", () => {
+    expect(deriveSheet(leyLineWalker).species).toEqual({ id: "human", name: "Human" });
+  });
+
+  test("defaults a legacy document without speciesId to Human without mutating input", () => {
+    const { speciesId: _speciesId, ...legacy } = leyLineWalker;
+    expect(deriveSheet(legacy).species).toEqual({ id: "human", name: "Human" });
+    expect("speciesId" in legacy).toBe(false);
+  });
+
+  test("rejects unknown and unavailable species", () => {
+    expect(() => deriveSheet({ ...leyLineWalker, speciesId: "kryptonian" })).toThrow(
+      'Unknown species "kryptonian".',
+    );
+    expect(() => deriveSheet({ ...leyLineWalker, speciesId: "psi-stalker" })).toThrow(
+      "Psi-Stalker is known but not playable.",
+    );
+  });
+
+  test("enforces printed O.C.C. attribute requirements in derivation", () => {
+    expect(() =>
+      deriveSheet({
+        ...leyLineWalker,
+        attributes: { ...leyLineWalker.attributes, IQ: 9, PE: 11 },
+      }),
+    ).toThrow("I.Q. 9; requires 10+. P.E. 11; requires 12+.");
   });
 });
 
