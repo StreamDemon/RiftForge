@@ -333,6 +333,7 @@ describe("assembleSkills — hand-to-hand upgrades (synthetic O.C.C.)", () => {
     category: "Test",
     alignment: "Any",
     attributeRequirements: [],
+    speciesEligibility: { kind: "any" },
     occSkills: [
       { skill: "Climbing", skillId: "climbing", occBonus: 5 },
       {
@@ -473,6 +474,7 @@ describe("secondarySkillPlan", () => {
       category: "Test",
       alignment: "Any",
       attributeRequirements: [],
+      speciesEligibility: { kind: "any" },
       secondarySkills: { count: 3 },
     });
     const plan = secondarySkillPlan(occ);
@@ -489,6 +491,7 @@ describe("content-bug fail-fasts and edge counts", () => {
     category: "Test",
     alignment: "Any",
     attributeRequirements: [],
+    speciesEligibility: { kind: "any" },
   };
 
   test("a category choice with no catalog skills throws at plan time", () => {

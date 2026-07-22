@@ -1,7 +1,65 @@
 import { describe, expect, test } from "vite-plus/test";
-import { basePpeRange, getOcc, leyLineWalker, rollBasePpe } from "../src/index.ts";
+import {
+  basePpeRange,
+  getOcc,
+  leyLineWalker,
+  occSchema,
+  rollBasePpe,
+  validateOccSpeciesReferences,
+} from "../src/index.ts";
+
+const gruntEligibilityFixture = occSchema.parse({
+  source: { book: "Rifts Ultimate Edition", page: 233 },
+  id: "coalition-grunt-eligibility-fixture",
+  name: "Coalition Grunt eligibility fixture",
+  category: "Men at Arms",
+  alignment: "Any",
+  attributeRequirements: [],
+  speciesEligibility: { kind: "oneOf", speciesIds: ["human", "psi-stalker"] },
+});
 
 describe("Ley Line Walker O.C.C. (RUE pp.113-116)", () => {
+  test("Ley Line Walker accepts any playable species through structured content", () => {
+    expect(leyLineWalker.speciesEligibility).toEqual({ kind: "any" });
+    expect("racialRequirement" in leyLineWalker).toBe(false);
+  });
+
+  test("the p.233 Grunt fixture references Human and Psi-Stalker", () => {
+    expect(gruntEligibilityFixture.speciesEligibility).toEqual({
+      kind: "oneOf",
+      speciesIds: ["human", "psi-stalker"],
+    });
+    expect(() => validateOccSpeciesReferences(gruntEligibilityFixture)).not.toThrow();
+  });
+
+  test("rejects legacy prose, empty/duplicate lists, and unknown species references", () => {
+    const base = {
+      source: { book: "Rifts Ultimate Edition", page: 233 },
+      id: "invalid",
+      name: "Invalid",
+      category: "Test",
+      alignment: "Any",
+      attributeRequirements: [],
+    };
+    expect(() => occSchema.parse({ ...base, racialRequirement: "Humans only" })).toThrow();
+    expect(() =>
+      occSchema.parse({ ...base, speciesEligibility: { kind: "oneOf", speciesIds: [] } }),
+    ).toThrow();
+    expect(() =>
+      occSchema.parse({
+        ...base,
+        speciesEligibility: { kind: "oneOf", speciesIds: ["human", "human"] },
+      }),
+    ).toThrow();
+    const unknown = occSchema.parse({
+      ...base,
+      speciesEligibility: { kind: "oneOf", speciesIds: ["human", "kryptonian"] },
+    });
+    expect(() => validateOccSpeciesReferences(unknown)).toThrow(
+      'O.C.C. "invalid" references unknown species "kryptonian".',
+    );
+  });
+
   test("validates and is registered", () => {
     expect(leyLineWalker.id).toBe("ley-line-walker");
     expect(leyLineWalker.name).toBe("Ley Line Walker");

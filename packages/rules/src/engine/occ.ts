@@ -1,9 +1,21 @@
 import { occSchema, type Occ } from "../schema/occ.ts";
 import leyLineWalkerRaw from "../content/occ/ley-line-walker.json" with { type: "json" };
 import { diceAverage, diceMax, diceMin, rollDice, type Rng } from "./dice.ts";
+import { getSpecies } from "./species.ts";
 
 /** The Ley Line Walker O.C.C. (RUE pp.113-116), validated at load. */
 export const leyLineWalker: Occ = occSchema.parse(leyLineWalkerRaw);
+
+export function validateOccSpeciesReferences(occ: Occ): void {
+  if (occ.speciesEligibility.kind === "any") return;
+  for (const speciesId of occ.speciesEligibility.speciesIds) {
+    if (getSpecies(speciesId) === undefined) {
+      throw new Error(`O.C.C. "${occ.id}" references unknown species "${speciesId}".`);
+    }
+  }
+}
+
+validateOccSpeciesReferences(leyLineWalker);
 
 /** All O.C.C.s currently modeled, keyed by id. */
 export const occRegistry: Readonly<Record<string, Occ>> = {
