@@ -1,0 +1,32 @@
+packages/rules/tests/character.test.ts
+  s_77333ca00ccc9c::t_d0e96e6c877752 7,95-122
+  s_902623fce1fa2f::t_fbbf31775e916a 123-124
+packages/rules/src/schema/character.ts
+  s_77333ca00ccc9c::t_0f2704489d9c43 97-98
+packages/rules/src/engine/character.ts
+  s_77333ca00ccc9c::t_0f2704489d9c43 10,64-67,125-133,317
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8a2f6dc1e2bb529c6b483cf78c9791d9863f0d71",
+  "prompts": {},
+  "sessions": {
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    },
+    "s_902623fce1fa2f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f83d5-22f2-7893-b392-5a45d1c9a01a",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
