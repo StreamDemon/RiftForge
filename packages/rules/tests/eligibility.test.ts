@@ -3,6 +3,7 @@ import {
   describeOccEligibilityFailure,
   leyLineWalker,
   occSchema,
+  type OccEligibilityFailure,
   validateOccEligibility,
 } from "../src/index.ts";
 
@@ -57,4 +58,35 @@ describe("validateOccEligibility", () => {
       "P.E. 11; requires 12+.",
     ]);
   });
+
+  test.each([
+    [
+      "unknown species",
+      { kind: "unknownSpecies", speciesId: "kryptonian" },
+      'Unknown species "kryptonian".',
+    ],
+    [
+      "unavailable species",
+      {
+        kind: "unavailableSpecies",
+        speciesId: "psi-stalker",
+        name: "Psi-Stalker",
+      },
+      "Psi-Stalker is known but not playable.",
+    ],
+    [
+      "disallowed species",
+      {
+        kind: "speciesNotAllowed",
+        speciesId: "human",
+        allowedSpeciesIds: ["psi-stalker"],
+      },
+      'Species "human" is not allowed; expected psi-stalker.',
+    ],
+  ] satisfies readonly (readonly [string, OccEligibilityFailure, string])[])(
+    "pins the exact formatter message for %s",
+    (_label, failure, expected) => {
+      expect(describeOccEligibilityFailure(failure)).toBe(expected);
+    },
+  );
 });

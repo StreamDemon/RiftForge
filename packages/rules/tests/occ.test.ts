@@ -40,6 +40,7 @@ describe("Ley Line Walker O.C.C. (RUE pp.113-116)", () => {
       category: "Test",
       alignment: "Any",
       attributeRequirements: [],
+      speciesEligibility: { kind: "any" },
     };
     expect(() => occSchema.parse({ ...base, racialRequirement: "Humans only" })).toThrow();
     expect(() =>
