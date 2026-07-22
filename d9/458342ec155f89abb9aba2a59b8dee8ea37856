@@ -1,0 +1,23 @@
+packages/rules/src/index.ts
+  s_77333ca00ccc9c::t_bdfb4f71bd67dd 17
+packages/rules/src/engine/eligibility.ts
+  s_77333ca00ccc9c::t_bdfb4f71bd67dd 1-87
+packages/rules/tests/eligibility.test.ts
+  s_77333ca00ccc9c::t_01f8753b0bb729 1-60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d9458342ec155f89abb9aba2a59b8dee8ea37856",
+  "prompts": {},
+  "sessions": {
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
