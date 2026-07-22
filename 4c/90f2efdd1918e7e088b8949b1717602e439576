@@ -1,0 +1,21 @@
+.codex/superpowers/specs/2026-07-22-occ-breadth-foundation-design.md
+  s_77333ca00ccc9c::t_f091ce7039fa16 3-10
+  s_77333ca00ccc9c::t_353c0920449b02 1-2,11-60,70-76,85-440,449-475
+  s_77333ca00ccc9c::t_60eefb3ebb69f8 61-69,77-84,441-448
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "4c90f2efdd1918e7e088b8949b1717602e439576",
+  "prompts": {},
+  "sessions": {
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
