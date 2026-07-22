@@ -1,7 +1,7 @@
 # Full M.D.C. Combat Exchange Design
 
 **Date:** 2026-07-21
-**Status:** PR #55 ready; CodeRabbit nit resolved; human merge pending
+**Status:** Complete; PR #55 merged and Issue #51 closed on 2026-07-22
 **Branch:** `feat/mdc-combat-exchange`
 **Primary issue:** [#51 — Full M.D.C. combat](https://github.com/StreamDemon/RiftForge/issues/51)
 
@@ -625,6 +625,9 @@ not timeless project totals.
   throw with the missing relative path. RED failed 2/48 as expected; GREEN passed
   48/48, the web package passed 54/54, and root validation passed 540/540 with
   130/130 files formatted and 95/95 files lint/type clean.
+- The human maintainer merged PR #55 into `main` at
+  **2026-07-22 04:10:50 +08:00 (Asia/Singapore)** as
+  `77bcd8a859d35bbe73aed4c06b0ad06fe7cfb7a8`; Issue #51 closed automatically.
 
 ### Live Convex and browser acceptance
 
