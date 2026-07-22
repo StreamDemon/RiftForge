@@ -1,5 +1,6 @@
 export * from "./schema/alignments.ts";
 export * from "./schema/attributes.ts";
+export * from "./schema/species.ts";
 export * from "./schema/occ.ts";
 export * from "./schema/combat.ts";
 export * from "./schema/damage.ts";
@@ -12,6 +13,7 @@ export * from "./schema/combat-exchange.ts";
 export * from "./schema/character.ts";
 export * from "./engine/alignments.ts";
 export * from "./engine/attributes.ts";
+export * from "./engine/species.ts";
 export * from "./engine/dice.ts";
 export * from "./engine/occ.ts";
 export * from "./engine/combat.ts";
