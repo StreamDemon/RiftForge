@@ -1,0 +1,36 @@
+packages/rules/tests/occ.test.ts
+  s_77333ca00ccc9c::t_ce3c89819412c8 2-19,22-62
+packages/rules/tests/builder.test.ts
+  s_77333ca00ccc9c::t_328a240aa14e98 336,477,494
+packages/rules/src/engine/occ.ts
+  s_77333ca00ccc9c::t_06708841108a24 4,9-18
+  s_6006ec54fd1802::t_183af4d6bda074 19
+packages/rules/src/content/occ/ley-line-walker.json
+  s_77333ca00ccc9c::t_06708841108a24 16
+packages/rules/src/schema/occ.ts
+  s_77333ca00ccc9c::t_06708841108a24 107-120,131-132
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f83984f91df5b42ce2f494dc2591d7c61a56fda5",
+  "prompts": {},
+  "sessions": {
+    "s_6006ec54fd1802": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4ba04ba7-84d3-42e0-80ef-ad5cb58f8ddb",
+        "model": "claude-fable-5"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    },
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
