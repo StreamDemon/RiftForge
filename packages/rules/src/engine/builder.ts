@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { CharacterSkill, PsychicClass } from "../schema/character.ts";
-import type { AttributeCode } from "../schema/attributes.ts";
 import type { Occ } from "../schema/occ.ts";
 import type { Skill } from "../schema/skills.ts";
 import { getAlignment } from "./alignments.ts";
@@ -16,33 +15,6 @@ import { initialSpellChoices } from "./spells.ts";
  * storable `CharacterSkill[]`. Level-1 only — skill progression at later
  * levels (`progression`, `newSkillsStartAtLevel1`) is level-up territory.
  */
-
-// ---------------------------------------------------------------------------
-// Attribute requirements (surfaced at the O.C.C. step; RUE per-O.C.C. entries)
-
-export interface RequirementFailure {
-  code: AttributeCode;
-  min: number;
-  actual: number;
-}
-
-export interface RequirementCheck {
-  ok: boolean;
-  failures: RequirementFailure[];
-}
-
-/** Check rolled attributes against the O.C.C.'s printed requirements. */
-export function meetsAttributeRequirements(
-  occ: Occ,
-  attributes: Partial<Record<AttributeCode, number>>,
-): RequirementCheck {
-  const failures: RequirementFailure[] = [];
-  for (const req of occ.attributeRequirements) {
-    const actual = attributes[req.code] ?? 0;
-    if (actual < req.min) failures.push({ code: req.code, min: req.min, actual });
-  }
-  return { ok: failures.length === 0, failures };
-}
 
 // ---------------------------------------------------------------------------
 // Psionics (Step 4, RUE p.289 — Random Psionics Table)

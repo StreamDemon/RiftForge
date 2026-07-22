@@ -49,6 +49,10 @@ inventory and worn armor, take and recover damage, rest, draw P.P.E. from a ley 
 receive treatment, and cast spells through server-validated state changes, while
 ephemeral sheet rolls use the shared rules package client-side.
 
+Character identity is source-validated: Human is currently the sole playable
+species, while known but unimplemented identities remain unavailable rather than
+silently accepted.
+
 ## Development
 
 Tooling is [Vite+](https://viteplus.dev) (`vp`) over a pnpm workspace.

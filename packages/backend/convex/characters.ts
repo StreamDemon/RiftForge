@@ -44,8 +44,13 @@ const characterInputFields = {
   spellIds: v.optional(characterFields.spellIds),
 };
 
+const newCharacterInputFields = {
+  ...characterInputFields,
+  speciesId: v.string(),
+};
+
 export const create = mutation({
-  args: characterInputFields,
+  args: newCharacterInputFields,
   returns: v.id("characters"),
   handler: async (ctx, args) => {
     return await ctx.db.insert("characters", validateCharacter(args));

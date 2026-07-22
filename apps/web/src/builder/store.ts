@@ -2,14 +2,16 @@ import {
   assembleSkills,
   deriveSheet,
   getOcc,
-  meetsAttributeRequirements,
+  getSpecies,
   occSkillPlan,
+  validateOccEligibility,
   validateInitialSpells,
   type AttributeCode,
   type AttributeRoll,
   type BuilderSelections,
   type CharacterInput,
   type CharacterSheet,
+  type OccEligibilityFailure,
   type PsionicsRoll,
   type PsychicClass,
   type SkillPick,
@@ -21,6 +23,7 @@ import { emptyNarrativeForm, toNarrative, type NarrativeForm } from "../lib/narr
 /** Everything the player has chosen so far. */
 export interface Draft {
   name: string;
+  speciesId: string;
   /** Optional player-authored identity (raw form strings). */
   narrative: NarrativeForm;
   attributes?: Record<AttributeCode, AttributeRoll>;
@@ -41,13 +44,15 @@ export interface BuilderStore {
   setDraft: SetStoreFunction<Draft>;
   /** The chosen O.C.C., once picked. */
   occ: Accessor<ReturnType<typeof getOcc>>;
+  /** The resolved source-owned species identity. */
+  species: Accessor<ReturnType<typeof getSpecies>>;
   /** Rolled attribute totals, once rolled. */
   attributeTotals: Accessor<Record<AttributeCode, number> | undefined>;
   /** Engine validation of every skill selection (empty errors = legal). */
   assembled: Accessor<ReturnType<typeof assembleSkills> | undefined>;
   spellErrors: Accessor<string[]>;
   /** The final character, when every step is satisfied. */
-  characterInput: Accessor<CharacterInput | undefined>;
+  characterInput: Accessor<(CharacterInput & { speciesId: string }) | undefined>;
   /** The derived preview for the review step, or the error preventing it. */
   preview: Accessor<{ sheet?: CharacterSheet; error?: string }>;
 }
@@ -55,6 +60,7 @@ export interface BuilderStore {
 export function createBuilderStore(): BuilderStore {
   const [draft, setDraft] = createStore<Draft>({
     name: "",
+    speciesId: "human",
     narrative: { ...emptyNarrativeForm },
     psychicClass: "ordinary",
     occChoices: {},
@@ -64,6 +70,7 @@ export function createBuilderStore(): BuilderStore {
   });
 
   const occ = createMemo(() => (draft.occId !== undefined ? getOcc(draft.occId) : undefined));
+  const species = createMemo(() => getSpecies(draft.speciesId));
 
   const attributeTotals = createMemo(() => {
     if (!draft.attributes) return undefined;
@@ -94,7 +101,7 @@ export function createBuilderStore(): BuilderStore {
     return chosen ? validateInitialSpells(chosen, draft.spellIds) : [];
   });
 
-  const characterInput = createMemo((): CharacterInput | undefined => {
+  const characterInput = createMemo((): (CharacterInput & { speciesId: string }) | undefined => {
     const attributes = attributeTotals();
     const skills = assembled();
     if (!draft.occId || !attributes || !skills) return undefined;
@@ -102,6 +109,7 @@ export function createBuilderStore(): BuilderStore {
     return {
       name: draft.name.trim(),
       occId: draft.occId,
+      speciesId: draft.speciesId,
       ...(draft.alignmentId !== undefined ? { alignmentId: draft.alignmentId } : {}),
       level: 1,
       attributes,
@@ -123,22 +131,42 @@ export function createBuilderStore(): BuilderStore {
     }
   });
 
-  return { draft, setDraft, occ, attributeTotals, assembled, spellErrors, characterInput, preview };
+  return {
+    draft,
+    setDraft,
+    occ,
+    species,
+    attributeTotals,
+    assembled,
+    spellErrors,
+    characterInput,
+    preview,
+  };
+}
+
+export function occEligibilityRecoveryGuidance(failures: readonly OccEligibilityFailure[]): string {
+  return failures.some((failure) => failure.kind !== "attribute")
+    ? "IDENTITY/O.C.C. UNAVAILABLE"
+    : "REROLL ATTRIBUTES TO QUALIFY";
 }
 
 /** Per-step gating — a step is reachable when all before it are valid. */
 export function stepValidity(store: BuilderStore) {
-  const requirements = createMemo(() => {
+  const eligibility = createMemo(() => {
     const chosen = store.occ();
     const attrs = store.attributeTotals();
-    return chosen && attrs ? meetsAttributeRequirements(chosen, attrs) : undefined;
+    return chosen && attrs
+      ? validateOccEligibility(chosen, store.draft.speciesId, attrs)
+      : undefined;
   });
 
   return {
-    requirements,
-    identity: createMemo(() => store.draft.name.trim().length > 0),
+    eligibility,
+    identity: createMemo(
+      () => store.draft.name.trim().length > 0 && store.species()?.playable === true,
+    ),
     attributes: createMemo(() => store.draft.attributes !== undefined),
-    occ: createMemo(() => store.occ() !== undefined && requirements()?.ok === true),
+    occ: createMemo(() => store.occ() !== undefined && eligibility()?.ok === true),
     alignment: createMemo(() => store.draft.alignmentId !== undefined),
     psionics: createMemo(() => true),
     // The O.C.C.-skills step only checks its own slots: related/secondary

@@ -13,7 +13,7 @@
     { "code": "IQ", "min": 10 },
     { "code": "PE", "min": 12 }
   ],
-  "racialRequirement": "None. At least 30% are D-Bees.",
+  "speciesEligibility": { "kind": "any" },
   "concealedBodyArmor": {
     "source": { "book": "Rifts Ultimate Edition", "page": 113 },
     "light": { "mainBodyMdc": "2D6+32" },

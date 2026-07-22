@@ -19,6 +19,19 @@ export function IdentityStep(props: { store: BuilderStore }) {
         />
       </label>
 
+      <div class="max-w-sm space-y-1">
+        <MonoLabel>SPECIES</MonoLabel>
+        <div
+          class="border border-line bg-inset px-3 py-2 font-mono text-[13px] tracking-[0.08em] text-amber"
+          aria-label="Species: Human, locked"
+        >
+          HUMAN // LOCKED
+        </div>
+        <p class="font-mono text-[11px] text-dead">
+          // sole playable species in the current rules catalog
+        </p>
+      </div>
+
       <div class="border-t border-line pt-3">
         <div class="flex items-baseline gap-3">
           <h3 class="font-display text-[15px] tracking-[0.1em] text-muted">// PERSONNEL FILE</h3>

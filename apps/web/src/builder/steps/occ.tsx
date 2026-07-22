@@ -1,14 +1,29 @@
-import { meetsAttributeRequirements, occRegistry } from "@riftforge/rules";
+import {
+  describeOccEligibilityFailure,
+  getSpecies,
+  occRegistry,
+  validateOccEligibility,
+} from "@riftforge/rules";
 import { For, Show } from "solid-js";
 import { Alert, MonoLabel, Panel } from "../../components/ui.tsx";
-import type { BuilderStore } from "../store.ts";
+import { occEligibilityRecoveryGuidance, type BuilderStore } from "../store.ts";
 
 /** Step 5 (RUE p.289): pick an O.C.C., gated on its attribute requirements. */
 export function OccStep(props: { store: BuilderStore }) {
   const occs = Object.values(occRegistry);
   const check = (occ: (typeof occs)[number]) => {
     const attrs = props.store.attributeTotals();
-    return attrs ? meetsAttributeRequirements(occ, attrs) : undefined;
+    return attrs ? validateOccEligibility(occ, props.store.draft.speciesId, attrs) : undefined;
+  };
+
+  const eligibleSpecies = (occ: (typeof occs)[number]) => {
+    if (occ.speciesEligibility.kind === "any") return "ANY PLAYABLE SPECIES";
+    return occ.speciesEligibility.speciesIds
+      .map((id) => {
+        const species = getSpecies(id);
+        return species ? `${species.name}${species.playable ? "" : " [DEFERRED]"}` : id;
+      })
+      .join(", ");
   };
 
   return (
@@ -30,6 +45,7 @@ export function OccStep(props: { store: BuilderStore }) {
                 class="accent-amber"
                 checked={props.store.draft.occId === occ.id}
                 onChange={() => props.store.setDraft("occId", occ.id)}
+                disabled={check(occ)?.ok !== true}
               />
               <span class="font-display text-xl tracking-[0.03em]">{occ.name}</span>
               <MonoLabel>{occ.category}</MonoLabel>
@@ -41,6 +57,9 @@ export function OccStep(props: { store: BuilderStore }) {
               REQUIRES:{" "}
               {occ.attributeRequirements.map((r) => `${r.code} ${r.min}+`).join(", ") || "NOTHING"}
             </p>
+            <p class="font-mono text-[12px] text-muted">
+              SPECIES: {eligibleSpecies(occ).toUpperCase()}
+            </p>
             <Show when={check(occ)}>
               {(result) => (
                 <Show
@@ -48,10 +67,8 @@ export function OccStep(props: { store: BuilderStore }) {
                   fallback={
                     <Alert tone="danger" class="mt-2">
                       NOT QUALIFIED:{" "}
-                      {result()
-                        .failures.map((f) => `${f.code} ${f.actual} (NEEDS ${f.min})`)
-                        .join(", ")}{" "}
-                      — REROLL ATTRIBUTES TO QUALIFY
+                      {result().failures.map(describeOccEligibilityFailure).join(" ").toUpperCase()}{" "}
+                      — {occEligibilityRecoveryGuidance(result().failures)}
                     </Alert>
                   }
                 >

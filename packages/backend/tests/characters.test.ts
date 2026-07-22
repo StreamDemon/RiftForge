@@ -12,6 +12,7 @@ const modules = {
 const vesper = {
   name: "Vesper",
   occId: "ley-line-walker",
+  speciesId: "human",
   level: 1,
   attributes: { IQ: 18, ME: 16, MA: 12, PS: 16, PP: 20, PE: 14, PB: 11, Spd: 12 },
   hthType: "basic",
@@ -25,6 +26,54 @@ const vesper = {
 };
 
 describe("characters — a saved Ley Line Walker round-trips", () => {
+  test("create requires and stores explicit Human identity", async () => {
+    const t = convexTest(schema, modules);
+    const id = await t.mutation(api.characters.create, vesper);
+    expect(await t.query(api.characters.get, { id })).toMatchObject({ speciesId: "human" });
+    expect(await t.query(api.characters.sheet, { id })).toMatchObject({
+      species: { id: "human", name: "Human" },
+    });
+
+    const { speciesId: _speciesId, ...missing } = vesper;
+    await expect(t.mutation(api.characters.create, missing as typeof vesper)).rejects.toThrow();
+  });
+
+  test("backend rejects unknown, unavailable, and attribute-ineligible writes", async () => {
+    const t = convexTest(schema, modules);
+    await expect(
+      t.mutation(api.characters.create, { ...vesper, speciesId: "kryptonian" }),
+    ).rejects.toThrow('Unknown species "kryptonian".');
+    await expect(
+      t.mutation(api.characters.create, { ...vesper, speciesId: "psi-stalker" }),
+    ).rejects.toThrow("Psi-Stalker is known but not playable.");
+    await expect(
+      t.mutation(api.characters.create, {
+        ...vesper,
+        attributes: { ...vesper.attributes, PE: 11 },
+      }),
+    ).rejects.toThrow("P.E. 11; requires 12+.");
+
+    const id = await t.mutation(api.characters.create, vesper);
+    await expect(
+      t.mutation(api.characters.update, {
+        id,
+        character: { ...vesper, speciesId: "psi-stalker" },
+      }),
+    ).rejects.toThrow("Psi-Stalker is known but not playable.");
+    expect(await t.query(api.characters.get, { id })).toMatchObject({ speciesId: "human" });
+  });
+
+  test("legacy storage without speciesId derives Human without a read-time rewrite", async () => {
+    const t = convexTest(schema, modules);
+    const { speciesId: _speciesId, ...legacy } = vesper;
+    const id = await t.run((ctx) => ctx.db.insert("characters", legacy));
+
+    expect(await t.query(api.characters.sheet, { id })).toMatchObject({
+      species: { id: "human", name: "Human" },
+    });
+    expect(await t.query(api.characters.get, { id })).not.toHaveProperty("speciesId");
+  });
+
   test("create → get returns the stored choices", async () => {
     const t = convexTest(schema, modules);
     const id = await t.mutation(api.characters.create, vesper);
@@ -303,30 +352,30 @@ describe("living vitals — current vs. max (#38)", () => {
   });
 
   test.each([
-    { amount: 11, lifeState: "coma" as const, marker: undefined },
-    { amount: 12, lifeState: "dead" as const, marker: "dead" as const },
+    { amount: 13, lifeState: "coma" as const, marker: undefined },
+    { amount: 14, lifeState: "dead" as const, marker: "dead" as const },
   ])(
     "manual damage at the P.E. floor stores $lifeState without raw overflow",
     async ({ amount, lifeState, marker }) => {
       const t = convexTest(schema, modules);
       const id = await t.mutation(api.characters.create, {
         ...vesper,
-        attributes: { ...vesper.attributes, PE: 10 },
-        rolled: { hitPoints: 11, sdc: 20, ppe: 84 },
+        attributes: { ...vesper.attributes, PE: 12 },
+        rolled: { hitPoints: 13, sdc: 20, ppe: 84 },
         current: { sdc: 0, hitPoints: 1 },
       });
 
       expect(await t.mutation(api.characters.applyDamage, { id, amount })).toEqual({
         before: { sdc: 0, hitPoints: 1 },
-        after: { sdc: 0, hitPoints: -10 },
+        after: { sdc: 0, hitPoints: -12 },
         amount,
         lifeState,
         sdc: 0,
-        hitPoints: -10,
+        hitPoints: -12,
       });
       expect((await t.query(api.characters.get, { id }))?.current).toEqual({
         sdc: 0,
-        hitPoints: -10,
+        hitPoints: -12,
         ...(marker === undefined ? {} : { lifeState: marker }),
       });
     },

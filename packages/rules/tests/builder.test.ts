@@ -3,7 +3,6 @@ import {
   assembleSkills,
   deriveSheet,
   leyLineWalker,
-  meetsAttributeRequirements,
   occSchema,
   occSkillPlan,
   relatedSkillPlan,
@@ -22,26 +21,6 @@ function d100Faces(...values: number[]): Rng {
     return (v - 1) / 100;
   };
 }
-
-describe("meetsAttributeRequirements — LLW needs I.Q. 10, P.E. 12", () => {
-  test("passes at the printed minimums", () => {
-    const check = meetsAttributeRequirements(leyLineWalker, { IQ: 10, PE: 12 });
-    expect(check).toEqual({ ok: true, failures: [] });
-  });
-
-  test("reports each failing attribute with the shortfall", () => {
-    const check = meetsAttributeRequirements(leyLineWalker, { IQ: 9, PE: 11 });
-    expect(check.ok).toBe(false);
-    expect(check.failures).toEqual([
-      { code: "IQ", min: 10, actual: 9 },
-      { code: "PE", min: 12, actual: 11 },
-    ]);
-  });
-
-  test("missing attributes count as 0", () => {
-    expect(meetsAttributeRequirements(leyLineWalker, {}).failures).toHaveLength(2);
-  });
-});
 
 describe("rollPsionics — Random Psionics Table, RUE p.289", () => {
   test("01-10 is major, 11-25 minor, 26-00 none", () => {
@@ -333,6 +312,7 @@ describe("assembleSkills — hand-to-hand upgrades (synthetic O.C.C.)", () => {
     category: "Test",
     alignment: "Any",
     attributeRequirements: [],
+    speciesEligibility: { kind: "any" },
     occSkills: [
       { skill: "Climbing", skillId: "climbing", occBonus: 5 },
       {
@@ -473,6 +453,7 @@ describe("secondarySkillPlan", () => {
       category: "Test",
       alignment: "Any",
       attributeRequirements: [],
+      speciesEligibility: { kind: "any" },
       secondarySkills: { count: 3 },
     });
     const plan = secondarySkillPlan(occ);
@@ -489,6 +470,7 @@ describe("content-bug fail-fasts and edge counts", () => {
     category: "Test",
     alignment: "Any",
     attributeRequirements: [],
+    speciesEligibility: { kind: "any" },
   };
 
   test("a category choice with no catalog skills throws at plan time", () => {

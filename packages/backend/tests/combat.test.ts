@@ -22,6 +22,7 @@ const modules = {
 const character: Character = {
   name: "Vesper",
   occId: "ley-line-walker",
+  speciesId: "human",
   level: 1,
   attributes: { IQ: 18, ME: 16, MA: 12, PS: 16, PP: 20, PE: 14, PB: 11, Spd: 12 },
   hthType: "basic",

@@ -104,6 +104,20 @@ export const occSkillGrantSchema = z.object({ skill: z.string() }).catchall(z.un
 /** A special O.C.C. ability. Rich/descriptive; only `name` is required. */
 export const occAbilitySchema = z.object({ name: z.string() }).catchall(z.unknown());
 
+export const speciesEligibilitySchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("any") }),
+  z.object({
+    kind: z.literal("oneOf"),
+    speciesIds: z
+      .array(z.string().min(1))
+      .min(1)
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "O.C.C. species eligibility cannot contain duplicate ids.",
+      }),
+  }),
+]);
+export type SpeciesEligibility = z.infer<typeof speciesEligibilitySchema>;
+
 /** A full Occupational Character Class entry. */
 export const occSchema = z
   .object({
@@ -114,7 +128,8 @@ export const occSchema = z
     description: z.string().optional(),
     alignment: z.string(),
     attributeRequirements: z.array(attributeRequirementSchema),
-    racialRequirement: z.string().optional(),
+    speciesEligibility: speciesEligibilitySchema,
+    racialRequirement: z.never().optional(),
     concealedBodyArmor: z.unknown().optional(),
     ppe: ppeSchema.optional(),
     spellKnowledge: spellKnowledgeSchema.optional(),

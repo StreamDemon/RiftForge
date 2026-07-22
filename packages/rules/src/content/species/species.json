@@ -1,0 +1,26 @@
+{
+  "book": "Rifts Ultimate Edition",
+  "species": [
+    {
+      "source": {
+        "book": "Rifts Ultimate Edition",
+        "page": 233,
+        "table": "Coalition Grunt O.C.C. Racial Requirements"
+      },
+      "id": "human",
+      "name": "Human",
+      "playable": true
+    },
+    {
+      "source": {
+        "book": "Rifts Ultimate Edition",
+        "page": 233,
+        "table": "Coalition Grunt O.C.C. Racial Requirements"
+      },
+      "id": "psi-stalker",
+      "name": "Psi-Stalker",
+      "playable": false,
+      "availabilityNote": "Known eligibility identity only; playable Psi-Stalker and psionics rules are deferred."
+    }
+  ]
+}

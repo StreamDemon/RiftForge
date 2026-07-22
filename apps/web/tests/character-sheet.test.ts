@@ -43,6 +43,10 @@ describe("application shell", () => {
 });
 
 describe("terminal sheet dossier", () => {
+  test("shows resolved species in the dossier identity line", () => {
+    expect(sheetViewSource).toContain("s().species.name.toUpperCase()");
+  });
+
   test("retains the dossier while disabling every gameplay roll with the terminal reason", () => {
     expect(characterSheetSource).toContain(TERMINAL_REASON);
     expect(sheetViewSource).toContain("gameplayDisabledReason?: string;");
