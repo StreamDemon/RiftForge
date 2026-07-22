@@ -1,0 +1,22 @@
+.codex/superpowers/plans/2026-07-22-species-eligibility-foundation.md
+  s_77333ca00ccc9c::t_58304d7ff86a38 1-110,112-724,729-801,803-818,828-1043,1045-1060,1062-1066,1070-1140,1142-1254,1256-1260,1262-1265
+  s_77333ca00ccc9c::t_5c4dc9b8c37ae9 802
+  s_77333ca00ccc9c::t_523e481b545489 111,725-728,1044,1061,1067-1069
+  s_77333ca00ccc9c::t_6912d7c9e61dc4 819-827,1141,1255,1261
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a8ec30ba5104f0e513875680317e577c77647838",
+  "prompts": {},
+  "sessions": {
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
