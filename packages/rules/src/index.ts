@@ -14,6 +14,7 @@ export * from "./schema/character.ts";
 export * from "./engine/alignments.ts";
 export * from "./engine/attributes.ts";
 export * from "./engine/species.ts";
+export * from "./engine/eligibility.ts";
 export * from "./engine/dice.ts";
 export * from "./engine/occ.ts";
 export * from "./engine/combat.ts";
