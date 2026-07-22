@@ -1,0 +1,34 @@
+apps/web/src/builder/store.ts
+  s_77333ca00ccc9c::t_7fffd645d1af99 5,7,25,46-47,62,72,111,133-143,148,151-153,157-160,162
+  s_77333ca00ccc9c::t_92d6e9316085cc 54,103
+apps/web/src/builder/steps/identity.tsx
+  s_77333ca00ccc9c::t_7fffd645d1af99 22-34
+apps/web/tests/character-sheet.test.ts
+  s_77333ca00ccc9c::t_2aeba55042e562 46-49
+apps/web/src/builder/steps/occ.tsx
+  s_77333ca00ccc9c::t_c967722a517985 70
+  s_77333ca00ccc9c::t_7fffd645d1af99 1-6,16-26,48,60-61
+  s_77333ca00ccc9c::t_989dd147204656 62
+apps/web/src/components/sheet-view.tsx
+  s_77333ca00ccc9c::t_7fffd645d1af99 371-372
+README.md
+  s_77333ca00ccc9c::t_7fffd645d1af99 52-55
+apps/web/tests/builder.test.ts
+  s_77333ca00ccc9c::t_2aeba55042e562 1-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8d3bb69cd37c95be71f6b65300ad00edf1efcd00",
+  "prompts": {},
+  "sessions": {
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
