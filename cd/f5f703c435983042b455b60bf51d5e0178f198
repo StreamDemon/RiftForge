@@ -1,0 +1,39 @@
+apps/web/src/builder/steps/occ.tsx
+  s_77333ca00ccc9c::t_1fd085cff85b30 9,71
+packages/rules/src/engine/eligibility.ts
+  s_77333ca00ccc9c::t_1fd085cff85b30 3,13
+apps/web/tests/builder.test.ts
+  s_77333ca00ccc9c::t_bc762d590f73d6 4,21-36,48-49,52-62,65,67,71-77
+  s_77333ca00ccc9c::t_3f2036487b4927 66,78
+  s_77333ca00ccc9c::t_d842f0bc940061 63-64,68-70,80-84
+  s_77333ca00ccc9c::t_1fd085cff85b30 7-11,50-51,79
+  s_77333ca00ccc9c::t_946c8f1c8c5092 20
+.codex/superpowers/specs/2026-07-22-occ-breadth-foundation-design.md
+  s_77333ca00ccc9c::t_1fd085cff85b30 5,456-457
+packages/rules/tests/species.test.ts
+  s_77333ca00ccc9c::t_bc762d590f73d6 14-19,28-39
+  s_77333ca00ccc9c::t_f948623fc54970 40-41
+packages/rules/src/engine/species.ts
+  s_77333ca00ccc9c::t_1fd085cff85b30 4-6,8-9,13-24,34,42
+  s_77333ca00ccc9c::t_6095b5ef20d4ed 10-12
+apps/web/src/builder/store.ts
+  s_77333ca00ccc9c::t_3f2036487b4927 147
+  s_77333ca00ccc9c::t_1fd085cff85b30 14,148-150
+  s_77333ca00ccc9c::t_430ce6099d7532 151-152
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "cdf5f703c435983042b455b60bf51d5e0178f198",
+  "prompts": {},
+  "sessions": {
+    "s_77333ca00ccc9c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f88c7-c753-7f62-ad61-2d9e8f492d02",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "StreamDemon <revenantpulse@protonmail.com>"
+    }
+  }
+}
