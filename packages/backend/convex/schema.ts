@@ -12,6 +12,8 @@ import { combatExchangeValidator } from "./combat_values";
 export const characterFields = {
   name: v.string(),
   occId: v.string(),
+  /** Optional only for documents created before species identity existed. */
+  speciesId: v.optional(v.string()),
   alignmentId: v.optional(v.string()),
   level: v.number(),
   attributes: v.object({
