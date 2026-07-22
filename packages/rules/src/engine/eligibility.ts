@@ -1,7 +1,6 @@
 import type { AttributeCode } from "../schema/attributes.ts";
 import type { Occ } from "../schema/occ.ts";
-import type { Species } from "../schema/species.ts";
-import { getSpecies } from "./species.ts";
+import { getSpecies, type ImmutableSpecies } from "./species.ts";
 
 export type OccEligibilityFailure =
   | { kind: "unknownSpecies"; speciesId: string }
@@ -11,7 +10,7 @@ export type OccEligibilityFailure =
 
 export interface OccEligibilityResult {
   ok: boolean;
-  species?: Species;
+  species?: ImmutableSpecies;
   failures: OccEligibilityFailure[];
 }
 

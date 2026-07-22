@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-22
 
-**Status:** Approved in conversation; implementation not started
+**Status:** Approved; #60 foundation implemented on PR #63, later phases not started
 
 **Design branch:** `docs/occ-breadth-foundation-design`
 
@@ -453,8 +453,8 @@ subsystem.
 
 A dependency label is removed only after its implementing PR is merged and the
 result is synchronized and verified on local `main`. Exactly one issue carries
-`next-up`. After #57 completes, #58 becomes that issue; #59 remains queued after
-#58.
+`next-up`. After #57 completes, #58 becomes that issue. #59 remains queued
+after #58.
 
 ## Success criteria
 

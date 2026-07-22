@@ -6,7 +6,7 @@ import {
 } from "@riftforge/rules";
 import { For, Show } from "solid-js";
 import { Alert, MonoLabel, Panel } from "../../components/ui.tsx";
-import type { BuilderStore } from "../store.ts";
+import { occEligibilityRecoveryGuidance, type BuilderStore } from "../store.ts";
 
 /** Step 5 (RUE p.289): pick an O.C.C., gated on its attribute requirements. */
 export function OccStep(props: { store: BuilderStore }) {
@@ -68,7 +68,7 @@ export function OccStep(props: { store: BuilderStore }) {
                     <Alert tone="danger" class="mt-2">
                       NOT QUALIFIED:{" "}
                       {result().failures.map(describeOccEligibilityFailure).join(" ").toUpperCase()}{" "}
-                      — REROLL ATTRIBUTES TO QUALIFY
+                      — {occEligibilityRecoveryGuidance(result().failures)}
                     </Alert>
                   }
                 >

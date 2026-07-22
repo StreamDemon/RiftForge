@@ -11,6 +11,7 @@ import {
   type BuilderSelections,
   type CharacterInput,
   type CharacterSheet,
+  type OccEligibilityFailure,
   type PsionicsRoll,
   type PsychicClass,
   type SkillPick,
@@ -141,6 +142,12 @@ export function createBuilderStore(): BuilderStore {
     characterInput,
     preview,
   };
+}
+
+export function occEligibilityRecoveryGuidance(failures: readonly OccEligibilityFailure[]): string {
+  return failures.some((failure) => failure.kind !== "attribute")
+    ? "IDENTITY/O.C.C. UNAVAILABLE"
+    : "REROLL ATTRIBUTES TO QUALIFY";
 }
 
 /** Per-step gating — a step is reachable when all before it are valid. */
